@@ -1,0 +1,695 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>卡诺图交互化简实验室 · 第 3 关 结丹期</title>
+<style>
+  :root {
+    --bg: #0f172a;
+    --surface: #1e293b;
+    --surface-2: #334155;
+    --ink: #f1f5f9;
+    --ink-muted: #94a3b8;
+    --ink-dim: #64748b;
+    --rule: #334155;
+    --accent: #38bdf8;
+    --accent-2: #818cf8;
+    --ok: #4ade80;
+    --warn: #fbbf24;
+    --bad: #f87171;
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC",
+                 "Microsoft YaHei", sans-serif;
+    background: var(--bg);
+    color: var(--ink);
+    line-height: 1.7;
+    font-size: 14px;
+    padding: 28px 20px 60px;
+  }
+  .wrap { max-width: 1240px; margin: 0 auto; }
+  a.back { color: var(--accent); text-decoration: none; font-size: 13px; }
+  a.back:hover { text-decoration: underline; }
+
+  .stage {
+    display: inline-block; font-size: 12px; letter-spacing: .12em;
+    color: var(--accent); border: 1px solid var(--accent); border-radius: 999px;
+    padding: 3px 14px; margin: 10px 0 12px;
+  }
+  h1 {
+    font-size: 1.7rem; margin-bottom: 8px;
+    background: linear-gradient(135deg, var(--accent), var(--accent-2));
+    -webkit-background-clip: text; background-clip: text;
+    -webkit-text-fill-color: transparent;
+  }
+  p.lead { color: var(--ink-muted); font-size: 13.5px; max-width: 900px; margin-bottom: 22px; }
+
+  .grid { display: grid; grid-template-columns: minmax(430px, 1fr) 380px; gap: 18px; align-items: start; }
+  @media (max-width: 1020px) { .grid { grid-template-columns: 1fr; } }
+
+  .panel {
+    background: var(--surface); border: 1px solid var(--rule);
+    border-radius: 14px; padding: 18px 20px; margin-bottom: 18px;
+  }
+  .panel h2 { font-size: 15px; color: var(--accent); margin-bottom: 10px; }
+  .panel h3 { font-size: 13px; color: var(--accent-2); margin: 14px 0 6px; }
+  .panel p { color: var(--ink-muted); font-size: 12.5px; }
+
+  /* ---------- 卡诺图 ---------- */
+  .kmap { display: inline-block; margin: 6px 0 4px; font-family: Consolas, "Courier New", monospace; }
+  .kmap table { border-collapse: collapse; }
+  .kmap th {
+    font-weight: normal; color: var(--ink-dim); font-size: 11.5px;
+    padding: 3px 0; text-align: center;
+  }
+  .kmap td.rowh {
+    color: var(--ink-dim); font-size: 11.5px; padding: 0 8px 0 4px;
+    text-align: right; white-space: nowrap;
+  }
+  .cell {
+    width: 78px; height: 62px; border: 1px solid var(--rule);
+    text-align: center; vertical-align: top; cursor: pointer;
+    background: #0b1220; transition: background .12s, box-shadow .12s;
+    position: relative; user-select: none;
+  }
+  .cell:hover { box-shadow: inset 0 0 0 2px var(--accent); }
+  .cell .v { font-size: 21px; line-height: 1.25; color: var(--ink-dim); }
+  .cell.one .v { color: var(--ok); font-weight: 700; }
+  .cell.x .v { color: var(--warn); font-weight: 700; }
+  .cell .m { font-size: 10px; color: var(--ink-dim); line-height: 1; }
+  .cell.wrapc::after {
+    content: '↻跨边'; position: absolute; right: 3px; bottom: 2px;
+    font-size: 9px; color: var(--ink-dim);
+  }
+
+  .gtag {
+    display: inline-block; width: 11px; height: 11px; border-radius: 3px;
+    margin-right: 5px; vertical-align: -1px;
+  }
+  .legend { margin-top: 10px; font-size: 12.5px; color: var(--ink-muted); }
+  .legend div { margin: 3px 0; }
+  .legend code { font-family: Consolas, monospace; color: var(--accent); }
+
+  .res {
+    background: #0b1220; border: 1px solid var(--rule); border-radius: 9px;
+    padding: 12px 14px; font-family: Consolas, "Courier New", monospace;
+    font-size: 13.5px; color: var(--ink); margin-top: 8px; overflow-x: auto;
+  }
+  .res .big { color: var(--ok); font-size: 15px; }
+  .res.none { color: var(--ink-dim); }
+
+  table.cost { width: 100%; border-collapse: collapse; font-size: 12.5px; margin-top: 10px; }
+  table.cost th { text-align: left; color: var(--ink-dim); font-weight: normal; font-size: 11.5px;
+                  border-bottom: 1px solid var(--rule); padding: 5px 4px; }
+  table.cost td { padding: 5px 4px; border-bottom: 1px solid rgba(51,65,85,.5); color: var(--ink-muted); }
+  table.cost td.n { text-align: right; font-family: Consolas, monospace; color: var(--ink); }
+  table.cost td.best { color: var(--ok); font-family: Consolas, monospace; text-align: right; }
+
+  label.row { display: block; margin-bottom: 10px; }
+  .presets { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 8px; }
+  .presets button {
+    flex: 1 1 auto; background: var(--surface-2); color: var(--ink);
+    border: 1px solid var(--rule); border-radius: 8px;
+    padding: 8px 10px; font-size: 12.5px; cursor: pointer;
+    font-family: inherit; transition: border-color .15s, background .15s;
+  }
+  .presets button:hover { border-color: var(--accent); background: rgba(56,189,248,.14); }
+  .presets button.on { border-color: var(--accent); background: rgba(56,189,248,.2); color: var(--accent); }
+
+  .chkline { display: flex; align-items: center; gap: 7px; font-size: 12.5px;
+             color: var(--ink-muted); margin-top: 10px; }
+  .chkline input { accent-color: var(--accent); }
+
+  .note {
+    background: rgba(56,189,248,.06); border-left: 3px solid var(--accent);
+    border-radius: 0 8px 8px 0; padding: 10px 13px;
+    font-size: 12.5px; color: var(--ink-muted); margin-top: 12px;
+  }
+  .note.warn { background: rgba(251,191,36,.06); border-left-color: var(--warn); }
+  .note.bad { background: rgba(248,113,113,.06); border-left-color: var(--bad); }
+  .note b { color: var(--ink); }
+  .note code { font-family: Consolas, monospace; color: var(--accent); }
+
+  footer { text-align: center; color: var(--ink-dim); font-size: 12px; margin-top: 26px; }
+  footer a { color: var(--accent); text-decoration: none; }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <a class="back" href="../硬件学习路线图.html">← 返回总路线图</a>
+  <div class="stage">第 3 关 · 结丹期 · 数字电路</div>
+  <h1>卡诺图交互化简实验室（4 变量）</h1>
+  <p class="lead">
+    点格子在 <b>0 → 1 → X</b> 之间循环。程序实时用 Quine-McCluskey 算法求最简与或式，
+    并把最优圈组画在图上。
+    <b>建议先在纸上自己圈一遍，再打开"显示最优圈组"对答案</b>——
+    这一步建立的是"相邻 = 消掉一个变量"的直觉，比看一百遍算法都有用。
+    变量约定：<code>A</code> 是最高位（位权 8）、<code>B</code>=4、<code>C</code>=2、<code>D</code>=1。
+  </p>
+
+  <div class="grid">
+
+    <!-- ============ 左：卡诺图 ============ -->
+    <div>
+      <div class="panel">
+        <h2>卡诺图（AB 行 × CD 列，行列表头都是格雷码序）</h2>
+        <div class="kmap">
+          <table>
+            <tr>
+              <th></th><th></th>
+              <th colspan="4" style="color:var(--ink-muted)">CD →</th>
+            </tr>
+            <tr>
+              <th></th><th></th>
+              <th>00</th><th>01</th><th>11</th><th>10</th>
+            </tr>
+            <tbody id="kbody"></tbody>
+          </table>
+        </div>
+        <div class="chkline">
+          <input type="checkbox" id="showGroups" checked>
+          <label for="showGroups">显示最优圈组（关掉可以逼自己圈一遍）</label>
+        </div>
+        <div class="chkline">
+          <input type="checkbox" id="useDc" checked>
+          <label for="useDc">把 X 当作无关项参与化简（关掉 = "不敢用 X"，看代价涨多少）</label>
+        </div>
+        <div class="legend" id="legend"></div>
+      </div>
+
+      <div class="panel">
+        <h2>最简与或式（SOP）</h2>
+        <div class="res" id="sopBox">—</div>
+        <table class="cost">
+          <thead>
+            <tr><th style="width:42%">代价项</th><th style="width:29%">标准与或式（未化简）</th><th>化简后</th></tr>
+          </thead>
+          <tbody id="costBody"></tbody>
+        </table>
+        <div class="note">
+          <b>为什么圈越大越简？</b>
+          两个相邻的 1 合并，就消掉一个变量（<code>A'BC + ABC = BC</code>）；
+          四个合成一个矩形，消掉两个；八个消掉三个。
+          所以一个覆盖 <code>k</code> 个最小项的圈，写出来只剩 <code>4 − log₂k</code> 个字面值 ——
+          <b>圈越大 = 与门的输入脚越少 = 片子越少、功耗越低、延迟级数越少</b>。
+          化简省的是这三样，不是卷面分。
+        </div>
+      </div>
+    </div>
+
+    <!-- ============ 右：preset + 说明 ============ -->
+    <div>
+      <div class="panel">
+        <h2>内置 preset</h2>
+        <p>点一下就填好真值，四个都是真会遇到的东西。</p>
+        <div class="presets">
+          <button type="button" id="pMajor">三人投票多数器</button>
+          <button type="button" id="pGseg">BCD 七段 g 段</button>
+          <button type="button" id="pParity">奇偶校验（反面教材）</button>
+          <button type="button" id="pGray">格雷码 → 二进制 g2</button>
+        </div>
+        <div class="presets">
+          <button type="button" id="pClear">全部清空</button>
+        </div>
+      </div>
+
+      <div class="panel">
+        <h2>逐个 preset 该看什么</h2>
+        <h3>三人投票多数器</h3>
+        <p>
+          答案必须是 <code>F = AB+AC+BC</code>，三个 4 格圈，5 个门、延迟 3 级。
+          没化简之前是 <b>35 个门、66 个门输入脚、7 级延迟</b>。
+          注意 D 是这个函数的空脚，所以每个 1 都成对出现，天然能纵向合并。
+        </p>
+        <h3>BCD 七段译码 g 段</h3>
+        <p>
+          数字 2,3,4,5,6,8,9 点亮 g 段，而 <code>1010~1111</code> 你的编码器永远不会输出
+          —— 它们是<b>无关项 X</b>。用满 X：<code>g = A+B'C+BC'+CD'</code>，<b>9 个门</b>；
+          把上面"不敢用 X"的勾去掉，退化成 <code>A'B'C+A'BC'+AB'C'+A'CD'</code>，<b>15 个门</b>。
+          <b>X 不是"随便"，X 是白捡的便宜。</b>
+        </p>
+        <h3>奇偶校验（反面教材）</h3>
+        <p>
+          1 在卡诺图上是棋盘格，谁也挨不着谁，<b>一个圈都合并不了</b>，
+          化简前后代价一模一样。这类函数天生该用异或门（74HC86），
+          别跟卡诺图较劲 —— 知道什么时候该换工具，也是这一关的内容。
+        </p>
+        <h3>格雷码 → 二进制 g2</h3>
+        <p>
+          <code>b2 = g2 ⊕ g3</code>，与位无关，所以图上是<b>整列整列</b>的块，
+          能圈出一个 8 格的大圈。这就是"格雷码跨时钟域安全"的图形版本：
+          相邻的两个编码只差 1 位，采样最坏也只读到上一步或下一步。
+        </p>
+      </div>
+
+      <div class="panel">
+        <h2>卡诺图四条规矩</h2>
+        <div class="note">
+          <b>①</b> 只能圈 <code>1</code>（和 X），个数必须是 <code>1 / 2 / 4 / 8 / 16</code>。<br>
+          <b>②</b> 上下相邻是相邻，<b>左右卷起来也是相邻</b>——
+             最左列和最右列挨着，最上行和最下行挨着。
+             四个角也算一个 4 格圈。带 <code>↻跨边</code> 标记的格子就是这种。<br>
+          <b>③</b> 每个 <code>1</code> 必须被至少一个圈盖住；<code>X</code> 可盖可不盖。<br>
+          <b>④</b> 圈要尽量大、个数要尽量少；允许重叠（重叠是为了把圈做大）。
+        </div>
+        <div class="note warn">
+          <b>化简出来的是"逻辑"，不是"时序"。</b>
+          最简 SOP 是<b>面积</b>最优，不是<b>时序</b>最优：
+          相邻的两个 1 分属不同乘积项时，输入切换的瞬间会出现
+          "两个与门同时输出 0"的空窗，输出打一个<b>反毛刺</b>。
+          解决办法是关键路径上打一拍寄存器同步化，或者加冗余项（consensus term）。
+          毛刺的数字形态在 <code>02_sequential_lab.c</code> 里，
+          <code>0111→1000</code> 那一拍会吐出 <b>3 个各宽 13.0 ns 的假状态</b>。
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <footer>
+    第 3 关 · 结丹期 · 数字电路　|　本页完全离线，无任何外部依赖　|
+    <a href="./index.html">回到本关目录</a>　·
+    <a href="../硬件学习路线图.html">← 返回总路线图</a>
+  </footer>
+
+</div>
+
+<script>
+"use strict";
+
+/* ============================ 算法部分 ============================
+ * Quine-McCluskey：先求全部质蕴含项（迭代合并），
+ * 再用分支限界求最小覆盖（先比项数，再比字面值总数，再比门输入脚数）。
+ * 与 01_logic_gates.c 里的 C 实现是同一套逻辑，结果应当完全一致。
+ * ================================================================= */
+
+var NVAR = 4;
+var BIT = [8, 4, 2, 1];          /* A=8 B=4 C=2 D=1 */
+var VNAME = ["A", "B", "C", "D"];
+var ROWS = [0, 1, 3, 2];          /* AB 的格雷码序：00 01 11 10 */
+var COLS = [0, 1, 3, 2];          /* CD 的格雷码序 */
+var COLORS = ["#38bdf8", "#818cf8", "#4ade80", "#fbbf24",
+              "#f87171", "#22d3ee", "#e879f9", "#a3e635"];
+
+function popcount(x) {
+  var c = 0, v = x;
+  while (v) { c += v & 1; v >>= 1; }
+  return c;
+}
+
+/* 质蕴含项。每项 = {val, dash}，dash 的 bit 置位表示该变量被消去。
+ * 合并规则（与 01_logic_gates.c 完全同构）：两个与项 dash 相同、
+ * val 只差 1 个比特 → 消掉那一维。没被合并过的就是质蕴含项。 */
+function primeImplicants(minterms, dcs) {
+  var cur = [], primes = [];
+
+  function tadd(arr, v, d) {
+    for (var q = 0; q < arr.length; q++) {
+      if (arr[q].val === v && arr[q].dash === d) { return; }
+    }
+    arr.push({ val: v, dash: d });
+  }
+
+  var i, j;
+  for (i = 0; i < minterms.length; i++) { tadd(cur, minterms[i], 0); }
+  for (i = 0; i < dcs.length; i++) { tadd(cur, dcs[i], 0); }
+
+  while (cur.length > 0) {
+    var nxt = [], used = [];
+    for (i = 0; i < cur.length; i++) { used[i] = 0; }
+    for (i = 0; i < cur.length; i++) {
+      for (j = i + 1; j < cur.length; j++) {
+        if (cur[i].dash !== cur[j].dash) { continue; }
+        var diff = cur[i].val ^ cur[j].val;
+        if (popcount(diff) !== 1) { continue; }
+        used[i] = 1; used[j] = 1;
+        tadd(nxt, cur[i].val & ~diff, cur[i].dash | diff);
+      }
+    }
+    for (i = 0; i < cur.length; i++) {
+      if (used[i] === 0) { tadd(primes, cur[i].val, cur[i].dash); }
+    }
+    cur = nxt;
+  }
+  /* 注意：这里刻意不排序。C 版的 pi[] 就是"发现顺序"，
+     最小覆盖按同一顺序搜索，两边才会挑中同一个等价解。 */
+  return primes;
+}
+
+function covers(p, m) {
+  return (p.val & ~p.dash) === (m & ~p.dash);
+}
+
+function litCount(p) { return NVAR - popcount(p.dash); }
+
+/* 代价模型（与 C 版 cost_of 逐句一致）：二输入门为单元，
+ * 与门串成链（k 个叶子 = k-1 个门），或门做成二输入树。 */
+function ceilLog2(v) {
+  var n = 0, p = 1;
+  while (p < v) { p *= 2; n += 1; }
+  return n;
+}
+
+function costOf(terms) {
+  var i, k, L = 0, inv = 0, invMask = 0, andGates = 0, maxAnd = 0;
+  for (i = 0; i < terms.length; i++) {
+    var leaves = litCount(terms[i]);
+    L += leaves;
+    if (leaves >= 2) {
+      andGates += leaves - 1;
+      if (leaves - 1 > maxAnd) { maxAnd = leaves - 1; }
+    }
+    for (k = 0; k < NVAR; k++) {
+      var bit = 1 << k;
+      if ((terms[i].dash & bit) === 0 && (terms[i].val & bit) === 0) { invMask |= bit; }
+    }
+  }
+  inv = popcount(invMask);
+  var orGates = terms.length > 1 ? terms.length - 1 : 0;
+  var orDepth = ceilLog2(terms.length > 1 ? terms.length : 2);
+
+  return {
+    ands: andGates,
+    ors: orGates,
+    invs: inv,
+    total: andGates + orGates + inv,
+    pins: 2 * (andGates + orGates) + inv,
+    levels: maxAnd + orDepth + (inv > 0 ? 1 : 0),
+    lits: L,
+    terms: terms.length
+  };
+}
+
+function toStr(p) {
+  var out = "", k;
+  for (k = 0; k < NVAR; k++) {
+    var bit = 1 << (NVAR - 1 - k);
+    if (p.dash & bit) { continue; }
+    out += VNAME[k];
+    if ((p.val & bit) === 0) { out += "'"; }
+  }
+  return out === "" ? "1" : out;
+}
+
+/* 覆盖 mask：一个圈覆盖了 16 格里的哪些 */
+function coverMask(p) {
+  var mask = 0, m;
+  for (m = 0; m < 16; m++) { if (covers(p, m)) { mask |= (1 << m); } }
+  return mask;
+}
+
+/* 分支限界最小覆盖 —— 与 01_logic_gates.c 的 cover_recur 严格同构：
+ * 每次挑"最小的未被覆盖最小项"，按质蕴含表顺序试所有能盖住它的项；
+ * 代价 = 项数*100 + 字面值总数，先比项数再比字面值，同价保留先找到的。
+ * 这样才能和 C 程序吐出同一条最简式，逐字对账。 */
+function minCover(primes, need0) {
+  var masks = [], i;
+  for (i = 0; i < primes.length; i++) { masks.push(coverMask(primes[i])); }
+
+  var sol = null, bestCost = -1, cur = [];
+
+  function rec(need, depth) {
+    if (need === 0) {
+      var lit = 0, q;
+      for (q = 0; q < depth; q++) { lit += litCount(primes[cur[q]]); }
+      var c = depth * 100 + lit;
+      if (bestCost < 0 || c < bestCost) { bestCost = c; sol = cur.slice(0, depth); }
+      return;
+    }
+    if (bestCost >= 0 && depth >= Math.floor(bestCost / 100)) { return; }
+    var m = 0;
+    while ((need & (1 << m)) === 0) { m++; }
+    for (var q2 = 0; q2 < primes.length; q2++) {
+      if ((masks[q2] & (1 << m)) === 0) { continue; }
+      cur[depth] = q2;
+      rec(need & ~masks[q2], depth + 1);
+    }
+  }
+
+  rec(need0, 0);
+  var out = [];
+  if (sol !== null) {
+    for (i = 0; i < sol.length; i++) { out.push(primes[sol[i]]); }
+  }
+  return out;
+}
+
+function minimize(ones, dcs, useDc) {
+  var need0 = 0, i;
+  for (i = 0; i < ones.length; i++) { need0 |= (1 << ones[i]); }
+  if (need0 === 0) { return { terms: [], cost: costOf([]) }; }
+  var dc = useDc ? dcs : [];
+  var pi = primeImplicants(ones, dc);
+  var terms = minCover(pi, need0);
+  /* 输出排序：dash 多的在前，dash 相同则 val 小的在前（同 C 版 sort_terms） */
+  for (i = 1; i < terms.length; i++) {
+    var k = terms[i], j = i - 1;
+    while (j >= 0 && (terms[j].dash > k.dash ||
+           (terms[j].dash === k.dash && terms[j].val > k.val))) {
+      terms[j + 1] = terms[j];
+      j -= 1;
+    }
+    terms[j + 1] = k;
+  }
+  return { terms: terms, cost: costOf(terms) };
+}
+
+/* 未化简的标准 SOP：每个 1 一项，各 4 个字面值 */
+function canonicalTerms(ones) {
+  var out = [], i;
+  for (i = 0; i < ones.length; i++) { out.push({ val: ones[i], dash: 0 }); }
+  return out;
+}
+
+/* ============================ 界面部分 ============================ */
+
+var grid = new Array(16);       /* 0 / 1 / 2（2 = X） */
+var i;
+for (i = 0; i < 16; i++) { grid[i] = 0; }
+
+var kbody = document.getElementById("kbody");
+var sopBox = document.getElementById("sopBox");
+var costBody = document.getElementById("costBody");
+var legendBox = document.getElementById("legend");
+var showGroups = document.getElementById("showGroups");
+var useDcBox = document.getElementById("useDc");
+
+/* 建表：4 行 × 4 列，格子按 (rowIdx, colIdx) → minterm 编号 */
+function cellIndex(r, c) {
+  var a = ROWS[r] >> 1, b = ROWS[r] & 1;      /* A B */
+  var cc = COLS[c] >> 1, d = COLS[c] & 1;     /* C D */
+  return (a << 3) | (b << 2) | (cc << 1) | d;
+}
+
+function buildTable() {
+  var html = "", r, c, m;
+  for (r = 0; r < 4; r++) {
+    html += "<tr>";
+    html += '<td class="rowh">AB ' + ((ROWS[r] >> 1) & 1) + (ROWS[r] & 1) + "</td>";
+    for (c = 0; c < 4; c++) {
+      var m = cellIndex(r, c);
+      html += '<td class="cell" id="c' + m + '" data-m="' + m + '">' +
+              '<div class="v">0</div><div class="m">m' + m + '</div></td>';
+    }
+    html += "</tr>";
+  }
+  kbody.innerHTML = html;
+
+  for (m = 0; m < 16; m++) {
+    var el = document.getElementById("c" + m);
+    el.addEventListener("click", onCellClick);
+  }
+}
+
+function onCellClick(ev) {
+  var el = ev.currentTarget;
+  var m = parseInt(el.getAttribute("data-m"), 10);
+  grid[m] = (grid[m] + 1) % 3;
+  render();
+}
+
+function gridValue(m) { return grid[m]; }
+
+function collect() {
+  var ones = [], xs = [], m;
+  for (m = 0; m < 16; m++) {
+    if (grid[m] === 1) { ones.push(m); }
+    else if (grid[m] === 2) { xs.push(m); }
+  }
+  return { ones: ones, xs: xs };
+}
+
+function sopText(terms) {
+  if (terms.length === 0) { return "F = 0"; }
+  var parts = [], i;
+  for (i = 0; i < terms.length; i++) { parts.push(toStr(terms[i])); }
+  return "F = " + parts.join("+");
+}
+
+function render() {
+  var m;
+  for (m = 0; m < 16; m++) {
+    var el = document.getElementById("c" + m);
+    var v = grid[m];
+    el.className = "cell" + (v === 1 ? " one" : (v === 2 ? " x" : ""));
+    el.firstChild.textContent = (v === 2 ? "X" : String(v));
+  }
+
+  var got = collect();
+  var res = minimize(got.ones, got.xs, useDcBox.checked);
+  var canon = costOf(canonicalTerms(got.ones));
+
+  /* 圈组高亮 */
+  var groupOf = {};           /* m -> [项下标,...] */
+  var ti, mm;
+  for (ti = 0; ti < res.terms.length; ti++) {
+    var mask = coverMask(res.terms[ti]);
+    for (mm = 0; mm < 16; mm++) {
+      if (mask & (1 << mm)) {
+        if (!groupOf[mm]) { groupOf[mm] = []; }
+        groupOf[mm].push(ti);
+      }
+    }
+  }
+
+  if (showGroups.checked) {
+    for (mm = 0; mm < 16; mm++) {
+      var e2 = document.getElementById("c" + mm);
+      if (groupOf[mm] && groupOf[mm].length > 0) {
+        var col = COLORS[groupOf[mm][0] % COLORS.length];
+        e2.style.boxShadow = "inset 0 0 0 3px " + col;
+        e2.style.background = "rgba(56,189,248,.05)";
+        if (groupOf[mm].length > 1) {
+          e2.style.boxShadow = "inset 0 0 0 3px " + col +
+            ", inset 0 0 0 6px " + COLORS[groupOf[mm][1] % COLORS.length];
+        }
+      } else {
+        e2.style.boxShadow = "";
+        e2.style.background = "";
+      }
+    }
+  } else {
+    for (mm = 0; mm < 16; mm++) {
+      var e3 = document.getElementById("c" + mm);
+      e3.style.boxShadow = "";
+      e3.style.background = "";
+    }
+  }
+
+  /* 最简式 */
+  sopBox.className = "res" + (res.terms.length === 0 ? " none" : "");
+  sopBox.textContent = sopText(res.terms) +
+    (res.terms.length > 0 ? "      （" + res.cost.terms + " 项，共 " +
+      res.cost.lits + " 个字面值）" : "");
+
+  /* 代价对照 */
+  var rows = [
+    ["与门（二输入）", canon.ands, res.cost.ands],
+    ["或门（二输入）", canon.ors, res.cost.ors],
+    ["反相器", canon.invs, res.cost.invs],
+    ["门总数", canon.total, res.cost.total],
+    ["门输入脚总数", canon.pins, res.cost.pins],
+    ["延迟级数", canon.levels, res.cost.levels],
+    ["74HC00 片数估算", Math.max(1, Math.ceil(canon.total / 4)),
+     Math.max(1, Math.ceil(res.cost.total / 4))]
+  ];
+  var ch = "", r;
+  for (r = 0; r < rows.length; r++) {
+    ch += "<tr><td>" + rows[r][0] + "</td><td class='n'>" + rows[r][1] +
+          "</td><td class='best'>" + rows[r][2] + "</td></tr>";
+  }
+  costBody.innerHTML = ch;
+
+  /* 图例 */
+  var lh = "";
+  if (showGroups.checked && res.terms.length > 0) {
+    lh += "<div style='color:var(--ink)'>最优圈组（每一项一个圈）：</div>";
+    for (ti = 0; ti < res.terms.length; ti++) {
+      var size = (1 << popcount(res.terms[ti].dash));
+      var list = [], qq;
+      for (qq = 0; qq < 16; qq++) {
+        if (covers(res.terms[ti], qq) && grid[qq] === 1) { list.push("m" + qq); }
+      }
+      lh += "<div><span class='gtag' style='background:" +
+            COLORS[ti % COLORS.length] + "'></span><code>" + toStr(res.terms[ti]) +
+            "</code>　" + size + " 格圈（消掉 " + popcount(res.terms[ti].dash) +
+            " 个变量）　覆盖 1：" + list.join(" ") + "</div>";
+    }
+  } else if (!showGroups.checked) {
+    lh = "<div>圈组已隐藏。先在纸上自己圈，再打开对答案。</div>";
+  } else {
+    lh = "<div>图上还没有 1。点格子放几个 1，或者点右边的 preset。</div>";
+  }
+  legendBox.innerHTML = lh;
+}
+
+/* --------------------------- preset --------------------------- */
+
+function setAll(arr) {
+  var m;
+  for (m = 0; m < 16; m++) { grid[m] = 0; }
+  var i2;
+  for (i2 = 0; i2 < arr.length; i2++) { grid[arr[i2]] = 1; }
+}
+function setXs(arr) {
+  var i2;
+  for (i2 = 0; i2 < arr.length; i2++) { grid[arr[i2]] = 2; }
+}
+
+function mark(btn) {
+  var ids = ["pMajor", "pGseg", "pParity", "pGray"], i2;
+  for (i2 = 0; i2 < ids.length; i2++) {
+    document.getElementById(ids[i2]).className = "";
+  }
+  if (btn) { btn.className = "on"; }
+}
+
+document.getElementById("pMajor").addEventListener("click", function () {
+  setAll([6, 7, 10, 11, 12, 13, 14, 15]);
+  useDcBox.checked = true;
+  mark(this);
+  render();
+});
+
+document.getElementById("pGseg").addEventListener("click", function () {
+  setAll([2, 3, 4, 5, 6, 8, 9]);
+  setXs([10, 11, 12, 13, 14, 15]);
+  useDcBox.checked = true;
+  mark(this);
+  render();
+});
+
+document.getElementById("pParity").addEventListener("click", function () {
+  setAll([1, 2, 4, 7, 8, 11, 13, 14]);
+  useDcBox.checked = true;
+  mark(this);
+  render();
+});
+
+document.getElementById("pGray").addEventListener("click", function () {
+  /* b2 = g2 ^ g3，与 g1、g0 无关 → 整列整列的块 */
+  setAll([0, 1, 2, 3, 12, 13, 14, 15]);
+  useDcBox.checked = true;
+  mark(this);
+  render();
+});
+
+document.getElementById("pClear").addEventListener("click", function () {
+  setAll([]);
+  mark(null);
+  render();
+});
+
+showGroups.addEventListener("change", render);
+useDcBox.addEventListener("change", render);
+
+buildTable();
+setAll([6, 7, 10, 11, 12, 13, 14, 15]);
+document.getElementById("pMajor").className = "on";
+render();
+</script>
+</body>
+</html>

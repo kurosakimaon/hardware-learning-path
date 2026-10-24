@@ -1,0 +1,201 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>模拟电路模块导航 · 第 2 关 · 炼气期</title>
+<style>
+:root {
+  --bg: #0f172a;
+  --surface: #1e293b;
+  --surface-2: #334155;
+  --ink: #f1f5f9;
+  --ink-muted: #94a3b8;
+  --ink-dim: #64748b;
+  --rule: #334155;
+  --accent: #38bdf8;
+  --accent-2: #818cf8;
+  --ok: #4ade80;
+  --warn: #fbbf24;
+  --bad: #f87171;
+}
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body {
+  background: var(--bg);
+  color: var(--ink);
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", "Microsoft YaHei", sans-serif;
+  font-size: 14px;
+  line-height: 1.7;
+  padding: 20px 26px 60px;
+  max-width: 980px;
+  margin: 0 auto;
+}
+a { color: var(--accent); text-decoration: none; }
+a:hover { text-decoration: underline; }
+.topbar { display: flex; align-items: center; gap: 14px; margin-bottom: 6px; }
+.badge {
+  display: inline-block; padding: 3px 12px; border-radius: 999px;
+  background: var(--surface-2); color: var(--accent);
+  font-size: 12px; letter-spacing: 1px;
+}
+h1 { font-size: 24px; margin: 10px 0 4px; }
+.sub { color: var(--ink-muted); margin-bottom: 22px; }
+.panel {
+  background: var(--surface); border: 1px solid var(--rule);
+  border-radius: 10px; padding: 18px 20px; margin-bottom: 18px;
+}
+.panel h2 { font-size: 15px; color: var(--accent); margin-bottom: 12px; letter-spacing: 1px; }
+.file {
+  display: grid; grid-template-columns: 240px 1fr; gap: 6px 18px;
+  border-top: 1px solid var(--rule); padding: 12px 0;
+}
+.file:first-of-type { border-top: none; }
+.file .name { font-family: Consolas, monospace; font-size: 14px; color: var(--accent-2); }
+.file .kind { color: var(--ink-dim); font-size: 12px; margin-top: 2px; }
+.file .use { color: var(--ink); }
+.file .focus { color: var(--ink-muted); font-size: 13px; }
+.file .focus b { color: var(--warn); font-weight: 600; }
+ol.order { margin-left: 20px; }
+ol.order li { margin-bottom: 8px; }
+ol.order li .why { color: var(--ink-muted); font-size: 13px; }
+code {
+  font-family: Consolas, monospace; font-size: 13px;
+  background: var(--surface-2); border-radius: 4px; padding: 1px 6px;
+  color: var(--ink);
+}
+.pit { border-left: 4px solid var(--bad); background: var(--surface-2); border-radius: 6px; padding: 8px 12px; margin-bottom: 10px; }
+.pit b { color: var(--bad); }
+.pit.p2 { border-left-color: var(--warn); }
+.pit.p2 b { color: var(--warn); }
+.tip { color: var(--ink-dim); font-size: 12.5px; margin-top: 10px; }
+footer { color: var(--ink-dim); font-size: 12.5px; margin-top: 26px; border-top: 1px solid var(--rule); padding-top: 14px; }
+@media (max-width: 700px) { .file { grid-template-columns: 1fr; } }
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <a href="../硬件学习路线图.html">← 返回总路线图</a>
+  <span class="badge">第 2 关 · 炼气期</span>
+</div>
+
+<h1>模拟电路：从二极管到电源的"非理想"世界</h1>
+<div class="sub">
+  数字电路骗自己"0 就是 0、1 就是 1"，模拟电路不许骗。
+  本关用 3 个 C 算盘 + 2 个 HTML 教具，把二极管、运放、电源这三件套的
+  非理想账本一笔一笔算出来、画出来：有限增益、带宽、压摆率、撞轨、
+  热耗、纹波、饱和——每个数字都是将来少烧的一块板子。
+</div>
+
+<div class="panel">
+  <h2>本 关 文 件 清 单</h2>
+
+  <div class="file">
+    <div>
+      <div class="name">tutorial.md</div>
+      <div class="kind">课本（本关总纲）</div>
+    </div>
+    <div>
+      <div class="use">为什么模拟是分水岭、学习目标逐条自检、12 条常见坑、5 道家庭作业、通关标准。</div>
+      <div class="focus">学习重点：<b>先通读它</b>，再碰代码；作业全在里面，别跳过。</div>
+    </div>
+  </div>
+
+  <div class="file">
+    <div>
+      <div class="name">01_diode_rectifier.c</div>
+      <div class="kind">C 算盘（编译：gcc -std=c17 -O2 -Wall -Wextra）</div>
+    </div>
+    <div>
+      <div class="use">牛顿迭代解二极管方程求工作点；数值仿真半波 / 全波 / 桥式整流，量纹波、导通角、开机浪涌；稳压管限流电阻与功耗。</div>
+      <div class="focus">学习重点：<b>滤波电容越大纹波越小、但峰值电流越大</b>——同一件事的两面；开机浪涌看合闸相位，过零约十几倍、峰值合闸可达几十倍，这就是烧桥的原因。</div>
+    </div>
+  </div>
+
+  <div class="file">
+    <div>
+      <div class="name">02_opamp_lab.c</div>
+      <div class="kind">C 算盘（本关心脏）</div>
+    </div>
+    <div>
+      <div class="use">内置非理想运放模型（有限 A_ol、GBW、SR、输出摆幅、Ib、Vos），对反相 / 同相 / 跟随 / 差分 / 仪表放大器五种拓扑一次算出实际增益、误差、−3dB 带宽、f_max(SR)、撞轨与失调折算误差。</div>
+      <div class="focus">学习重点：同一增益下电阻取 1k/10k 和 100k/1M 完全不是一回事；<b>先算 f_cl = GBW / NG</b>，工作频率接近它的一律重来。</div>
+    </div>
+  </div>
+
+  <div class="file">
+    <div>
+      <div class="name">03_power_supply.c</div>
+      <div class="kind">C 算盘（选型账本）</div>
+    </div>
+    <div>
+      <div class="use">LDO 热账（Tj = Ta + P·θja、105℃ 降额线）与 Buck 全账（占空比、ΔI_L、峰值电流、损耗分解、频率扫描）；电感材料饱和曲线；输出电容容值/ESR/ESL 三笔账；LDO PSRR 与降额清单。</div>
+      <div class="focus">学习重点：12V→3.3V 500mA 用 LDO 时 Tj 算出来 500℃+ ——<b>这不是选型问题，是着火问题</b>，必须换 Buck。</div>
+    </div>
+  </div>
+
+  <div class="file">
+    <div>
+      <div class="name">opamp_animator.html</div>
+      <div class="kind">HTML 教具（双击即开，最重要）</div>
+    </div>
+    <div>
+      <div class="use">选拓扑、拖 R1/R2/电源轨/GBW/压摆率/频率/幅度，SVG 实时画输入输出波形：撞轨顶部削平标红"削波"，压摆率不够画成三角标红"压摆率限制"，频率过高按 GBW 衰减增益。</div>
+      <div class="focus">学习重点：四个 preset（理想 / 撞轨 / 压摆率不足 / GBW 不足）逐个点，<b>看右侧一句话诊断怎么变</b>，直到你能提前猜中。</div>
+    </div>
+  </div>
+
+  <div class="file">
+    <div>
+      <div class="name">filter_bode.html</div>
+      <div class="kind">HTML 教具（双击即开）</div>
+    </div>
+    <div>
+      <div class="use">一阶 RC 低通 / 二阶 Sallen-Key 低通（可调 Q）/ 一阶 RC 高通，拖 R、C、Q 即时重算对数轴幅频 + 相频，标出 −3dB 点与 Q=0.707 和 Q=2 的峰化差别。</div>
+      <div class="focus">学习重点：点"ADC 抗混叠"preset——1kHz 信号 10kSPS 采样，<b>看截止频率该定多少、污染带里的频率各被压了多少 dB</b>。</div>
+    </div>
+  </div>
+</div>
+
+<div class="panel">
+  <h2>学 习 顺 序 建 议</h2>
+  <ol class="order">
+    <li>通读 <code>tutorial.md</code> 第一到三节，明确学习目标。
+      <div class="why">不知道要学成什么样就开跑，等于蒙眼走路。</div></li>
+    <li>编译运行 <code>01_diode_rectifier.c</code>，对照输出把整流三兄弟（半波/全波/桥式）的纹波、导通角、浪涌数字抄一遍。
+      <div class="why">先把"非理想"的第一课——二极管压降不是常数——刻进脑子。</div></li>
+    <li>跑 <code>02_opamp_lab.c</code>，重点看"5 拓扑 × 4 组电阻"对比表和两个翻车案例。
+      <div class="why">这是本关心脏：有限增益、GBW、SR 三本账全在这张表里。</div></li>
+    <li>双击打开 <code>opamp_animator.html</code>，把 02 算过的场景在动画里复现，再拖滑杆故意翻车。
+      <div class="why">数字算完再看波形，"撞轨削平""正弦变三角"才真正长进眼睛里。</div></li>
+    <li>打开 <code>filter_bode.html</code>，玩 Q 峰化和 ADC 抗混叠 preset。
+      <div class="why">滤波器是运放和 ADC 之间的桥梁，波特图必须是本能。</div></li>
+    <li>跑 <code>03_power_supply.c</code>，把 LDO 与 Buck 的选型账各算一遍，最后照降额清单过一遍自己手头的板子。
+      <div class="why">电源是最后一个坑最多的环节，放最后是因为前面所有"非理想"思维在这里汇总。</div></li>
+    <li>回 <code>tutorial.md</code> 第六、七节，做作业、对通关标准。
+      <div class="why">作业不动手 = 白学。每道题都要有算过的数字。</div></li>
+  </ol>
+</div>
+
+<div class="panel">
+  <h2>常 见 坑（节选，完整 12 条在 tutorial.md）</h2>
+  <div class="pit"><b>运放输出直接接大容性负载 → 自激。</b>
+    输出"随手"并 100nF，等于往反馈环里塞极点，跟随器变振荡器。正确姿势：输出串 10~100Ω 隔离电阻。</div>
+  <div class="pit"><b>压摆率当带宽用。</b>
+    f_3dB 够不代表正弦不失真：满幅 V_peak 需要 SR ≥ 2π·f·V_peak。超过 f_max 输出变三角波，示波器上"看着还有波形"，谐波已经烂透。</div>
+  <div class="pit"><b>LDO 只算 P=(Vin−Vout)·I，不算封装热阻。</b>
+    470mW 听着小，SOT-223 的 θja≈105℃/W 就是 +49℃。算热必须走 Tj = Ta + P·θja，θja 还要按实际铺铜打折。</div>
+  <div class="pit p2"><b>DCDC 电感按平均电流选饱和电流。</b>
+    1A 输出 + 40% 纹波，峰值就是 1.2A。规则：I_sat ≥ 1.3 × 最坏峰值电流，否则磁芯饱和、纹波暴涨、EMI 爆炸。</div>
+  <div class="pit p2"><b>示波器探头 ×1 档把被测电路带宽拖死。</b>
+    ×1 档 100~150pF 输入电容往高阻节点一搭，fc 立刻掉到几百 kHz——你以为电路振荡，其实是你把它改成了振荡器。测高阻节点必须 ×10 + 短地。</div>
+  <div class="tip">运行三个 C 程序前，先在控制台执行 <code>chcp 65001</code>，否则中文输出全是乱码。</div>
+</div>
+
+<footer>
+  第 2 关 · 炼气期 · 模拟电路 —— 本页与本页所有链接均为本地相对路径，完全离线可用。<br>
+  上一个模块 ← <a href="../硬件学习路线图.html">返回总路线图</a>
+</footer>
+
+</body>
+</html>

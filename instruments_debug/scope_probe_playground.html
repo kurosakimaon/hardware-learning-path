@@ -1,0 +1,316 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>探头负载演练场 · 第 6 关 · 望闻问切</title>
+<style>
+:root {
+  --bg: #0f172a; --surface: #1e293b; --surface-2: #334155;
+  --ink: #f1f5f9; --ink-muted: #94a3b8; --ink-dim: #64748b;
+  --rule: #334155; --accent: #38bdf8; --accent-2: #818cf8;
+  --ok: #4ade80; --warn: #fbbf24; --bad: #f87171;
+}
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body {
+  background: var(--bg); color: var(--ink);
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", "Microsoft YaHei", sans-serif;
+  font-size: 14px; line-height: 1.7; padding: 24px;
+}
+.header { max-width: 1120px; margin: 0 auto 18px; }
+.stage {
+  display: inline-block; background: var(--surface-2); color: var(--accent);
+  border: 1px solid var(--accent); border-radius: 999px;
+  padding: 2px 14px; font-size: 12px; margin-bottom: 10px;
+}
+h1 { font-size: 22px; margin-bottom: 6px; }
+.sub { color: var(--ink-muted); }
+.wrap { max-width: 1120px; margin: 0 auto; display: grid; gap: 16px; }
+.panel {
+  background: var(--surface); border: 1px solid var(--rule);
+  border-radius: 10px; padding: 18px;
+}
+.panel h2 { font-size: 15px; color: var(--accent); margin-bottom: 10px; }
+.grid2 { display: grid; grid-template-columns: 1.1fr 1fr; gap: 16px; }
+.ctrl { margin-bottom: 12px; }
+.ctrl label { display: flex; justify-content: space-between; color: var(--ink-muted); margin-bottom: 4px; }
+.ctrl label b { color: var(--ink); font-family: Consolas, monospace; }
+input[type=range] { width: 100%; accent-color: var(--accent); }
+.seg { display: inline-flex; border: 1px solid var(--rule); border-radius: 8px; overflow: hidden; }
+.seg button {
+  background: var(--surface-2); color: var(--ink-muted); border: none;
+  padding: 7px 20px; cursor: pointer; font-size: 14px; font-family: inherit;
+}
+.seg button.on { background: var(--accent); color: #0f172a; font-weight: bold; }
+.presets { display: flex; gap: 10px; flex-wrap: wrap; }
+.presets button {
+  background: var(--surface-2); color: var(--ink); border: 1px solid var(--rule);
+  border-radius: 8px; padding: 7px 12px; cursor: pointer; font-size: 12.5px; font-family: inherit;
+  text-align: left;
+}
+.presets button:hover { border-color: var(--accent); color: var(--accent); }
+.readouts { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; margin-bottom: 12px; }
+.ro {
+  background: var(--bg); border: 1px solid var(--rule); border-radius: 8px;
+  padding: 8px 12px;
+}
+.ro .k { color: var(--ink-dim); font-size: 12px; }
+.ro .v { font-family: Consolas, monospace; font-size: 17px; }
+.ro.bad .v { color: var(--bad); }
+.ro.warn .v { color: var(--warn); }
+.ro.ok .v { color: var(--ok); }
+svg { width: 100%; height: auto; display: block; background: var(--bg); border-radius: 8px; border: 1px solid var(--rule); }
+.legend { display: flex; gap: 18px; margin-top: 8px; color: var(--ink-muted); font-size: 12px; flex-wrap: wrap; }
+.legend i { display: inline-block; width: 22px; height: 3px; vertical-align: middle; margin-right: 5px; }
+.note {
+  border-left: 3px solid var(--accent-2); background: var(--surface-2);
+  padding: 10px 14px; border-radius: 0 8px 8px 0; color: var(--ink-muted); margin-top: 12px;
+}
+.note b { color: var(--ink); }
+.formula { font-family: Consolas, monospace; color: var(--warn); }
+a { color: var(--accent); }
+@media (max-width: 860px) { .grid2 { grid-template-columns: 1fr; } .readouts { grid-template-columns: 1fr 1fr; } }
+</style>
+</head>
+<body>
+<div class="header">
+  <span class="stage">第 6 关 · 望闻问切</span>
+  <h1>探头负载演练场：你看到的 vs 真实的</h1>
+  <p class="sub">探头不是导线，是电路的一部分。调探头档位、源阻抗、频率、地线长度，看波形怎么变形。返回：<a href="index.html">本关目录</a> · <a href="../硬件学习路线图.html">总路线图</a></p>
+</div>
+
+<div class="wrap">
+  <div class="panel">
+    <h2>① 四个事故现场（preset）</h2>
+    <div class="presets">
+      <button data-p="0">① 50Ω 低频用 ×1：安全，但纯属浪费</button>
+      <button data-p="1">② ×1 量 1MΩ 分压点：电压几乎被吃光</button>
+      <button data-p="2">③ 30cm 长地线量 10MHz：满屏假振铃</button>
+      <button data-p="3">④ 弹簧地量开关节点：干净利落</button>
+    </div>
+  </div>
+
+  <div class="grid2">
+    <div class="panel">
+      <h2>② 探头与电路设置</h2>
+      <div class="ctrl">
+        <label>探头档位 <span class="seg">
+          <button id="btnX1" class="on">×1（1MΩ ∥ 100pF）</button>
+          <button id="btnX10">×10（9MΩ+1MΩ ∥ 10pF）</button>
+        </span></label>
+      </div>
+      <div class="ctrl">
+        <label>被测点 Thevenin 阻抗 Rth <b><span id="rVal">50</span> Ω</b></label>
+        <input type="range" id="rSlider" min="0" max="40" step="1" value="12">
+      </div>
+      <div class="ctrl">
+        <label>信号频率（方波基波） <b><span id="fVal">1.00</span> MHz</b></label>
+        <input type="range" id="fSlider" min="0.05" max="25" step="0.05" value="1">
+      </div>
+      <div class="ctrl">
+        <label>信号幅度（峰峰） <b><span id="aVal">3.30</span> V</b></label>
+        <input type="range" id="aSlider" min="0.1" max="10" step="0.1" value="3.3">
+      </div>
+      <div class="ctrl">
+        <label>地线环路长度（约 1 µH/m ≈ 1 nH/mm） <b><span id="gLVal">5</span> cm</b></label>
+        <input type="range" id="gLSlider" min="2" max="40" step="1" value="5">
+      </div>
+      <div class="note" id="tip"></div>
+    </div>
+
+    <div class="panel">
+      <h2>③ 仪器账本（误差 &gt; 3% 标红）</h2>
+      <div class="readouts">
+        <div class="ro" id="roZ"><div class="k">探头输入阻抗 |Z| @5次谐波</div><div class="v">—</div></div>
+        <div class="ro" id="roErr"><div class="k">幅度负载误差</div><div class="v">—</div></div>
+        <div class="ro" id="roBw"><div class="k">负载极点 f₋₃dB</div><div class="v">—</div></div>
+        <div class="ro" id="roRing"><div class="k">地线谐振 Q 值</div><div class="v">—</div></div>
+      </div>
+      <svg id="scope" viewBox="0 0 760 380"></svg>
+      <div class="legend">
+        <span><i style="background:var(--ink-dim)"></i>真实波形（不挂探头）</span>
+        <span><i style="background:var(--accent)"></i>你看到的（挂了这套探头）</span>
+        <span><i style="background:var(--bad)"></i>谐振振铃包络</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="panel">
+    <h2>④ 老师傅点拨</h2>
+    <p>负载误差一条公式算到底：<span class="formula">误差 = Rth / (Rth + |Z_probe(f)|)</span>。×1 探头 100pF 电容在 10MHz 处只有 159Ω——挂到 1kΩ 以上的节点，信号先没一半。
+    地线是电感（约 <span class="formula">1 µH/m ≈ 1 nH/mm</span>），和探头电容拼成并联谐振：<span class="formula">f₀ = 1/(2π√(L·C))</span>，边沿能量一激发就是满屏"振铃"。你以为是信号完整性问题，其实是 30cm 鳄鱼夹。</p>
+    <div class="note"><b>现场心法：</b>换短地线/弹簧地再看振铃还在不在；换 ×10 再看幅值涨不涨。两步之内，"电路的问题"和"探头的问题"就分家了。</div>
+  </div>
+</div>
+
+<script>
+"use strict";
+var PI = Math.PI;
+var state = { x10: false, logR: 12, fMHz: 1, amp: 3.3, groundCm: 5 };
+
+// Rth 滑块：对数刻度，logR 0..40 → 1Ω .. 4.6MΩ
+function rth() { return Math.pow(10, state.logR / 6); }
+
+function probeParams() {
+  // ×1: 1MΩ ∥ 100pF；×10: (9MΩ+1MΩ) ∥ 10pF（示波器本体 1MΩ 计入）
+  return state.x10
+    ? { R: 10e6, C: 10e-12, name: "×10" }
+    : { R: 1e6, C: 100e-12, name: "×1" };
+}
+
+function zMag(R, C, f) {
+  var Zc = 1 / (2 * PI * f * C);
+  return (R * Zc) / Math.sqrt(R * R + Zc * Zc);
+}
+
+function fmtZ(z) {
+  if (z >= 1e6) return (z / 1e6).toFixed(2) + " MΩ";
+  if (z >= 1e3) return (z / 1e3).toFixed(1) + " kΩ";
+  return z.toFixed(0) + " Ω";
+}
+
+function el(n, a, t) {
+  var e = document.createElementNS("http://www.w3.org/2000/svg", n);
+  for (var k in a) e.setAttribute(k, a[k]);
+  if (t !== undefined) e.textContent = t;
+  return e;
+}
+
+function compute() {
+  var p = probeParams();
+  var f0 = state.fMHz * 1e6;
+  var f5 = 5 * f0;                       // 方波看 5 次谐波
+  var Rth = rth();
+  var Z = zMag(p.R, p.C, f5);
+  var errPct = 100 * Rth / (Rth + Z);    // 幅度负载误差
+  // 负载极点：Rth 与 C 的低通（Rth ∥ R 简化为 Rth 主导当 Rth << R）
+  var Rpar = (Rth * p.R) / (Rth + p.R);
+  var fbw = 1 / (2 * PI * Rpar * p.C);
+  var tr = 0.35 / fbw;
+  // 地线环路：L ≈ 1µH/m（1nH/mm）；与探头电容并联谐振，阻尼 = Rth + 寄生动阻
+  var L = 1e-6 * (state.groundCm / 100);
+  var fRing = 1 / (2 * PI * Math.sqrt(L * p.C));
+  var Q = (2 * PI * fRing * L) / Math.max(Rth + 5, 1); // +5Ω 寄生动阻
+  return { p: p, f0: f0, Rth: Rth, Z: Z, errPct: errPct, fbw: fbw, tr: tr, fRing: fRing, Q: Q, L: L };
+}
+
+function render() {
+  var m = compute();
+  document.getElementById("rVal").textContent = m.Rth >= 1e6 ? (m.Rth / 1e6).toFixed(2) + "M" : (m.Rth >= 1e3 ? (m.Rth / 1e3).toFixed(1) + "k" : m.Rth.toFixed(0));
+  document.getElementById("fVal").textContent = state.fMHz.toFixed(2);
+  document.getElementById("aVal").textContent = state.amp.toFixed(2);
+  document.getElementById("gLVal").textContent = state.groundCm;
+
+  function setRO(id, cls, text) {
+    var box = document.getElementById(id);
+    box.className = "ro " + cls;
+    box.querySelector(".v").textContent = text;
+  }
+  setRO("roZ", "ok", fmtZ(m.Z));
+  setRO("roErr", m.errPct > 3 ? "bad" : (m.errPct > 1 ? "warn" : "ok"),
+        m.errPct.toFixed(1) + "%" + (m.errPct > 3 ? " ←超标" : ""));
+  setRO("roBw", m.fbw < 5 * m.f0 ? "bad" : "ok",
+        (m.fbw >= 1e6 ? (m.fbw / 1e6).toFixed(2) + " MHz" : (m.fbw / 1e3).toFixed(0) + " kHz") +
+        " tr≈" + (m.tr * 1e9).toFixed(0) + "ns");
+  setRO("roRing", m.Q > 2 ? "bad" : (m.Q > 1 ? "warn" : "ok"),
+        m.Q.toFixed(1) + " @ " + (m.fRing / 1e6).toFixed(1) + "MHz");
+
+  // 提示语
+  var tips = [];
+  if (m.errPct > 3) tips.push("幅度误差 " + m.errPct.toFixed(0) + "%：这不是测量，是探头在改写电路。");
+  if (m.fbw < 5 * m.f0) tips.push("负载极点低于 5 次谐波：边沿被探头自己变缓了。");
+  if (m.Q > 2) tips.push("地线 Q = " + m.Q.toFixed(1) + "：谐振 Q&gt;2 就是'每个边沿都振'的假振铃配方。");
+  if (!tips.length) tips.push("当前配置安全。试试把地线拉到 30cm，或把 Rth 提到 1MΩ。");
+  document.getElementById("tip").innerHTML = "<b>诊断：</b>" + tips.join(" ");
+
+  // ---- 画波形：真实方波 vs 挂探头后的波形 ----
+  var svg = document.getElementById("scope");
+  while (svg.firstChild) svg.removeChild(svg.firstChild);
+  var W = 760, H = 380, padL = 44, padR = 16;
+  var xOf = function (u) { return padL + u * (W - padL - padR); }; // u∈[0,1] = 2 个周期
+  var v2y = function (v) { return H - 30 - (v / 10.5) * (H - 60); }; // 0~10.5V 量程
+  var top = 30, bot = H - 30;
+
+  // 网格
+  for (var g = 0; g <= 10; g++)
+    svg.appendChild(el("line", { x1: xOf(g / 10), y1: top, x2: xOf(g / 10), y2: bot, stroke: "#1e293b" }));
+  for (var gv = 0; gv <= 10; gv += 2)
+    svg.appendChild(el("line", { x1: padL, y1: v2y(gv), x2: W - padR, y2: v2y(gv), stroke: "#1e293b" }));
+
+  var T = 1 / (state.fMHz * 1e6);        // 一个周期
+  var tEnd = 2 * T;                      // 显示 2 个周期
+  var kLoad = 1 - m.errPct / 100;
+  var alpha = 2 * PI * m.fbw;            // 一阶响应速率
+  var wn = 2 * PI * m.fRing;
+  var zeta = 1 / (2 * Math.max(m.Q, 0.001));
+  var N = 1500, dt = tEnd / N;
+
+  // 仿真：一阶低通（RC 负载）+ 二阶振铃叠加项
+  var yLp = 0, dTrue = "", dSeen = "", dEnvUp = "", dEnvLo = "";
+  for (var i = 0; i <= N; i++) {
+    var t = i * dt;
+    var phase = (t % T) / T;
+    var ideal = state.amp * (phase < 0.5 ? 1 : 0);           // 真实方波 0..A
+    var target = ideal * kLoad;
+    yLp += (target - yLp) * Math.min(1, alpha * dt);          // 一阶爬升
+    // 振铃：在每次边沿后按 e^{-ζωn t'} sin(ωd t') 叠加
+    var tEdge = (phase < 0.5) ? (Math.floor(t / T) * T) : (Math.floor(t / T) * T + T / 2);
+    var tp = t - tEdge;
+    var amp0 = (state.amp * kLoad) * 0.5 * Math.min(1, m.Q / 3) * (m.Q > 0.7 ? 1 : 0);
+    var ring = (m.Q > 0.7) ? amp0 * Math.exp(-zeta * wn * tp) * Math.sin(wn * Math.sqrt(1 - zeta * zeta) * tp) : 0;
+    var seen = yLp + ring;
+    var x = xOf(t / tEnd);
+    dTrue += (i ? "L" : "M") + x.toFixed(1) + "," + v2y(ideal).toFixed(1);
+    dSeen += (i ? "L" : "M") + x.toFixed(1) + "," + v2y(Math.max(0, seen)).toFixed(1);
+    var eUp = yLp + amp0 * Math.exp(-zeta * wn * tp), eLo = yLp - amp0 * Math.exp(-zeta * wn * tp);
+    dEnvUp += (i ? "L" : "M") + x.toFixed(1) + "," + v2y(eUp).toFixed(1);
+    dEnvLo += (i ? "L" : "M") + x.toFixed(1) + "," + v2y(eLo).toFixed(1);
+  }
+  svg.appendChild(el("path", { d: dTrue, fill: "none", stroke: "#64748b", "stroke-width": 1.6, "stroke-dasharray": "5 4" }));
+  if (m.Q > 0.7) {
+    svg.appendChild(el("path", { d: dEnvUp, fill: "none", stroke: "#f87171", "stroke-width": 1, "stroke-dasharray": "2 3", opacity: 0.7 }));
+    svg.appendChild(el("path", { d: dEnvLo, fill: "none", stroke: "#f87171", "stroke-width": 1, "stroke-dasharray": "2 3", opacity: 0.7 }));
+  }
+  svg.appendChild(el("path", { d: dSeen, fill: "none", stroke: "#38bdf8", "stroke-width": 2 }));
+  svg.appendChild(el("text", { x: padL, y: 20, fill: "#64748b", "font-size": 12 }, "0—10.5 V，窗口 = 2 个周期（" + (tEnd * 1e6).toFixed(2) + " µs）"));
+  svg.appendChild(el("text", { x: W - padR, y: 20, fill: m.errPct > 3 ? "#f87171" : "#4ade80", "font-size": 12, "text-anchor": "end" }, "蓝线显示幅值 ≈ " + (state.amp * kLoad).toFixed(2) + " Vpp（真实 " + state.amp.toFixed(2) + " Vpp）"));
+}
+
+// ---- 控件绑定 ----
+function setProbe(x10) {
+  state.x10 = x10;
+  document.getElementById("btnX1").classList.toggle("on", !x10);
+  document.getElementById("btnX10").classList.toggle("on", x10);
+  render();
+}
+document.getElementById("btnX1").onclick = function () { setProbe(false); };
+document.getElementById("btnX10").onclick = function () { setProbe(true); };
+
+document.getElementById("rSlider").addEventListener("input", function () { state.logR = +this.value; render(); });
+document.getElementById("fSlider").addEventListener("input", function () { state.fMHz = +this.value; render(); });
+document.getElementById("aSlider").addEventListener("input", function () { state.amp = +this.value; render(); });
+document.getElementById("gLSlider").addEventListener("input", function () { state.groundCm = +this.value; render(); });
+
+var PRESETS = [
+  { x10: false, logR: Math.log10(50) * 6, fMHz: 0.1, amp: 5, gL: 5 },   // ① 50Ω 低频 ×1
+  { x10: false, logR: Math.log10(5e5) * 6, fMHz: 0.05, amp: 5, gL: 5 }, // ② 高阻分压点 ×1
+  { x10: true, logR: Math.log10(20) * 6, fMHz: 10, amp: 3.3, gL: 30 },  // ③ 低阻节点 + 30cm 地线
+  { x10: true, logR: Math.log10(20) * 6, fMHz: 0.5, amp: 10, gL: 2 }    // ④ 开关节点 + 弹簧地
+];
+Array.prototype.forEach.call(document.querySelectorAll(".presets button"), function (b, i) {
+  b.addEventListener("click", function () {
+    var p = PRESETS[i];
+    state.x10 = p.x10; state.logR = p.logR; state.fMHz = p.fMHz; state.amp = p.amp; state.groundCm = p.gL;
+    document.getElementById("rSlider").value = p.logR;
+    document.getElementById("fSlider").value = p.fMHz;
+    document.getElementById("aSlider").value = p.amp;
+    document.getElementById("gLSlider").value = p.gL;
+    document.getElementById("btnX1").classList.toggle("on", !p.x10);
+    document.getElementById("btnX10").classList.toggle("on", p.x10);
+    render();
+  });
+});
+render();
+</script>
+</body>
+</html>

@@ -1,0 +1,490 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>滤波器波特图实验室 · 第 2 关 · 模拟电路</title>
+<style>
+:root {
+  --bg: #0f172a;
+  --surface: #1e293b;
+  --surface-2: #334155;
+  --ink: #f1f5f9;
+  --ink-muted: #94a3b8;
+  --ink-dim: #64748b;
+  --rule: #334155;
+  --accent: #38bdf8;
+  --accent-2: #818cf8;
+  --ok: #4ade80;
+  --warn: #fbbf24;
+  --bad: #f87171;
+}
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body {
+  background: var(--bg);
+  color: var(--ink);
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", "Microsoft YaHei", sans-serif;
+  font-size: 14px;
+  line-height: 1.7;
+  padding: 20px 26px 60px;
+}
+a { color: var(--accent); text-decoration: none; }
+a:hover { text-decoration: underline; }
+.topbar { display: flex; align-items: center; gap: 14px; margin-bottom: 6px; }
+.badge {
+  display: inline-block; padding: 3px 12px; border-radius: 999px;
+  background: var(--surface-2); color: var(--accent);
+  font-size: 12px; letter-spacing: 1px;
+}
+h1 { font-size: 22px; margin: 10px 0 4px; }
+.sub { color: var(--ink-muted); margin-bottom: 18px; }
+.layout { display: grid; grid-template-columns: 330px 1fr; gap: 16px; align-items: start; }
+.panel {
+  background: var(--surface); border: 1px solid var(--rule);
+  border-radius: 10px; padding: 16px;
+}
+.panel h2 { font-size: 14px; color: var(--accent); margin-bottom: 10px; letter-spacing: 1px; }
+.ctl { margin-bottom: 12px; }
+.ctl label { display: flex; justify-content: space-between; color: var(--ink-muted); font-size: 12.5px; }
+.ctl label b { color: var(--ink); font-weight: 600; font-family: Consolas, monospace; }
+.ctl input[type=range] { width: 100%; accent-color: var(--accent); }
+select {
+  width: 100%; background: var(--surface-2); color: var(--ink);
+  border: 1px solid var(--rule); border-radius: 6px; padding: 6px 8px;
+  font-family: inherit; font-size: 13px;
+}
+.presets { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 14px; }
+.presets button {
+  background: var(--surface-2); color: var(--ink); border: 1px solid var(--rule);
+  border-radius: 6px; padding: 6px 10px; cursor: pointer; font-family: inherit; font-size: 12.5px;
+}
+.presets button:hover { border-color: var(--accent); color: var(--accent); }
+svg { width: 100%; height: auto; display: block; background: #0b1120; border-radius: 8px; }
+.legend { display: flex; gap: 18px; margin: 8px 0 0; color: var(--ink-muted); font-size: 12.5px; flex-wrap: wrap; }
+.legend i { display: inline-block; width: 18px; height: 3px; vertical-align: middle; margin-right: 6px; }
+.cards { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; margin-top: 14px; }
+.cell { background: var(--surface-2); border-radius: 8px; padding: 8px 10px; }
+.cell .k { color: var(--ink-dim); font-size: 11.5px; }
+.cell .v { font-family: Consolas, monospace; font-size: 15px; }
+.cell .v.ok { color: var(--ok); }
+.cell .v.warn { color: var(--warn); }
+.cell .v.bad { color: var(--bad); }
+.diag {
+  border-radius: 8px; padding: 10px 12px; margin-top: 14px;
+  background: var(--surface-2); border-left: 4px solid var(--accent);
+  font-size: 13px;
+}
+.diag.warn { border-left-color: var(--warn); }
+.diag.bad { border-left-color: var(--bad); }
+.note { color: var(--ink-dim); font-size: 12.5px; margin-top: 12px; }
+table { border-collapse: collapse; width: 100%; margin-top: 12px; font-size: 12.5px; }
+th, td { border-bottom: 1px solid var(--rule); padding: 5px 8px; text-align: right; font-family: Consolas, monospace; }
+th { color: var(--ink-dim); font-weight: 600; }
+td:first-child, th:first-child { text-align: left; }
+.anti td.good { color: var(--ok); }
+.anti td.over { color: var(--bad); }
+@media (max-width: 1000px) { .layout { grid-template-columns: 1fr; } .cards { grid-template-columns: 1fr 1fr; } }
+</style>
+</head>
+<body>
+<div class="topbar">
+  <a href="index.html">← 返回本模块目录</a>
+  <a href="../硬件学习路线图.html">← 返回总路线图</a>
+  <span class="badge">第 2 关 · 炼气期</span>
+</div>
+<h1>滤波器波特图实验室</h1>
+<div class="sub">
+  一阶 RC 低通 / 二阶 Sallen-Key 低通（可调 Q）/ 一阶 RC 高通。
+  拖滑杆即时重算幅频与相频，对数横轴，−3dB 点与 Q 峰化当场标出来。
+</div>
+
+<div class="presets">
+  <button id="pButter">preset：Q=0.707（Butterworth）</button>
+  <button id="pPeak">preset：Q=2（峰化）</button>
+  <button id="pAnti">preset：ADC 抗混叠</button>
+</div>
+
+<div class="layout">
+  <div class="panel">
+    <h2>滤 波 器</h2>
+    <div class="ctl">
+      <label>类型</label>
+      <select id="kind">
+        <option value="rc1">一阶 RC 低通</option>
+        <option value="sk2" selected>二阶 Sallen-Key 低通</option>
+        <option value="hp1">一阶 RC 高通</option>
+      </select>
+    </div>
+    <div class="ctl">
+      <label>R（Ω）<b id="vR"></b></label>
+      <input type="range" id="rSlider" min="0" max="100" step="1">
+    </div>
+    <div class="ctl">
+      <label>C（F）<b id="vC"></b></label>
+      <input type="range" id="cSlider" min="0" max="100" step="1">
+    </div>
+    <div class="ctl">
+      <label>Q（阻尼 ζ = 1/2Q）<b id="vQ"></b></label>
+      <input type="range" id="qSlider" min="0" max="100" step="1">
+      <div class="note" id="qNote"></div>
+    </div>
+    <div class="note">
+      二阶低通：H(jω) = ωn² / (ωn² − ω² + jω·ωn/Q)，其中 ωn = 1/√(R1R2C1C2)，
+      本页取 R1=R2=R、C1=C2=C，故 fn = 1/(2πRC)，Q 由运放同相端分压（增益 3−1/Q）设定。
+      一阶：|H| = 1/√(1+(f/fc)²)，相位 = −arctan(f/fc)。
+    </div>
+    <div class="note" style="border-top:1px solid var(--rule); padding-top:10px">
+      <b style="color:var(--accent-2)">ADC 抗混叠怎么定 fc：</b><br>
+      信号带 1kHz、采样率 10kSPS → Nyquist 5kHz。抗混叠的目标是让
+      "镜像污染带"（fs − f_signal 附近及以上）被压到所需动态以下。
+      二阶 Q=0.707 每倍频 −12dB：fc 取 2~3kHz 时，5kHz 处约 −8~−12dB，
+      9kHz 镜像约 −22~−30dB。要更狠就升阶数或降 fc，
+      代价是通带纹波与建立时间。点上面的 preset 看具体数字。
+    </div>
+  </div>
+
+  <div>
+    <div class="panel">
+      <h2>幅 频（dB）</h2>
+      <svg id="magSvg" viewBox="0 0 680 260" xmlns="http://www.w3.org/2000/svg"></svg>
+      <h2 style="margin-top:14px">相 频（°）</h2>
+      <svg id="phsSvg" viewBox="0 0 680 200" xmlns="http://www.w3.org/2000/svg"></svg>
+      <div class="legend">
+        <span><i style="background:#38bdf8"></i>当前 Q</span>
+        <span><i style="background:#818cf8"></i>参考 Q=0.707</span>
+        <span><i style="background:#fbbf24"></i>参考 Q=2（峰化）</span>
+        <span><i style="background:#4ade80"></i>−3dB 点 / fc</span>
+      </div>
+      <div class="cards">
+        <div class="cell"><div class="k">截止 / 特征频率 fc</div><div class="v" id="oFc"></div></div>
+        <div class="cell"><div class="k">−3dB 实际频点</div><div class="v" id="o3dB"></div></div>
+        <div class="cell"><div class="k">通带峰化</div><div class="v" id="oPeak"></div></div>
+        <div class="cell"><div class="k">10×fc 处衰减</div><div class="v" id="oAtten"></div></div>
+      </div>
+      <div class="diag" id="diag"></div>
+    </div>
+
+    <div class="panel" style="margin-top:16px">
+      <h2>各频点衰减（dB）</h2>
+      <table class="anti">
+        <thead>
+          <tr><th>频率</th><th>当前 Q 衰减</th><th>Q=0.707 衰减</th><th>相位</th><th>说明</th></tr>
+        </thead>
+        <tbody id="tbody"></tbody>
+      </table>
+      <div class="note">
+        "说明"列以 ADC 抗混叠视角标注：5kHz 起为 Nyquist 及以上——这些频点的分量
+        一旦漏过滤波器，折叠回来就落在信号带里，永远分不开了。所以抗混叠必须在
+        <b>模拟域</b>做，数字滤波救不了已经混叠的数据。
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+"use strict";
+
+var $ = function (id) { return document.getElementById(id); };
+var NS = "http://www.w3.org/2000/svg";
+
+function el(name, attrs) {
+  var e = document.createElementNS(NS, name);
+  for (var k in attrs) e.setAttribute(k, attrs[k]);
+  return e;
+}
+function fmtHz(f) {
+  if (!isFinite(f)) return "—";
+  if (f >= 1e6) return (f / 1e6).toFixed(3) + " MHz";
+  if (f >= 1e3) return (f / 1e3).toFixed(2) + " kHz";
+  return f.toFixed(1) + " Hz";
+}
+function fmtOhm(v) {
+  if (v >= 1e6) return (v / 1e6).toFixed(2) + " MΩ";
+  if (v >= 1e3) return (v / 1e3).toFixed(2) + " kΩ";
+  if (v >= 1) return v.toFixed(1) + " Ω";
+  return v.toFixed(3) + " mΩ";
+}
+function fmtCap(v) {
+  if (v >= 1e-6) return (v * 1e6).toFixed(3) + " µF";
+  if (v >= 1e-9) return (v * 1e9).toFixed(2) + " nF";
+  return (v * 1e12).toFixed(1) + " pF";
+}
+
+/* ---------- 参数 ---------- */
+var P = {
+  kind: "sk2",
+  R: 15900,          /* Ω  → fc = 1/(2πRC) = 1kHz */
+  C: 0.01e-6,        /* F  */
+  Q: 0.707
+};
+var MAP_R = { lo: 10, hi: 1e6 };
+var MAP_C = { lo: 10e-12, hi: 100e-6 };
+
+function pos2val(lo, hi, p) { return lo * Math.pow(hi / lo, p / 100); }
+function val2pos(lo, hi, v) { return Math.round(Math.log(v / lo) / Math.log(hi / lo) * 100); }
+
+/* ---------- 传递函数 ---------- */
+/* 返回 {mag, phsDeg}；f 单位 Hz */
+function resp(f) {
+  var fc = 1 / (2 * Math.PI * P.R * P.C);
+  var r = f / fc;
+  if (P.kind === "rc1") {
+    var m1 = 1 / Math.sqrt(1 + r * r);
+    return { mag: m1, phs: -Math.atan(r) * 180 / Math.PI, fc: fc };
+  }
+  if (P.kind === "hp1") {
+    var m2 = r / Math.sqrt(1 + r * r);
+    return { mag: m2, phs: (90 - Math.atan(r) * 180 / Math.PI), fc: fc };
+  }
+  /* 二阶低通 */
+  var Q = P.Q;
+  var a = 1 - r * r;
+  var b = r / Q;
+  var m3 = 1 / Math.sqrt(a * a + b * b);
+  var ph = -Math.atan2(b, a) * 180 / Math.PI;
+  return { mag: m3, phs: ph, fc: fc };
+}
+/* 指定 Q 的二阶低通幅值（画参考曲线用） */
+function mag2(f, fc, Q) {
+  var r = f / fc;
+  var a = 1 - r * r, b = r / Q;
+  return 1 / Math.sqrt(a * a + b * b);
+}
+function db(m) { return 20 * Math.log10(m); }
+
+/* −3dB 频点：二阶低通要解 |H|=1/√2 */
+function f3dB() {
+  var fc = 1 / (2 * Math.PI * P.R * P.C);
+  if (P.kind !== "sk2") return fc;
+  var lo = fc * 0.2, hi = fc * 8, i, mid, m;
+  for (i = 0; i < 80; ++i) {
+    mid = Math.sqrt(lo * hi);
+    m = mag2(mid, fc, P.Q);
+    if (m > Math.SQRT1_2) lo = mid; else hi = mid;
+  }
+  return Math.sqrt(lo * hi);
+}
+/* 通带峰化 dB（Q>0.707 才有） */
+function peakDb() {
+  if (P.kind !== "sk2" || P.Q <= 0.7072) return 0;
+  var fc = 1 / (2 * Math.PI * P.R * P.C);
+  var fp = fc * Math.sqrt(Math.max(0, 1 - 1 / (4 * P.Q * P.Q)));
+  return db(mag2(fp, fc, P.Q));
+}
+
+/* ---------- 绘图 ---------- */
+var F_LO = 10, F_HI = 1e6;   /* 对数横轴范围 */
+var xOf = null;
+
+function axisLog(svg, W, H, padL, padR, padT, padB, yLo, yHi, yTicks, yLabelFmt) {
+  while (svg.firstChild) svg.removeChild(svg.firstChild);
+  var plotW = W - padL - padR, plotH = H - padT - padB;
+  xOf = function (f) {
+    return padL + plotW * (Math.log10(f) - Math.log10(F_LO)) / (Math.log10(F_HI) - Math.log10(F_LO));
+  };
+  var yOf = function (v) { return padT + plotH * (1 - (v - yLo) / (yHi - yLo)); };
+  var i, t;
+
+  /* 竖直十倍频网格 */
+  for (i = Math.log10(F_LO); i <= Math.log10(F_HI); ++i) {
+    var f = Math.pow(10, i);
+    svg.appendChild(el("line", { x1: xOf(f), y1: padT, x2: xOf(f), y2: H - padB,
+      stroke: "#33415566", "stroke-width": 1 }));
+    t = el("text", { x: xOf(f), y: H - padB + 14, "text-anchor": "middle",
+      "font-size": 10, fill: "#64748b" });
+    t.textContent = (f >= 1e6) ? "1M" : ((f >= 1e3) ? "1k" : "10");
+    if (i === Math.log10(F_LO) + 1) t.textContent = "100";
+    svg.appendChild(t);
+  }
+  /* 水平网格 + 标签 */
+  for (i = 0; i < yTicks.length; ++i) {
+    var v = yTicks[i];
+    svg.appendChild(el("line", { x1: padL, y1: yOf(v), x2: W - padR, y2: yOf(v),
+      stroke: "#33415566", "stroke-width": 1 }));
+    t = el("text", { x: padL - 5, y: yOf(v) + 3.5, "text-anchor": "end",
+      "font-size": 10, fill: "#64748b" });
+    t.textContent = yLabelFmt(v);
+    svg.appendChild(t);
+  }
+  return { yOf: yOf, padT: padT, plotH: plotH, W: W, H: H, padL: padL, padR: padR };
+}
+
+function curve(fn, yOf, color, width, dash) {
+  var d = "", i, n = 220;
+  for (i = 0; i <= n; ++i) {
+    var lf = Math.log10(F_LO) + (Math.log10(F_HI) - Math.log10(F_LO)) * i / n;
+    var f = Math.pow(10, lf);
+    var y = yOf(fn(f));
+    if (!isFinite(y)) y = yOf(-80);
+    d += (i === 0 ? "M" : "L") + xOf(f).toFixed(1) + " " + y.toFixed(1);
+  }
+  var a = { d: d, stroke: color, "stroke-width": width, fill: "none" };
+  if (dash) a["stroke-dasharray"] = dash;
+  return el("path", a);
+}
+
+function drawAll(fc) {
+  var W = 680, padL = 50, padR = 12;
+
+  /* ---- 幅频 ---- */
+  var Hm = 260, padTm = 14, padBm = 26;
+  var yLoM = -80, yHiM = 14;
+  var ctxM = axisLog($("magSvg"), W, Hm, padL, padR, padTm, padBm, yLoM, yHiM,
+    [0, -3, -20, -40, -60, -80], function (v) { return v + " dB"; });
+
+  /* 参考 Q=0.707 与 Q=2（仅二阶有意义，一阶时画自己的曲线做淡参考） */
+  var isLP2 = (P.kind === "sk2");
+  if (isLP2) {
+    $("magSvg").appendChild(curve(function (f) { return db(mag2(f, fc, 0.707)); },
+      ctxM.yOf, "#818cf8", 1.2, "5 4"));
+    $("magSvg").appendChild(curve(function (f) { return db(mag2(f, fc, 2)); },
+      ctxM.yOf, "#fbbf24", 1.2, "5 4"));
+  }
+  $("magSvg").appendChild(curve(function (f) { return db(resp(f).mag); },
+    ctxM.yOf, "#38bdf8", 2.4));
+  $("magSvg").appendChild(curve(function (f) { return db(1 / Math.sqrt(1 + (f / fc) * (f / fc))); },
+    ctxM.yOf, "#334155", 1, "2 4"));   /* 一阶渐近参考 */
+
+  /* −3dB 点 */
+  var f3 = f3dB();
+  var x3 = xOf(f3), y3 = ctxM.yOf(-3);
+  $("magSvg").appendChild(el("line", { x1: x3, y1: ctxM.yOf(-3), x2: x3, y2: Hm - padBm,
+    stroke: "#4ade8088", "stroke-width": 1, "stroke-dasharray": "3 3" }));
+  $("magSvg").appendChild(el("circle", { cx: x3, cy: y3, r: 4, fill: "#4ade80" }));
+  var t3 = el("text", { x: x3 + 8, y: y3 - 8, "font-size": 11, fill: "#4ade80" });
+  t3.textContent = "−3dB @ " + fmtHz(f3);
+  $("magSvg").appendChild(t3);
+
+  if (isLP2 && P.Q > 0.7072) {
+    var pk = el("text", { x: padL + 8, y: ctxM.yOf(peakDb()) - 6, "font-size": 11, fill: "#fbbf24" });
+    pk.textContent = "Q=" + P.Q.toFixed(2) + " 峰化 " + peakDb().toFixed(1) +
+      " dB（Q=0.707 无峰化）";
+    $("magSvg").appendChild(pk);
+  }
+
+  /* ---- 相频 ---- */
+  var Hp = 200, padTp = 12, padBp = 26;
+  var phLo = (P.kind === "hp1") ? 0 : -190, phHi = (P.kind === "hp1") ? 95 : 10;
+  var ticks = (P.kind === "hp1") ? [90, 45, 0] : [0, -45, -90, -135, -180];
+  var ctxP = axisLog($("phsSvg"), W, Hp, padL, padR, padTp, padBp, phLo, phHi,
+    ticks, function (v) { return v + "°"; });
+  $("phsSvg").appendChild(curve(function (f) { return resp(f).phs; },
+    ctxP.yOf, "#38bdf8", 2.4));
+  var xp = xOf(fc);
+  $("phsSvg").appendChild(el("line", { x1: xp, y1: padTp, x2: xp, y2: Hp - padBp,
+    stroke: "#4ade8088", "stroke-width": 1, "stroke-dasharray": "3 3" }));
+  var tp = el("text", { x: xp + 8, y: padTp + 14, "font-size": 11, fill: "#4ade80" });
+  tp.textContent = "fc = " + fmtHz(fc) + "（相位 " + resp(fc).phs.toFixed(1) + "°）";
+  $("phsSvg").appendChild(tp);
+}
+
+/* ---------- 主更新 ---------- */
+var PROBE = [100, 500, 1000, 2000, 5000, 9000, 20000];
+
+function update() {
+  var fc = 1 / (2 * Math.PI * P.R * P.C);
+  $("vR").textContent = fmtOhm(P.R);
+  $("vC").textContent = fmtCap(P.C);
+  $("vQ").textContent = P.Q.toFixed(3);
+  $("qSlider").disabled = (P.kind !== "sk2");
+  $("qNote").textContent = (P.kind === "sk2")
+    ? ("Sallen-Key 同相增益 = 3 − 1/Q = " + (3 - 1 / P.Q).toFixed(3) +
+       "；Q=0.707（ζ=0.707）最平坦，Q=2 出现 " + peakDb().toFixed(1) + " dB 峰化")
+    : "（一阶电路没有 Q 这一项）";
+
+  $("oFc").textContent = fmtHz(fc);
+  $("o3dB").textContent = fmtHz(f3dB());
+  var pkd = peakDb();
+  $("oPeak").textContent = pkd > 0.005 ? ("+" + pkd.toFixed(2) + " dB") : "无峰化";
+  $("oAtten").textContent = db(resp(fc * 10).mag).toFixed(1) + " dB";
+
+  drawAll(fc);
+
+  /* 诊断 */
+  var diag = $("diag"), cls = "", msg = "";
+  var at5k = db(resp(5000).mag);
+  if (P.kind === "sk2" && P.Q >= 1.5) {
+    cls = "warn";
+    msg = "Q=" + P.Q.toFixed(2) + "：通带凸起 " + pkd.toFixed(1) + " dB，阶跃过冲约 " +
+      (100 * Math.exp(-Math.PI / Math.sqrt(4 * P.Q * P.Q - 1))).toFixed(0) +
+      "%。想平坦就退到 Q=0.707；想要更陡的边缘才考虑峰化（椭圆/切比雪夫思路）。";
+  } else if (fc > 5000 && P.kind !== "hp1") {
+    cls = "bad";
+    msg = "fc=" + fmtHz(fc) + " 高于 Nyquist（5kHz）——这滤波器在 10kSPS 采样下等于没装，" +
+      "5kHz 处只衰减 " + at5k.toFixed(1) + " dB。抗混叠的 fc 必须压到信号带之上一点点。";
+  } else {
+    cls = "";
+    msg = "fc=" + fmtHz(fc) + "：" +
+      (P.kind === "hp1"
+        ? "高通在 1kHz 信号处衰减 " + db(resp(1000).mag).toFixed(1) +
+          " dB——想让信号带平坦，fc 必须压到信号带之下。"
+        : "信号带（1kHz）内平坦，5kHz（Nyquist）处衰减 " + at5k.toFixed(1) +
+          " dB，9kHz 镜像处衰减 " + db(resp(9000).mag).toFixed(1) +
+          " dB。这是低通该干的活。");
+  }
+  diag.className = "diag" + (cls ? " " + cls : "");
+  diag.textContent = msg;
+
+  /* 表格 */
+  var tb = $("tbody");
+  tb.innerHTML = "";
+  var i;
+  for (i = 0; i < PROBE.length; ++i) {
+    var f = PROBE[i];
+    var cur = db(resp(f).mag);
+    var ref = (P.kind === "sk2") ? db(mag2(f, fc, 0.707)) : cur;
+    var tr = document.createElement("tr");
+    var noteTxt;
+    if (f < 2000) noteTxt = "信号带内：要几乎不衰减";
+    else if (f < 5000) noteTxt = "过渡带";
+    else if (f === 5000) noteTxt = "Nyquist：此处漏过的都会折回来";
+    else noteTxt = "混叠污染带：折叠后落在信号带";
+    var clsTd = (f >= 5000) ? (cur < -20 ? "good" : "over") : "";
+    tr.innerHTML = "<td>" + fmtHz(f) + "</td>" +
+      "<td class='" + clsTd + "'>" + cur.toFixed(1) + "</td>" +
+      "<td>" + ref.toFixed(1) + "</td>" +
+      "<td>" + resp(f).phs.toFixed(1) + "°</td>" +
+      "<td>" + noteTxt + "</td>";
+    tb.appendChild(tr);
+  }
+}
+
+/* ---------- preset ---------- */
+function syncSliders() {
+  $("kind").value = P.kind;
+  $("rSlider").value = val2pos(MAP_R.lo, MAP_R.hi, P.R);
+  $("cSlider").value = val2pos(MAP_C.lo, MAP_C.hi, P.C);
+  $("qSlider").value = Math.round((P.Q - 0.3) / (4 - 0.3) * 100);
+}
+function bind() {
+  $("kind").addEventListener("change", function () { P.kind = this.value; update(); });
+  $("rSlider").addEventListener("input", function () {
+    P.R = pos2val(MAP_R.lo, MAP_R.hi, +this.value); update();
+  });
+  $("cSlider").addEventListener("input", function () {
+    P.C = pos2val(MAP_C.lo, MAP_C.hi, +this.value); update();
+  });
+  $("qSlider").addEventListener("input", function () {
+    P.Q = 0.3 + (+this.value) / 100 * (4 - 0.3); update();
+  });
+  $("pButter").addEventListener("click", function () {
+    P.kind = "sk2"; P.R = 15900; P.C = 0.01e-6; P.Q = 0.707;
+    syncSliders(); update();
+  });
+  $("pPeak").addEventListener("click", function () {
+    P.kind = "sk2"; P.R = 15900; P.C = 0.01e-6; P.Q = 2.0;
+    syncSliders(); update();
+  });
+  $("pAnti").addEventListener("click", function () {
+    /* 1kHz 信号带、10kSPS：fc≈2.2kHz 二阶 Q=0.707 */
+    P.kind = "sk2"; P.R = 7230; P.C = 0.01e-6; P.Q = 0.707;
+    syncSliders(); update();
+  });
+}
+
+syncSliders();
+bind();
+update();
+</script>
+</body>
+</html>

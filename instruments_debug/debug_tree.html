@@ -1,0 +1,278 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>排障决策树 · 第 6 关 · 望闻问切</title>
+<style>
+:root {
+  --bg: #0f172a; --surface: #1e293b; --surface-2: #334155;
+  --ink: #f1f5f9; --ink-muted: #94a3b8; --ink-dim: #64748b;
+  --rule: #334155; --accent: #38bdf8; --accent-2: #818cf8;
+  --ok: #4ade80; --warn: #fbbf24; --bad: #f87171;
+}
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body {
+  background: var(--bg); color: var(--ink);
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", "Microsoft YaHei", sans-serif;
+  font-size: 14px; line-height: 1.7; padding: 24px;
+}
+.mono { font-family: Consolas, "Courier New", monospace; }
+.header { max-width: 1180px; margin: 0 auto 18px; }
+.stage {
+  display: inline-block; background: var(--surface-2); color: var(--accent);
+  border: 1px solid var(--accent); border-radius: 999px;
+  padding: 2px 14px; font-size: 12px; margin-bottom: 10px;
+}
+h1 { font-size: 22px; margin-bottom: 6px; }
+.sub { color: var(--ink-muted); }
+.layout { max-width: 1180px; margin: 0 auto; display: grid; grid-template-columns: 1fr 380px; gap: 16px; align-items: start; }
+.panel {
+  background: var(--surface); border: 1px solid var(--rule);
+  border-radius: 10px; padding: 18px; margin-bottom: 16px;
+}
+.panel h2 { font-size: 15px; color: var(--accent); margin-bottom: 10px; }
+.chains { display: flex; gap: 10px; flex-wrap: wrap; margin-bottom: 14px; }
+.chains button {
+  background: var(--surface-2); color: var(--ink); border: 1px solid var(--rule);
+  border-radius: 8px; padding: 8px 14px; cursor: pointer; font-size: 13px; font-family: inherit;
+}
+.chains button.on { border-color: var(--accent); color: var(--accent); }
+.tree { display: grid; gap: 8px; }
+.node {
+  background: var(--bg); border: 1px solid var(--rule); border-radius: 8px;
+  padding: 10px 14px; cursor: pointer; transition: border-color .15s;
+  display: grid; grid-template-columns: auto 1fr auto; gap: 10px; align-items: center;
+}
+.node:hover { border-color: var(--accent); }
+.node .step { color: var(--ink-dim); font-family: Consolas, monospace; font-size: 12px; }
+.node .q b { display: block; }
+.node .q span { color: var(--ink-muted); font-size: 12.5px; }
+.node .cost { font-family: Consolas, monospace; font-size: 12px; color: var(--ink-dim); white-space: nowrap; }
+.branch { margin-left: 26px; border-left: 2px dashed var(--rule); padding-left: 14px; display: grid; gap: 8px; }
+.node.doom { border-color: var(--bad); }
+.node.safe { border-color: var(--ok); }
+.tag { display: inline-block; border-radius: 6px; padding: 1px 8px; font-size: 12px; font-family: Consolas, monospace; }
+.tag.yes { background: rgba(74,222,128,.12); color: var(--ok); border: 1px solid var(--ok); }
+.tag.no { background: rgba(248,113,113,.12); color: var(--bad); border: 1px solid var(--bad); }
+.side .panel { position: sticky; top: 16px; }
+.hypo { border-left: 3px solid var(--accent-2); background: var(--surface-2); border-radius: 0 8px 8px 0; padding: 10px 12px; margin-bottom: 10px; }
+.hypo h3 { font-size: 13px; color: var(--accent); margin-bottom: 4px; }
+.hypo p { color: var(--ink-muted); font-size: 13px; }
+.safety { border-left: 3px solid var(--warn); background: var(--surface-2); border-radius: 0 8px 8px 0; padding: 10px 12px; }
+.safety h3 { font-size: 13px; color: var(--warn); margin-bottom: 4px; }
+.safety ul { margin-left: 18px; color: var(--ink-muted); font-size: 13px; }
+.reset {
+  width: 100%; margin-top: 12px; background: var(--surface-2); color: var(--ink);
+  border: 1px solid var(--rule); border-radius: 8px; padding: 9px; cursor: pointer; font-family: inherit; font-size: 13px;
+}
+.reset:hover { border-color: var(--accent); color: var(--accent); }
+.wisdom { color: var(--ink-muted); font-size: 13px; }
+.wisdom li { margin-bottom: 8px; margin-left: 18px; }
+.wisdom b { color: var(--ink); }
+a { color: var(--accent); }
+@media (max-width: 900px) { .layout { grid-template-columns: 1fr; } }
+</style>
+</head>
+<body>
+<div class="header">
+  <span class="stage">第 6 关 · 望闻问切</span>
+  <h1>排障决策树：三板斧，刀刀见血</h1>
+  <p class="sub">点每条链路第一层的动作开始走。右侧师傅实时告诉你"为什么测这个、说明什么、注意什么"。返回：<a href="index.html">本关目录</a> · <a href="../硬件学习路线图.html">总路线图</a></p>
+</div>
+
+<div class="layout">
+  <div>
+    <div class="panel">
+      <h2>① 选一条链路</h2>
+      <div class="chains" id="chains"></div>
+      <p style="color:var(--ink-dim);font-size:13px">节点右侧是测量代价（⏱ 越少越好）。好的排障 = 花最小代价买最大信息。</p>
+    </div>
+    <div class="panel">
+      <h2 id="chainTitle">② 决策树</h2>
+      <div class="tree" id="tree"></div>
+    </div>
+  </div>
+
+  <div class="side">
+    <div class="panel">
+      <h2>③ 师傅旁白</h2>
+      <div id="hypoBox"><div class="hypo"><h3>还没开测</h3><p>选一条链路，从第一个动作开始。记住：第一步永远是望闻问切，不是掏万用表。</p></div></div>
+      <div class="safety">
+        <h3>⚠ 安全事项</h3>
+        <ul id="safetyList"><li>带电测量单手操作，另一只手别碰地。</li><li>220V 初级侧没练过就别带电测，先断电查。</li></ul>
+      </div>
+      <button class="reset" id="resetBtn">↺ 重置本链路</button>
+    </div>
+    <div class="panel">
+      <h2>④ 师傅心法</h2>
+      <ol class="wisdom">
+        <li><b>先问后测。</b>"什么时候好的？动了什么？"三个问题常常直接破案，比量一晚上都管用。</li>
+        <li><b>先二分再细量。</b>全板电压一次扫完，一刀切一半；别抱着可疑点抠细节。</li>
+        <li><b>测量有价格。</b>表笔一搭 5 秒，拆焊换件半小时。信息增益要除以代价才是好动作。</li>
+        <li><b>每次只改一个变量。</b>同时换仨件"好了"，你不知道是谁的功劳，下次还得来一遍。</li>
+        <li><b>重启是毁灭证据。</b>能复现的故障，抓现场优先于恢复生产。</li>
+      </ol>
+    </div>
+  </div>
+</div>
+
+<script>
+"use strict";
+// 决策树数据（全部内嵌，无外部依赖）。
+// 每条链路 = 症状 + 一串动作节点；节点含: 问题、为什么、代价、是/否去向
+var CHAINS = [
+  {
+    id: "power", name: "链路 A：板子完全无电",
+    symptom: "插上电源，板子冰凉，任何轨都是 0V，指示灯不亮。",
+    safety: ["市电进来的板子：初级侧高压危险，没练过就只查次级和保险丝。", "换保险丝前必须先找到它熔断的原因，否则换一百根还是烧。"],
+    root: { q: "望闻问切：看烧痕/闻焦味/问过程", why: "免费且零风险。焦味=某处大电流；烧痕直接锁定区域；『插上去啪一声』=入口短路。这一步经常直接破案。", cost: 0, yes: "saw", no: "fuse" },
+    nodes: {
+      saw: { q: "有烧痕/焦味区域？", why: "有→别上电了，断电用电阻档量该区域对地阻抗。没有→老老实实从入口查。", cost: 1, yes: "smellShort", no: "fuse", cls: "doom" },
+      smellShort: { q: "断电量该区域对地电阻", why: "明显低阻(<10Ω)就是短路点。找到发烫的元件：断电、触摸定位温升，或松香/热成像辅助。", cost: 3, leaf: "定位短路元件（常见：电解电容炸、MLCC 裂纹、功率管击穿）。修复后先限流上电验证。" },
+      fuse: { q: "保险丝通断（断电用电阻档）", why: "最入口的一道闸。熔断→说明流过过大电流，禁止直接换上了事；完好→继续往后走。", cost: 1, yes: "fuseOpen", no: "vin", cls: "doom" },
+      fuseOpen: { q: "保险丝熔断", why: "先量保险丝后级对地电阻再决定换不换。后级仍低阻=上游还有短路；后级正常=可能保险丝老化或浪涌。", cost: 2, leaf: "查后级短路 or 浪涌冲击。限流电源设 100mA 上电试探，看电流表再说话。" },
+      vin: { q: "量输入轨 VIN（保险丝后）", why: "有电→故障在 DCDC/LDO 本身或使能；没电→入口路径（保险丝座、自恢复保险丝、防反接 MOS、DC 插座）继续二分。", cost: 1, yes: "railScan", no: "entryPath" },
+      entryPath: { q: "插座→保险丝座→防反接 MOS 逐段量", why: "二分法：量路径中点，一半一半地排。防反接 PMOS 的 Vds 是最容易被忽略的断点。", cost: 2, leaf: "找到断路点：插座虚焊、自恢复保险丝老化、防反接管没开通（查栅极）。" },
+      railScan: { q: "扫一遍所有电源轨电压", why: "全轨 0=主 DCDC 没起/没使能；部分轨正常=故障范围立刻缩小到对应支路。一次动作切掉一半可能性。", cost: 2, yes: "partial", no: "mainDcdc" },
+      partial: { q: "只有一路没有？查该路使能、反馈电阻", why: "DCDC 使能脚电压、反馈分压是否开路。反馈上电阻开路会飙压，下电阻开路会输出为 0。", cost: 2, leaf: "锁定该路变换器外围：使能网络 / 反馈分压 / 该路输出短路保护。" },
+      mainDcdc: { q: "主 DCDC 芯片：供电、使能、EN 分压", why: "芯片没供电或使能电压不够就装死。用示波器看 SW 脚有没有开关动作，一步分清『没工作』和『工作了但没输出』。", cost: 3, leaf: "没波形：查 VIN/EN/BYPASS；有波形没输出：查电感、续流二极管、输出电容是否开路。" }
+    }
+  },
+  {
+    id: "short", name: "链路 B：电源轨短路 / 保险丝烧",
+    symptom: "一上电保险丝就断，或某轨电压被拖到 0，芯片发烫。",
+    safety: ["短路排查禁止稳压源直挂不限流——限流设到几十 mA 试探。", "断电再用电阻档！带电测电阻既不准又毁表。"],
+    root: { q: "断电！拔掉所有电源，等电容放完电", why: "电阻档内部有自己的测试电流源，带电测量读数无意义还可能损坏万用表。放电后摸电感/芯片确认不烫再动手。", cost: 1, yes: "whichRail", no: "whichRail" },
+    nodes: {
+      whichRail: { q: "各轨对地电阻逐条量（重点可疑轨）", why: "哪条轨对地异常低阻，短路就在那条轨上。正常轨看进去是负载，通常 kΩ 级。", cost: 3, yes: "halfSplit", no: "notOnRail" },
+      notOnRail: { q: "轨都正常？查输入侧与相邻板卡", why: "短路可能不在这些轨：输入口、连接器、外接负载倒灌。断开外设再量。", cost: 2, leaf: "断开所有外设/级联板逐段恢复，短路范围就是被断开的最后一段。" },
+      halfSplit: { q: "半板切割：翘电感/断磁珠，把轨分成两半", why: "经典二分。哪半边对地仍低阻，短路就在哪半边。一块复杂板 3~4 刀就能圈到单个元件。", cost: 5, yes: "halfLow", no: "halfOk" },
+      halfLow: { q: "半边内继续二分 or 松香/热成像", why: "元件密度高时，用可调电源往短路点灌 1~2V 限流 1A，看哪个元件先热（热成像最快，松香熔化次之，手指慎用）。", cost: 4, leaf: "定位发热元件。注意：短路的 MLCC 有时'不烫'是因为整片铜皮都在热——用松香看熔化顺序。" },
+      halfOk: { q: "两半都正常了？焊接点/磁珠本身问题", why: "低阻消失了说明故障元件在断开动作里被'断'出来了——回看刚才断开的那颗电感/磁珠本身。", cost: 2, leaf: "检查刚才断开的隔离点本身：磁珠击穿、电感层间短路是常见嫌疑。" }
+    }
+  },
+  {
+    id: "comms", name: "链路 C：通信不通（UART/I2C/SPI）",
+    symptom: "上位机收不到数据 / 从设备无应答 / 数据全是乱码。",
+    safety: ["热电桥插拔：I2C 总线带电插拔会锁死从机，先断总线电源再接探针。", "示波器探头地夹别同时夹两个不同地的点——探头共地会短路。"],
+    root: { q: "望闻问切：换过线吗？波特率/地址改过吗？", why: "通信故障一半以上是配置和物理连接问题。先确认 TX/RX 有没有接反、共地没有，再上仪器。", cost: 0, yes: "physical", no: "waveform" },
+    nodes: {
+      physical: { q: "TX/RX 交叉、共地、电平制式（3.3V vs RS232）", why: "TX 接 TX 是新手第一坑；TTL 直连 RS232 电平芯片会无响应甚至损坏。查完再量波形。", cost: 1, leaf: "改接线/加电平转换。若『之前好的突然坏』跳过此条，直接看波形。" },
+      waveform: { q: "示波器看 TX 线：有没有波形？", why: "有波形→物理层活着，问题在内容/速率；无波形→软件没发、引脚复用错了、或外设根本没跑起来。", cost: 2, yes: "hasWave", no: "noWave" },
+      noWave: { q: "MCU 活了吗：心跳引脚/复位电路/晶振", why: "外设不发的根因常是 MCU 根本没运行。量晶振两脚幅度、复位电平，或跑个翻转 GPIO 的最小程序。", cost: 3, leaf: "锁定固件/时钟/复位域：晶振不起振（负载电容/焊点）、复位被拉低、boot 引脚配置错。" },
+      hasWave: { q: "波形质量：波特率对不对？电平摆幅够吗？", why: "量一位宽度算波特率偏差（>3% 开始出错）；摆幅不足查上拉太弱/线太长/容性负载。", cost: 2, yes: "timingOk", no: "signalBad" },
+      signalBad: { q: "边沿变缓=上拉弱/线长/容性负载", why: "I2C 波形'圆'说明上升沿 RC 太大：上拉阻值太大、线太长、并联器件太多。改上拉再比一次。", cost: 2, leaf: "减小上拉（I2C 常 4.7k→2.2k）、缩短走线、去掉多余并联电容。" },
+      timingOk: { q: "时序内容都对？抓一包看协议层", why: "逻辑分析仪解码：I2C 看 ACK——NACK 说明地址/从机没醒；UART 乱码量两侧晶振精度；SPI 查相位 CPOL/CPHA。", cost: 3, leaf: "协议层问题：从机地址、CRC/校验、CPOL/CPHA 模式、片选时序。软件配置占这类故障 80%。" }
+    }
+  }
+];
+
+var cur = null, path = [];
+var chainsEl = document.getElementById("chains");
+CHAINS.forEach(function (c, i) {
+  var b = document.createElement("button");
+  b.textContent = c.name;
+  b.onclick = function () { start(i); };
+  chainsEl.appendChild(b);
+});
+
+function start(i) {
+  cur = i; path = [];
+  Array.prototype.forEach.call(chainsEl.children, function (b, k) {
+    b.classList.toggle("on", k === i);
+  });
+  document.getElementById("chainTitle").textContent = "② 决策树 — " + CHAINS[i].symptom;
+  document.getElementById("safetyList").innerHTML =
+    CHAINS[i].safety.map(function (s) { return "<li>" + s + "</li>"; }).join("") +
+    "<li>带电测量单手操作；换元件前放电。</li>";
+  narrateRoot();
+  draw();
+}
+
+function narrateRoot() {
+  var c = CHAINS[cur], n = c.root;
+  document.getElementById("hypoBox").innerHTML =
+    '<div class="hypo"><h3>当前假设：' + c.symptom + '</h3><p><b>动作：</b>' + n.q +
+    '<br><b>为什么：</b>' + n.why + '</p></div>';
+}
+
+function draw() {
+  var tree = document.getElementById("tree");
+  tree.innerHTML = "";
+  tree.appendChild(nodeEl(CHAINS[cur].root, true));
+  var curNode = CHAINS[cur].root;
+  var step = 2;
+  for (var d = 0; d < path.length; d++) {
+    var ans = path[d];
+    var nxt = CHAINS[cur].nodes[curNode[ans]];
+    if (!nxt) break;
+    var box = document.createElement("div");
+    box.className = "branch";
+    var lbl = document.createElement("span");
+    lbl.className = "tag " + ans;
+    lbl.textContent = (ans === "yes" ? "是" : "否") + " ↓";
+    box.appendChild(lbl);
+    if (nxt.leaf) {
+      var lf = document.createElement("div");
+      lf.className = "node safe";
+      lf.innerHTML = '<span class="step">★</span><span class="q"><b>定位方向</b><span>' + nxt.leaf + '</span></span><span class="cost"></span>';
+      box.appendChild(lf);
+      tree.appendChild(box);
+      narrate(nxt, ans);
+      break;
+    } else {
+      box.appendChild(nodeEl(nxt, false, step++));
+      tree.appendChild(box);
+      curNode = nxt;
+      narrate(nxt, ans);
+    }
+  }
+}
+
+function nodeEl(n, isRoot, step) {
+  var d = document.createElement("div");
+  d.className = "node" + (n.cls ? " " + n.cls : "");
+  d.innerHTML = '<span class="step">' + (isRoot ? "0" : step) + "</span>" +
+    '<span class="q"><b>' + n.q + "</b><span>" + n.why + "</span></span>" +
+    '<span class="cost">⏱ ' + n.cost + "</span>";
+  if (!n.leaf) {
+    d.onclick = function () { if (path.length < 6) { path.push("yes"); draw(); } };
+  }
+  return d;
+}
+
+function narrate(n, lastAns) {
+  var h = document.getElementById("hypoBox");
+  var extra = path.length >= 5 ? '<p style="color:var(--warn)">已经走了 5 步还没到叶子——回头检查最初的假设是不是错的，这本身就是信息。</p>' : "";
+  h.innerHTML = '<div class="hypo"><h3>' + (n.leaf ? "★ 收敛了" : "当前假设收窄") + "</h3><p><b>上一步答案：</b>" +
+    (lastAns === "yes" ? "是" : "否") + "<br><b>动作：</b>" + (n.q || "收工") +
+    "<br><b>为什么：</b>" + (n.why || n.leaf) + "</p>" + extra + "</div>";
+}
+
+// "否"分支按钮：在每个已展开节点上加一个"否"的小切换
+document.getElementById("tree").addEventListener("click", function (ev) {
+  var t = ev.target;
+  if (t.dataset && t.dataset.no) {
+    // 替换 path 最后一步为 no
+    path[path.length - 1] = "no";
+    delete t.dataset.no;
+    draw();
+  }
+});
+// 简化交互：节点点击 = 走"是"；alt/右键 = 走"否"
+document.getElementById("tree").addEventListener("contextmenu", function (ev) {
+  var node = ev.target.closest(".node");
+  if (!node || path.length >= 6) return;
+  ev.preventDefault();
+  path.push("no");
+  draw();
+});
+
+document.getElementById("resetBtn").onclick = function () { if (cur !== null) start(cur); };
+start(0);
+document.getElementById("hypoBox").insertAdjacentHTML("beforeend",
+  '<p style="color:var(--ink-dim);font-size:12px">提示：左键点节点 = 答案是"是"；右键点节点 = 答案是"否"。</p>');
+</script>
+</body>
+</html>

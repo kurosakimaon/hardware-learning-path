@@ -1,0 +1,312 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>STM32F103 时钟树交互图 · 第 4 关 · 兵器期</title>
+<style>
+:root{
+  --bg:#0f172a; --surface:#1e293b; --surface-2:#334155;
+  --ink:#f1f5f9; --ink-muted:#94a3b8; --ink-dim:#64748b;
+  --rule:#334155; --accent:#38bdf8; --accent-2:#818cf8;
+  --ok:#4ade80; --warn:#fbbf24; --bad:#f87171;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{
+  background:var(--bg);color:var(--ink);
+  font-family:-apple-system,BlinkMacSystemFont,"Segoe UI","PingFang SC","Microsoft YaHei",sans-serif;
+  font-size:14px;line-height:1.7;padding:24px 20px 60px;
+}
+.wrap{max-width:1280px;margin:0 auto}
+a.back{color:var(--accent);text-decoration:none;font-size:13px}
+a.back:hover{text-decoration:underline}
+.head{display:flex;align-items:center;gap:14px;flex-wrap:wrap;margin-bottom:6px}
+.stage{
+  background:linear-gradient(90deg,var(--accent-2),var(--accent));
+  color:#0f172a;font-weight:700;font-size:12px;letter-spacing:1px;
+  padding:3px 12px;border-radius:999px;
+}
+h1{font-size:22px;font-weight:700}
+.sub{color:var(--ink-muted);font-size:13px;margin-bottom:18px}
+.grid{display:grid;grid-template-columns:290px 1fr;gap:16px}
+@media (max-width:1020px){.grid{grid-template-columns:1fr}}
+.panel{background:var(--surface);border:1px solid var(--rule);border-radius:10px;padding:16px}
+.panel h2{font-size:15px;margin-bottom:8px;color:var(--accent)}
+label{display:block;color:var(--ink-muted);font-size:12px;margin:10px 0 4px}
+select{
+  width:100%;background:var(--surface-2);border:1px solid var(--rule);border-radius:6px;
+  color:var(--ink);padding:6px 8px;font-family:Consolas,monospace;font-size:13px;
+}
+.row2{display:flex;gap:8px}
+.row2>div{flex:1}
+button{
+  background:var(--surface-2);border:1px solid var(--rule);color:var(--ink);
+  border-radius:6px;padding:7px 10px;font-size:13px;cursor:pointer;font-family:inherit;width:100%;
+}
+button:hover{border-color:var(--accent);color:var(--accent)}
+button.preset{border-style:dashed;text-align:left;margin-top:8px}
+.ck{display:flex;align-items:center;gap:8px;margin-top:12px;color:var(--ink-muted);font-size:13px}
+.ck input{accent-color:var(--bad);width:16px;height:16px}
+svg{width:100%;height:auto;display:block;background:var(--bg);border:1px solid var(--rule);border-radius:8px}
+.swg rect{fill:var(--surface);stroke:var(--rule);stroke-width:1}
+.swg text{fill:var(--ink-muted);font-size:11px;font-family:Consolas,monospace}
+.swg .cap{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI","PingFang SC","Microsoft YaHei",sans-serif;font-size:11px;fill:var(--ink-dim)}
+path.wire{fill:none;stroke:var(--rule);stroke-width:1.5}
+path.wire.on{stroke:var(--accent);stroke-width:3}
+path.wire.bad{stroke:var(--bad);stroke-width:3}
+.boxbad{stroke:var(--bad) !important}
+.f{font-weight:700}
+.fok{fill:var(--ok)} .fwarn{fill:var(--warn)} .fbad{fill:var(--bad)}
+.wlist{margin-top:12px;display:flex;flex-direction:column;gap:6px}
+.witem{border-radius:6px;padding:7px 12px;font-size:13px;border:1px solid var(--rule);background:var(--surface-2)}
+.witem.ok{border-color:var(--ok);color:var(--ok)}
+.witem.warn{border-color:var(--warn);color:var(--warn)}
+.witem.bad{border-color:var(--bad);color:var(--bad);font-weight:700}
+.note{
+  margin-top:16px;background:var(--surface);border-left:3px solid var(--accent);
+  border-radius:0 8px 8px 0;padding:12px 14px;color:var(--ink-muted);font-size:13px;
+}
+.note b{color:var(--ink)}
+.mono{font-family:Consolas,monospace}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <a class="back" href="../硬件学习路线图.html">← 返回总路线图</a>
+  <div class="head" style="margin-top:8px">
+    <span class="stage">第 4 关 · 兵器期</span>
+    <h1>STM32F103 时钟树交互图 —— 电流到哪一级，跑多快，一目了然</h1>
+  </div>
+  <p class="sub">师傅原话：「芯片点不亮、跑着跑着死机、USB 认不出来，十有八九是时钟树配错了。你得先在脑子里把这条水流图画清楚：源头是 HSE 还是 HSI，经过 PLL 这个增压泵，到 AHB 主干道，再分给 APB1、APB2 两条支路，每一段都有耐压上限——超压不是烧管子，是逻辑出错、寿命折寿。」亮的线是通的，红的线是超限的。</p>
+
+  <div class="grid">
+    <div class="panel">
+      <h2>① 时钟源</h2>
+      <label>系统时钟源 SW</label>
+      <select id="sw">
+        <option value="HSI">HSI（内部 RC 8MHz）</option>
+        <option value="HSE">HSE（外部晶振 8MHz）</option>
+        <option value="PLL" selected>PLL（锁相环倍频）</option>
+      </select>
+      <label>PLL 输入源</label>
+      <select id="pllsrc">
+        <option value="HSE" selected>HSE（8MHz）</option>
+        <option value="HSE2">HSE ÷2（4MHz）</option>
+        <option value="HSI2">HSI ÷2（4MHz）</option>
+      </select>
+      <label>PLL 倍频 PLLMUL</label>
+      <select id="mul"></select>
+      <div class="ck">
+        <input type="checkbox" id="hsefail">
+        <span>模拟 HSE 不起振（晶振虚焊/负载电容错）</span>
+      </div>
+      <div class="tip" style="font-size:12px;color:var(--ink-dim)">勾上后 CSS（时钟安全系统）会把 SYSCLK 自动打回 HSI——固件如果死等 HSERDY，压根等不到这一步就卡死了。</div>
+
+      <h2 style="margin-top:18px">② 总线预分频</h2>
+      <div class="row2">
+        <div><label>AHB (HPRE)</label>
+          <select id="ahb"><option>1</option><option>2</option><option>4</option><option>8</option><option>16</option></select>
+        </div>
+        <div><label>APB1 (PPRE1)</label>
+          <select id="apb1"><option>1</option><option selected>2</option><option>4</option><option>8</option><option>16</option></select>
+        </div>
+        <div><label>APB2 (PPRE2)</label>
+          <select id="apb2"><option selected>1</option><option>2</option><option>4</option><option>8</option><option>16</option></select>
+        </div>
+      </div>
+      <div class="row2">
+        <div><label>ADC 预分频 (from PCLK2)</label>
+          <select id="adc"><option>2</option><option>4</option><option selected>6</option><option>8</option><option>10</option><option>12</option><option>14</option><option>16</option></select>
+        </div>
+        <div><label>USB 预分频 (from PLL)</label>
+          <select id="usb"><option value="1" selected>PLL ÷1</option><option value="1.5">PLL ÷1.5</option></select>
+        </div>
+      </div>
+
+      <h2 style="margin-top:18px">③ 预设场景</h2>
+      <button class="preset" id="p1">📘 教科书 72MHz + USB<br><span style="color:var(--ink-dim);font-size:12px">HSE ×9 → 72/36/72，ADC 12MHz；USB ÷1.5 → 48MHz，两不误</span></button>
+      <button class="preset" id="p2">🩸 HSE 不起振退回 HSI 后果<br><span style="color:var(--ink-dim);font-size:12px">CSS 打回 8MHz：全片慢 9 倍，延时、波特率、定时器全废</span></button>
+      <button class="preset" id="p3">💥 APB1 配错超限<br><span style="color:var(--ink-dim);font-size:12px">APB1 忘了 ÷2 → PCLK1=72MHz，超 36MHz 上限，外设总线超频</span></button>
+      <button class="preset" id="p4" style="margin-top:8px">🔌 低功耗 48MHz + USB<br><span style="color:var(--ink-dim);font-size:12px">HSE ×6 = 48MHz，USB ÷1 = 48MHz；CPU 也只有 48MHz，省电但慢</span></button>
+    </div>
+
+    <div>
+      <div class="panel">
+        <svg id="tree" viewBox="0 0 1000 560" class="swg" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="STM32F103 时钟树">
+          <!-- 源 -->
+          <rect x="24" y="34" width="110" height="36" rx="6"/><text x="79" y="49" text-anchor="middle" class="f" id="t_hsi">HSI 8MHz</text><text x="79" y="63" text-anchor="middle" class="cap">内部 RC ±1%</text>
+          <rect x="24" y="100" width="110" height="36" rx="6" id="b_hse"/><text x="79" y="115" text-anchor="middle" class="f" id="t_hse">HSE 8MHz</text><text x="79" y="129" text-anchor="middle" class="cap" id="t_hsecap">外部晶振 ±20ppm</text>
+          <!-- ÷2 分频 -->
+          <rect x="180" y="34" width="56" height="36" rx="6"/><text x="208" y="56" text-anchor="middle">÷2</text>
+          <rect x="180" y="100" width="56" height="36" rx="6"/><text x="208" y="122" text-anchor="middle">÷2</text>
+          <!-- PLL 输入 mux -->
+          <circle cx="300" cy="90" r="13"/><text x="300" y="94" text-anchor="middle">M</text>
+          <!-- PLL -->
+          <rect x="350" y="66" width="130" height="48" rx="8" id="b_pll"/>
+          <text x="415" y="86" text-anchor="middle" class="f" id="t_pll">PLL ×9</text>
+          <text x="415" y="102" text-anchor="middle" class="cap" id="t_pllout">→ 72 MHz</text>
+          <!-- SW -->
+          <circle cx="560" cy="90" r="15"/><text x="560" y="95" text-anchor="middle">SW</text>
+          <text x="560" y="60" text-anchor="middle" class="cap" id="t_sw">SYSCLK = 72 MHz</text>
+          <!-- AHB 预分频 -->
+          <rect x="640" y="72" width="86" height="38" rx="6" id="b_ahb"/>
+          <text x="683" y="88" text-anchor="middle" id="t_ahb">÷1</text>
+          <text x="683" y="103" text-anchor="middle" class="f" id="t_hclk">72 MHz</text>
+          <!-- 主干道 -->
+          <text x="760" y="84" class="cap">HCLK（AHB 主干道 ≤72）</text>
+          <text x="760" y="100" class="f" id="t_hclk2">72 MHz</text>
+          <text x="760" y="116" class="cap">DMA / SRAM / FLASH / GPIO 时钟</text>
+          <!-- APB1 -->
+          <rect x="820" y="150" width="86" height="38" rx="6" id="b_apb1"/>
+          <text x="863" y="166" text-anchor="middle" id="t_apb1">÷2</text>
+          <text x="863" y="181" text-anchor="middle" class="f" id="t_pclk1">36 MHz</text>
+          <text x="820" y="206" class="cap">APB1 ≤36：TIM2-7 · USART2-5 · I2C1/2 · SPI2 · CAN</text>
+          <!-- APB2 -->
+          <rect x="820" y="240" width="86" height="38" rx="6" id="b_apb2"/>
+          <text x="863" y="256" text-anchor="middle" id="t_apb2">÷1</text>
+          <text x="863" y="271" text-anchor="middle" class="f" id="t_pclk2">72 MHz</text>
+          <text x="820" y="296" class="cap">APB2 ≤72：TIM1/8/9-11 · USART1 · SPI1 · ADC1/2 · GPIO</text>
+          <!-- ADC -->
+          <rect x="820" y="330" width="86" height="38" rx="6" id="b_adc"/>
+          <text x="863" y="346" text-anchor="middle" id="t_adc">÷6</text>
+          <text x="863" y="361" text-anchor="middle" class="f" id="t_adcclk">12 MHz</text>
+          <text x="820" y="386" class="cap">ADC 时钟 ≤14：采样保持时间按它算</text>
+          <!-- USB -->
+          <rect x="360" y="440" width="110" height="40" rx="6" id="b_usb"/>
+          <text x="415" y="457" text-anchor="middle" id="t_usb">÷1</text>
+          <text x="415" y="473" text-anchor="middle" class="f" id="t_usbclk">72 MHz</text>
+          <text x="360" y="502" class="cap">USB 时钟（PLL 经 ÷1/÷1.5）：必须正好 48 MHz；CAN 用 PCLK1</text>
+          <!-- 走线 -->
+          <path class="wire" id="p_hsi_dir"  d="M 134 44 L 160 44 L 160 16 L 560 16 L 560 75"/>
+          <path class="wire" id="p_hsi_h2"   d="M 134 58 L 180 58"/>
+          <path class="wire" id="p_h2i_mux"  d="M 236 52 L 268 52 L 268 80 L 289 84"/>
+          <path class="wire" id="p_hse_h2"   d="M 134 118 L 180 118"/>
+          <path class="wire" id="p_h2e_mux"  d="M 236 118 L 268 118 L 268 100 L 289 96"/>
+          <path class="wire" id="p_hse_mux"  d="M 134 104 L 152 104 L 152 90 L 287 90"/>
+          <path class="wire" id="p_mux_pll"  d="M 313 90 L 350 90"/>
+          <path class="wire" id="p_pll_sw"   d="M 480 90 L 545 90"/>
+          <path class="wire" id="p_hse_dir"  d="M 100 136 L 100 152 L 540 152 L 540 104 L 548 100"/>
+          <path class="wire" id="p_sw_ahb"   d="M 575 90 L 640 90"/>
+          <path class="wire" id="p_ahb_bus"  d="M 726 90 L 748 90 L 748 169"/>
+          <path class="wire" id="p_bus_apb2" d="M 748 169 L 748 259 L 820 259"/>
+          <path class="wire" id="p_bus_apb1" d="M 748 169 L 820 169"/>
+          <path class="wire" id="p_p2_adc"   d="M 906 259 L 926 259 L 926 349 L 906 349"/>
+          <path class="wire" id="p_pll_usb"  d="M 415 114 L 415 440"/>
+          <path class="wire" id="p_hclk_lab" d="M 726 90 L 752 90"/>
+        </svg>
+        <div class="wlist" id="warns"></div>
+      </div>
+      <div class="note">
+        <b>老师傅点拨：</b>三条铁律。① <b>APB1 ≤ 36MHz</b>：F103 的外设时钟域分两层，APB1 上挂的东西（串口 2-5、I2C、CAN、TIM2-7）耐压就只有 36，你把 APB1 分频忘配，72MHz 灌进去，轻则 I2C 时序错乱、USART 波特率翻倍，重则芯片长期超频早夭。② <b>ADC ≤ 14MHz</b>：ADC 时钟超了，采样保持时间物理上不够，读出来的数看着挺像那么回事，其实全是噪声。③ <b>USB 必须恰好 48MHz</b>：USB 预分频只有 ÷1 和 ÷1.5 两档，所以 PLL 输出必须是 48MHz（÷1）或 72MHz（÷1.5）。8MHz HSE ×9 = 72MHz，CPU 跑 72MHz，USB 走 72÷1.5 = 48MHz——一颗 PLL 同时喂饱两者，这是 F103 最经典的配置。若 PLL 只跑到 48MHz（HSE ×6），USB 用 ÷1，但 CPU 也跟着只有 48MHz。真正无解的是 PLL 输出既不是 48MHz 也不是 72MHz 的怪组合；选型时先定晶振和 PLL，再选 USB 分频，顺序不能反。注意 CAN 的时钟来自 PCLK1（APB1），不是这个 48MHz USB 时钟。<br>
+        <b>HSE 不起振怎么办：</b>晶振负载电容算错、走线太长、虚焊，都会让 HSE 起振失败。正规写法是轮询 HSERDY 带超时，超时就退回 HSI 并把所有依赖波特率/延时的模块按 8MHz 重算；裸机最坑的死法是 <span class="mono">while(!(RCC->CR &amp; HSERDY));</span>——永远等不到，现象是「上电没反应」，你还会以为是芯片坏了。
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+"use strict";
+const $=id=>document.getElementById(id);
+(function(){ const s=$('mul'); for(let m=1;m<=16;m++){ const o=document.createElement('option'); o.value=m; o.textContent='×'+m; if(m===9)o.selected=true; s.appendChild(o);} })();
+
+function calc(){
+  const wantSw=$('sw').value;
+  const hseFail=$('hsefail').checked;
+  const hseOK=!hseFail;
+  const pllsrc=$('pllsrc').value, mul=+$('mul').value;
+  const ahb=+$('ahb').value, apb1=+$('apb1').value, apb2=+$('apb2').value;
+  const adc=+$('adc').value, usbk=+$('usb').value;
+  // PLL 输入频率
+  const pllIn = (pllsrc==='HSE')?8 : 4; // MHz
+  const pllSrcOK = (pllsrc==='HSI2') ? true : hseOK;
+  const pllOut = pllIn*mul;
+  // CSS 回退：需要 HSE 而 HSE 挂了 → SYSCLK 打回 HSI
+  let sw=wantSw, cssFallback=false;
+  if(hseFail && (wantSw==='HSE' || (wantSw==='PLL' && !pllSrcOK))){ sw='HSI'; cssFallback=true; }
+  const sysclk = sw==='HSI'?8 : (sw==='HSE'?8 : pllOut);
+  const hclk=sysclk/ahb, pclk1=hclk/apb1, pclk2=hclk/apb2, adcclk=pclk2/adc;
+  const usbclk = pllSrcOK? pllOut/usbk : 0;
+  return {wantSw:wantSw, sw:sw, hseFail:hseFail, hseOK:hseOK, pllsrc:pllsrc, mul:mul,
+          pllIn:pllIn, pllSrcOK:pllSrcOK, pllOut:pllOut, cssFallback:cssFallback,
+          sysclk:sysclk, ahb:ahb, hclk:hclk, apb1:apb1, pclk1:pclk1, apb2:apb2, pclk2:pclk2,
+          adc:adc, adcclk:adcclk, usbk:usbk, usbclk:usbclk};
+}
+function fmt(v){ return (Math.round(v*100)/100).toString().replace(/\.?0+$/,''); }
+function setF(id, txt, v, ok){ const el=$(id); el.textContent=txt; el.setAttribute('class','f '+(ok?'fok':'fbad')); }
+
+function render(){
+  const c=calc();
+  // 文字
+  $('t_hse').setAttribute('class','f '+(c.hseOK?'fok':'fbad'));
+  $('t_hse').textContent='HSE 8MHz'+(c.hseOK?'':' ✕不起振');
+  $('t_hsecap').textContent = c.hseOK? '外部晶振 ±20ppm' : 'CSS 已接管';
+  $('t_hsi').setAttribute('class','f '+((c.sw==='HSI')?'fok':'f'));
+  $('t_pll').textContent='PLL ×'+c.mul+(c.pllsrc==='HSE'?'':(c.pllsrc==='HSE2'?' (HSE÷2)':' (HSI÷2)'));
+  $('t_pllout').textContent='→ '+fmt(c.pllOut)+' MHz'+(c.pllSrcOK?'':'（源丢失）');
+  $('b_pll').setAttribute('class', (c.sw==='PLL'&&!c.pllSrcOK)?'boxbad':'');
+  $('t_sw').textContent='SYSCLK = '+fmt(c.sysclk)+' MHz'+(c.cssFallback?'（CSS 回退）':(c.sw!==c.wantSw?'（未生效）':''));
+  $('t_ahb').textContent='÷'+c.ahb; $('t_apb1').textContent='÷'+c.apb1;
+  $('t_apb2').textContent='÷'+c.apb2; $('t_adc').textContent='÷'+c.adc;
+  $('t_usb').textContent='PLL ÷'+c.usbk;
+  setF('t_hclk', fmt(c.hclk), 0, c.hclk<=72);
+  setF('t_hclk2', fmt(c.hclk)+' MHz', 0, c.hclk<=72);
+  setF('t_pclk1', fmt(c.pclk1)+' MHz', 0, c.pclk1<=36);
+  setF('t_pclk2', fmt(c.pclk2)+' MHz', 0, c.pclk2<=72);
+  setF('t_adcclk', fmt(c.adcclk)+' MHz', 0, c.adcclk<=14);
+  setF('t_usbclk', c.usbclk>0?fmt(c.usbclk)+' MHz':'—', 0, c.usbclk>0&&Math.abs(c.usbclk-48)<0.01);
+  ['b_ahb','b_apb1','b_apb2','b_adc','b_usb'].forEach(b=>$(b).setAttribute('class',''));
+  if(c.hclk>72)$('b_ahb').setAttribute('class','boxbad');
+  if(c.pclk1>36)$('b_apb1').setAttribute('class','boxbad');
+  if(c.pclk2>72)$('b_apb2').setAttribute('class','boxbad');
+  if(c.adcclk>14)$('b_adc').setAttribute('class','boxbad');
+  if(!(c.usbclk>0&&Math.abs(c.usbclk-48)<0.01))$('b_usb').setAttribute('class','boxbad');
+
+  // 走线：先全灭再点亮
+  const off=['p_hsi_dir','p_hsi_h2','p_h2i_mux','p_hse_h2','p_h2e_mux','p_hse_mux','p_mux_pll','p_pll_sw','p_hse_dir','p_sw_ahb','p_ahb_bus','p_bus_apb2','p_bus_apb1','p_p2_adc','p_pll_usb'];
+  off.forEach(p=>$(p).setAttribute('class','wire'));
+  const on=p=>$(p).setAttribute('class','wire on');
+  const onBad=p=>$(p).setAttribute('class','wire bad');
+  // 源 → 下游
+  if(c.pllSrcOK && c.pllOut>72 && (c.sw==='PLL')) onBad('p_pll_sw'); else if(c.sw==='PLL'&&c.pllSrcOK) on('p_pll_sw');
+  if(c.sw!=='PLL' && c.pllSrcOK && c.pllOut>72) onBad('p_pll_sw'); // PLL 开着但没用也超限：标红提醒
+  if(c.sw==='PLL'&&c.pllSrcOK) on('p_mux_pll');
+  if(c.pllsrc==='HSE'){ if(c.hseOK) on('p_hse_mux'); }
+  else if(c.pllsrc==='HSE2'){ if(c.hseOK){ on('p_hse_h2'); on('p_h2e_mux'); } }
+  else { on('p_hsi_h2'); on('p_h2i_mux'); }
+  if(c.sw==='HSI'){ on('p_hsi_dir'); }
+  if(c.sw==='HSE'){ on('p_hse_dir'); }
+  on('p_sw_ahb'); on('p_ahb_bus'); on('p_bus_apb1'); on('p_bus_apb2');
+  if(c.pclk1>36){ $('p_bus_apb1').setAttribute('class','wire bad'); }
+  if(c.pclk2>72){ $('p_bus_apb2').setAttribute('class','wire bad'); }
+  on('p_p2_adc'); if(c.adcclk>14){ $('p_p2_adc').setAttribute('class','wire bad'); }
+  if(c.pllSrcOK) on('p_pll_usb');
+  if(c.hclk>72){ $('p_sw_ahb').setAttribute('class','wire bad'); }
+
+  // 告警清单
+  const w=[];
+  if(c.hseFail) w.push(['bad','HSE 不起振：晶振电路有问题（负载电容/走线/虚焊）。CSS 把 SYSCLK 打回 HSI '+fmt(c.sysclk)+'MHz——如果你按 72MHz 配了波特率和延时，现在串口是乱码、定时慢 9 倍。']);
+  if(c.pllSrcOK && c.pllOut>72) w.push(['bad','PLL 输出 '+fmt(c.pllOut)+'MHz 超过 72MHz 上限：这是超频。STM32F103 数据手册写得明白，PLL 输出最大 72MHz。']);
+  if(c.hclk>72) w.push(['bad','HCLK='+fmt(c.hclk)+'MHz 超过 72MHz：Flash 访问跟不上，典型现象是跑飞、HardFault。']);
+  if(c.pclk1>36) w.push(['bad','PCLK1='+fmt(c.pclk1)+'MHz 超过 APB1 上限 36MHz：I2C/USART2-5/CAN/TIM2-7 全部在超频工作。查 HPRE 和 PPRE1。']);
+  if(c.pclk2>72) w.push(['bad','PCLK2='+fmt(c.pclk2)+'MHz 超过 72MHz。']);
+  if(c.adcclk>14) w.push(['bad','ADCCLK='+fmt(c.adcclk)+'MHz 超过 14MHz：采样精度没保证，ADC 读数会"看起来很稳但全是错的"。']);
+  if(!(c.usbclk>0&&Math.abs(c.usbclk-48)<0.01)) w.push(['warn','USB 时钟='+ (c.usbclk>0?fmt(c.usbclk)+'MHz':'—') +'，不是 48MHz：接 USB 必枚举失败。想要 USB，PLL 只能是 48MHz（÷1）或 72MHz（÷1.5）。']);
+  if(w.length===0) w.push(['ok','配置合法：SYSCLK='+fmt(c.sysclk)+'MHz，HCLK='+fmt(c.hclk)+'，PCLK1='+fmt(c.pclk1)+'，PCLK2='+fmt(c.pclk2)+'，ADC='+fmt(c.adcclk)+'MHz。这是一份能出厂的时钟配置。']);
+  $('warns').innerHTML=w.map(x=>'<div class="witem '+x[0]+'">'+x[1]+'</div>').join('');
+}
+
+function preset(a,b,c_,d,e,f,g,h){
+  $('sw').value=a; $('pllsrc').value=b; $('mul').value=c_; $('hsefail').checked=d;
+  $('ahb').value=e; $('apb1').value=f; $('apb2').value=g; $('adc').value=h.adc||'6'; $('usb').value=h.usb||'1';
+  render();
+}
+['sw','pllsrc','mul','ahb','apb1','apb2','adc','usb'].forEach(id=>$(id).addEventListener('change',render));
+$('hsefail').addEventListener('change',render);
+$('p1').addEventListener('click',()=>preset('PLL','HSE',9,false,'1','2','1',{adc:'6',usb:'1.5'}));
+$('p2').addEventListener('click',()=>{ $('sw').value='PLL'; $('pllsrc').value='HSE'; $('mul').value=9; $('hsefail').checked=true; $('ahb').value='1'; $('apb1').value='2'; $('apb2').value='1'; $('adc').value='6'; $('usb').value='1'; render(); });
+$('p3').addEventListener('click',()=>preset('PLL','HSE',9,false,'1','1','1',{adc:'8',usb:'1.5'}));
+$('p4').addEventListener('click',()=>preset('PLL','HSE',6,false,'1','2','1',{adc:'6',usb:'1'}));
+render();
+</script>
+</body>
+</html>

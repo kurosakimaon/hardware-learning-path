@@ -1,0 +1,215 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>第 6 关 · 望闻问切 — 仪器与排障心法</title>
+<style>
+:root {
+  --bg: #0f172a; --surface: #1e293b; --surface-2: #334155;
+  --ink: #f1f5f9; --ink-muted: #94a3b8; --ink-dim: #64748b;
+  --rule: #334155; --accent: #38bdf8; --accent-2: #818cf8;
+  --ok: #4ade80; --warn: #fbbf24; --bad: #f87171;
+  --mono: Consolas, "Cascadia Mono", "Courier New", monospace;
+}
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body {
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", "Microsoft YaHei", sans-serif;
+  background: var(--bg); color: var(--ink);
+  line-height: 1.7; font-size: 14px; padding: 30px 20px 70px;
+}
+.container { max-width: 1120px; margin: 0 auto; }
+.back { display: inline-block; margin-bottom: 18px; color: var(--accent); text-decoration: none; font-size: 13px; }
+.back:hover { text-decoration: underline; }
+.header { text-align: center; margin-bottom: 30px; }
+.header .stage {
+  display: inline-block; font-size: 12px; letter-spacing: .12em;
+  color: var(--accent); border: 1px solid var(--accent);
+  border-radius: 999px; padding: 3px 14px; margin-bottom: 14px;
+}
+.header h1 {
+  font-size: 2rem; margin-bottom: 10px;
+  background: linear-gradient(135deg, var(--accent), var(--accent-2));
+  -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent;
+}
+.header p { color: var(--ink-muted); font-size: 14px; max-width: 760px; margin: 0 auto; }
+.panel {
+  background: var(--surface); border: 1px solid var(--rule);
+  border-radius: 14px; padding: 22px 26px; margin-bottom: 22px;
+}
+.panel h2 { font-size: 16px; color: var(--accent); margin-bottom: 12px; }
+.panel > p { color: var(--ink-muted); font-size: 13.5px; }
+.cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 16px; margin: 14px 0 4px; }
+.card {
+  background: var(--bg); border: 1px solid var(--rule); border-radius: 12px;
+  padding: 16px 18px; text-decoration: none; color: inherit; display: block;
+  position: relative; overflow: hidden; transition: transform .18s, border-color .18s;
+}
+.card::before {
+  content: ''; position: absolute; top: 0; left: 0; right: 0; height: 3px;
+  background: linear-gradient(90deg, var(--accent), var(--accent-2));
+}
+.card:hover { transform: translateY(-3px); border-color: var(--accent); }
+.card .no { font-family: var(--mono); font-size: 11px; color: var(--ink-dim); margin-bottom: 5px; }
+.card .title { font-size: 15px; font-weight: 700; margin-bottom: 6px; }
+.card .title code { font-family: var(--mono); color: var(--accent); font-size: 14px; }
+.card .desc { font-size: 12.5px; color: var(--ink-muted); line-height: 1.65; }
+.card .desc b { color: var(--ink); }
+.card .tags { margin-top: 10px; display: flex; gap: 7px; flex-wrap: wrap; }
+.tag { font-size: 10.5px; padding: 2px 9px; border-radius: 999px; background: var(--surface-2); color: var(--ink-muted); }
+.tag.star { background: rgba(56,189,248,.16); color: var(--accent); }
+.tag.tool { background: rgba(129,140,248,.16); color: var(--accent-2); }
+.tag.live { background: rgba(74,222,128,.14); color: var(--ok); }
+.order { counter-reset: st; margin-top: 10px; }
+.order li {
+  list-style: none; counter-increment: st;
+  padding: 10px 0 10px 46px; position: relative;
+  border-bottom: 1px dashed var(--rule); color: var(--ink-muted); font-size: 13.5px;
+}
+.order li:last-child { border-bottom: none; }
+.order li::before {
+  content: counter(st); position: absolute; left: 6px; top: 10px;
+  width: 26px; height: 26px; border-radius: 50%;
+  background: linear-gradient(135deg, var(--accent), var(--accent-2));
+  color: #0b1220; font-weight: 700; font-size: 13px;
+  display: flex; align-items: center; justify-content: center;
+}
+.order code { font-family: var(--mono); color: var(--accent); font-size: 12.5px; }
+.order b { color: var(--ink); }
+.pit { margin-top: 10px; }
+.pit li { margin: 0 0 10px 20px; color: var(--ink-muted); font-size: 13.5px; }
+.pit li b { color: var(--bad); }
+.pit li em { color: var(--ink); font-style: normal; }
+pre.cmd {
+  background: #0b1220; border: 1px solid var(--rule); border-radius: 9px;
+  padding: 13px 16px; font-family: var(--mono); font-size: 12.5px;
+  line-height: 1.9; overflow-x: auto; margin-top: 10px;
+}
+pre.cmd .c { color: var(--ink-dim); }
+pre.cmd .k { color: var(--accent); }
+.note {
+  margin-top: 12px; padding: 10px 14px; border-left: 3px solid var(--warn);
+  background: rgba(251,191,36,.07); border-radius: 0 8px 8px 0;
+  font-size: 12.5px; color: var(--ink-muted);
+}
+.note b { color: var(--warn); }
+</style>
+</head>
+<body>
+<div class="container">
+
+  <a class="back" href="../硬件学习路线图.html">← 返回总路线图</a>
+
+  <div class="header">
+    <div class="stage">第 6 关 · 望闻问切</div>
+    <h1>仪器与排障心法</h1>
+    <p>
+      仪器是硬件工程师的听诊器和手术刀。这一关不背参数表，只练三件事：
+      <b style="color:var(--ink)">仪器的物理模型</b>（带宽/采样率/位数/输入阻抗怎么互相打架）、
+      <b style="color:var(--ink)">探头的学问</b>（探头是电路的一部分，不是一根线）、
+      <b style="color:var(--ink)">排障方法论</b>（望闻问切 + 二分法，每一步都在缩小包围圈）。
+      8 个文件全部离线：gcc 编译即跑，HTML 双击即开。
+    </p>
+  </div>
+
+  <div class="panel">
+    <h2>⌨️ 编译速查（MSYS2 / gcc 16.2，零警告标准）</h2>
+    <pre class="cmd"><span class="c"># 中文输出防乱码：每个新控制台先执行 chcp 65001</span>
+<span class="k">chcp 65001</span>
+<span class="c"># 三个 C 示例逐条编译（-Wall -Wextra 必须零警告）</span>
+<span class="k">gcc -std=c17 -O2 -Wall -Wextra 01_scope_model.c -o 01_scope_model.exe</span>
+<span class="k">gcc -std=c17 -O2 -Wall -Wextra 02_measurement_errors.c -o 02_measurement_errors.exe</span>
+<span class="k">gcc -std=c17 -O2 -Wall -Wextra 03_debug_bisection.c -o 03_debug_bisection.exe</span>
+<span class="k">.\01_scope_model.exe</span>          <span class="c"># 混叠 100kHz、探头误差 48%、垂直位数塌缩</span>
+<span class="k">.\02_measurement_errors.exe</span>   <span class="c"># 表笔负载 -4.8%、不确定度 U=±47Ω、10A 档量 6mA</span>
+<span class="k">.\03_debug_bisection.exe</span>      <span class="c"># 贪心 2.2 步 vs 乱测 4.6 步，8 步封顶</span></pre>
+    <div class="note">
+      <b>开工第一军规：</b>换探头先做补偿、带电先确认档位——电阻档/电流档搭上有电压的节点，
+      表的保险丝（或表）就没了。每个 .c 顶部注释块写明了"预期看到什么"，跑完对答案。
+    </div>
+  </div>
+
+  <div class="panel">
+    <h2>📁 文件清单（8 个，全部离线可用）</h2>
+    <div class="cards">
+      <a class="card" href="tutorial.md">
+        <div class="no">MAP · 带教手册</div>
+        <div class="title"><code>tutorial.md</code></div>
+        <div class="desc">师傅的带教课本：方法论、7 条学习目标、13 个必踩的坑、5 道动手作业、通关标准。开工前通读，啃完每个文件回来对照。</div>
+        <div class="tags"><span class="tag">地图</span><span class="tag">纯文本</span></div>
+      </a>
+      <a class="card" href="01_scope_model.c">
+        <div class="no">STEP 01 · 主菜</div>
+        <div class="title"><code>01_scope_model.c</code></div>
+        <div class="desc">示波器整条链路建模：信号 → 探头负载 → 一阶带宽 → 存储深度降采样 → 垂直量化。三个演示：欠采样混叠 f_alias=|f−round(f/fs)·fs|、带宽不足边沿变胖、档位过大有效位数塌到 4 位。附选型建议输出器。</div>
+        <div class="tags"><span class="tag star">★ 核心</span><span class="tag live">gcc 单文件</span></div>
+      </a>
+      <a class="card" href="02_measurement_errors.c">
+        <div class="no">STEP 02 · 主菜</div>
+        <div class="title"><code>02_measurement_errors.c</code></div>
+        <div class="desc">万用表误差链路：±(%读数+N字) 模型、10MΩ 表笔量高阻分压点的负载误差（−4.8% 起步）、3½ vs 6½ 分辨 1mV 漂移、多次测量合成不确定度 U(k=2)、10A 档量 6mA 的惨案。</div>
+        <div class="tags"><span class="tag star">★ 核心</span><span class="tag live">gcc 单文件</span></div>
+      </a>
+      <a class="card" href="03_debug_bisection.c">
+        <div class="no">STEP 03 · 主菜</div>
+        <div class="title"><code>03_debug_bisection.c</code></div>
+        <div class="desc">系统化排障模拟器：5 路电源板注入 6 种故障，测量动作各有代价；贪心策略按"最坏分组 ÷ 代价"选下一步，对比随机乱测。固定种子可复现：师傅平均 2.2 步、乱测 4.6 步，单故障 ≤8 步封顶。</div>
+        <div class="tags"><span class="tag star">★ 核心</span><span class="tag live">gcc 单文件</span></div>
+      </a>
+      <a class="card" href="aliasing_animator.html">
+        <div class="no">教具 ①</div>
+        <div class="title"><code>aliasing_animator.html</code></div>
+        <div class="desc">采样与混叠动画：拖 f / fs 两个滑块，看采样点何时"连成另一条假正弦"。三个 preset：正常采样、1MHz@1.1MSPS 看到 100kHz 假象、刚好 2 倍采样时幅值随初相在 0~100% 间跳。</div>
+        <div class="tags"><span class="tag tool">双击打开</span><span class="tag">SVG 动画</span></div>
+      </a>
+      <a class="card" href="scope_probe_playground.html">
+        <div class="no">教具 ②</div>
+        <div class="title"><code>scope_probe_playground.html</code></div>
+        <div class="desc">探头与负载效应沙盒：×1/×10 档位、输出阻抗、信号频率、地线长度（约 1µH/m ≈ 1nH/mm）六个旋钮互相打架，误差 &gt;3% 自动标红。四个 preset 从"灾难"到"正确姿势"，重点体会长鳄鱼夹夹出来的假振铃。</div>
+        <div class="tags"><span class="tag tool">双击打开</span><span class="tag">交互沙盒</span></div>
+      </a>
+      <a class="card" href="debug_tree.html">
+        <div class="no">教具 ③</div>
+        <div class="title"><code>debug_tree.html</code></div>
+        <div class="desc">排障决策树：三条主链路（板子无电 / 电源轨短路 / 通信不通），左键=是、右键=否往下走；右侧师傅旁白实时讲"当前假设、为什么测这个、安全事项"，底部附 5 条师傅心法。</div>
+        <div class="tags"><span class="tag tool">双击打开</span><span class="tag">决策树</span></div>
+      </a>
+      <a class="card" href="../硬件学习路线图.html">
+        <div class="no">NAV · 总入口</div>
+        <div class="title"><code>硬件学习路线图.html</code></div>
+        <div class="desc">七关总路线图：所有模块的文件清单与学习顺序从这里进。迷路了就回总入口。</div>
+        <div class="tags"><span class="tag">导航</span></div>
+      </a>
+    </div>
+  </div>
+
+  <div class="panel">
+    <h2>🪜 学习顺序（别乱）</h2>
+    <ol class="order">
+      <li><b>读手册</b>：通读 <code>tutorial.md</code>，重点记住"望闻问切"的顺序和上电冒烟后的前三步。</li>
+      <li><b>玩混叠</b>：先开 <code>aliasing_animator.html</code> 把三个 preset 点一遍，建立"采样率不够会看到假波形"的直觉。</li>
+      <li><b>跑 01</b>：编译 <code>01_scope_model.c</code>，对着 ASCII 叠加图找到混叠发生的那一刻，再跑一遍末尾的选型输出器。</li>
+      <li><b>玩探头</b>：开 <code>scope_probe_playground.html</code>，preset ③ 复原"长鳄鱼夹假振铃"，用 f=1/(2π√LC) 反推回路电感。</li>
+      <li><b>跑 02</b>：编译 <code>02_measurement_errors.c</code>，手算一遍 1MΩ 分压点的 −4.8% 负载误差和 U(k=2)，和程序输出对答案。</li>
+      <li><b>走决策树</b>：把 <code>debug_tree.html</code> 三条链路各走一遍，注意每个动作旁边的代价 ⏱。</li>
+      <li><b>跑 03</b>：编译 <code>03_debug_bisection.c</code>，看贪心 vs 乱测的步数差，理解"信息增益 ÷ 代价"。</li>
+      <li><b>交作业</b>：做 <code>tutorial.md</code> 第六节的 5 道动手题，对照第七节通关标准逐条打勾。</li>
+    </ol>
+  </div>
+
+  <div class="panel">
+    <h2>⚠ 常见坑速览（完整版在 tutorial.md 第五节）</h2>
+    <ul class="pit">
+      <li><b>采样率当带宽用。</b><em>带宽够、采样率不够，波形照样是假的</em>——示波器欠采样会画一条"稳定得可疑"的正弦，频率是 f_alias 算出来的假数。</li>
+      <li><b>×1 探头量高阻节点。</b><em>100pF 输入电容往 1MΩ 分压点上一搭，信号直接被吃掉</em>——01 里 ×1@150Ω/10MHz 误差 48.52%。</li>
+      <li><b>鳄鱼夹地线拖 15cm。</b><em>约 150nH 回路电感和探头电容谐振，振铃是你自己夹出来的</em>——量开关波形请用弹簧地。</li>
+      <li><b>电阻档量带电节点。</b><em>读数无意义还烧表</em>——断电、等电容放完电再量，这是肌肉记忆级别的规矩。</li>
+      <li><b>大量程凑合用。</b><em>10A 档量 6mA，读数能错 65%</em>——宁可多按一次量程键，不要拿分辨率不够的数下结论。</li>
+      <li><b>"重启就好了"。</b><em>重启不是修复，是把证据销毁了</em>——偶发问题的第一步是建立复现，不是恢复生产。</li>
+      <li><b>一次换仨件。</b><em>"好了"但你不知道是谁的功劳</em>——每次只改一个变量，修完要能解释因果。</li>
+    </ul>
+  </div>
+
+</div>
+</body>
+</html>

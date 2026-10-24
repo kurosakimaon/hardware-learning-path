@@ -1,0 +1,509 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>叠层实验室 · 2/4/6 层板剖面与参考平面体检</title>
+<style>
+  :root {
+    --bg: #0f172a;
+    --surface: #1e293b;
+    --surface-2: #334155;
+    --ink: #f1f5f9;
+    --ink-muted: #94a3b8;
+    --ink-dim: #64748b;
+    --rule: #334155;
+    --accent: #38bdf8;
+    --accent-2: #818cf8;
+    --ok: #4ade80;
+    --warn: #fbbf24;
+    --bad: #f87171;
+    --mono: "Consolas", "Cascadia Mono", "Courier New", ui-monospace, monospace;
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC",
+                 "Microsoft YaHei", sans-serif;
+    background: var(--bg);
+    color: var(--ink);
+    line-height: 1.7;
+    font-size: 14px;
+    padding-bottom: 60px;
+  }
+  .wrap { max-width: 1240px; margin: 0 auto; padding: 24px 20px; }
+  header { margin-bottom: 16px; }
+  header h1 {
+    font-size: 1.6rem;
+    background: linear-gradient(135deg, var(--accent), var(--accent-2));
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
+    margin-bottom: 4px;
+  }
+  header p { color: var(--ink-muted); font-size: 13px; }
+  header .links { margin-top: 6px; font-size: 12px; }
+  header .links a { color: var(--accent); text-decoration: none; margin-right: 14px; }
+  header .links a:hover { text-decoration: underline; }
+
+  .toolbar { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; margin: 12px 0 16px; }
+  button {
+    font-family: inherit; font-size: 13px; border-radius: 7px; padding: 7px 13px;
+    border: 1px solid var(--rule); background: var(--surface-2); color: var(--ink);
+    cursor: pointer; transition: border-color .15s, background .15s, transform .1s;
+  }
+  button:hover { border-color: var(--accent); }
+  button:active { transform: translateY(1px); }
+  button.active {
+    background: linear-gradient(135deg, var(--accent), var(--accent-2));
+    color: #0b1220; font-weight: 700; border-color: transparent;
+  }
+  button.bad-preset { border-color: rgba(248,113,113,.5); }
+  .tlabel { color: var(--ink-dim); font-size: 12px; font-family: var(--mono); margin-left: 10px; }
+
+  .grid { display: grid; grid-template-columns: minmax(420px, 640px) minmax(360px, 1fr); gap: 16px; }
+  @media (max-width: 980px) { .grid { grid-template-columns: 1fr; } }
+
+  .panel {
+    background: var(--surface); border: 1px solid var(--rule);
+    border-radius: 12px; padding: 14px 16px; margin-bottom: 16px;
+  }
+  .panel h2 {
+    font-size: 12px; font-family: var(--mono); letter-spacing: .05em;
+    color: var(--accent-2); margin-bottom: 10px;
+  }
+  svg { display: block; width: 100%; height: auto; }
+  svg text { font-family: var(--mono); }
+
+  .layerrow {
+    display: flex; align-items: center; gap: 8px; flex-wrap: wrap;
+    padding: 5px 6px; border-radius: 7px; border: 1px solid transparent;
+    font-size: 12.5px; margin-bottom: 3px;
+  }
+  .layerrow:hover { background: rgba(148,163,184,.06); }
+  .layerrow.bad { border-color: var(--bad); background: rgba(248,113,113,.08); }
+  .layerrow .lname { font-family: var(--mono); width: 66px; color: var(--ink-muted); flex: none; }
+  .layerrow .spacer { flex: 1; }
+  select, input[type=number] {
+    font-family: var(--mono); font-size: 12px; background: var(--bg); color: var(--ink);
+    border: 1px solid var(--rule); border-radius: 6px; padding: 3px 6px;
+  }
+  input[type=number] { width: 74px; }
+  .di-mat { color: var(--ink-dim); font-size: 11px; }
+
+  .verdict { border-left: 3px solid var(--rule); padding: 8px 12px; margin-bottom: 8px;
+             border-radius: 0 8px 8px 0; background: rgba(148,163,184,.05); font-size: 13px; }
+  .verdict.ok   { border-left-color: var(--ok); }
+  .verdict.warn { border-left-color: var(--warn); }
+  .verdict.bad  { border-left-color: var(--bad); background: rgba(248,113,113,.08); }
+  .verdict b { font-family: var(--mono); font-size: 12.5px; }
+  .verdict .num { color: #a5f3fc; font-family: var(--mono); }
+  .tag { display: inline-block; font-size: 10.5px; font-family: var(--mono);
+         border-radius: 4px; padding: 1px 7px; margin-left: 6px; }
+  .tag.ok   { background: rgba(74,222,128,.16); color: var(--ok); }
+  .tag.warn { background: rgba(251,191,36,.16); color: var(--warn); }
+  .tag.bad  { background: rgba(248,113,113,.2); color: var(--bad); }
+
+  .kv { font-family: var(--mono); font-size: 12.5px; color: var(--ink-muted); }
+  .kv b { color: #a5f3fc; }
+  .note {
+    background: rgba(251,191,36,.07); border-left: 3px solid var(--warn);
+    border-radius: 0 8px 8px 0; padding: 10px 14px; font-size: 13px;
+    color: var(--ink-muted); margin-top: 10px;
+  }
+  .note b { color: var(--warn); }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <h1>叠层实验室 · 剖面画给你看</h1>
+    <p>师傅说：叠层是 PCB 的"地基图纸"。信号线只是家具，参考平面才是楼板——楼板在哪、塌没塌，先看清楚再谈布线。</p>
+    <div class="links">
+      <a href="../硬件学习路线图.html">← 返回总路线图</a>
+      <a href="index.html">本关目录</a>
+      <a href="return_path_animator.html">配套：回流路径动画</a>
+    </div>
+  </header>
+
+  <div class="toolbar">
+    <span class="tlabel">层数</span>
+    <button id="n2" onclick="setLayers(2)">2 层</button>
+    <button id="n4" onclick="setLayers(4)">4 层</button>
+    <button id="n6" onclick="setLayers(6)">6 层</button>
+    <span class="tlabel">Preset</span>
+    <button class="preset" onclick="loadPreset('p2')">两层板便宜方案</button>
+    <button class="preset" onclick="loadPreset('p4')">标准 4 层 SIG-GND-PWR-SIG</button>
+    <button class="preset bad-preset" onclick="loadPreset('p4bad')">4 层错误叠层</button>
+  </div>
+
+  <div class="grid">
+    <div>
+      <div class="panel">
+        <h2>板子剖面（顶部=BOARD TOP）</h2>
+        <div id="svgBox"></div>
+      </div>
+      <div class="panel">
+        <h2>层编辑 —— 用途 / 铜厚 / 介质</h2>
+        <div id="editor"></div>
+        <div class="note">
+          <b>老师傅提醒：</b>εr 这里统一按 4.4 估算（教学值）。真实板材 100MHz~1GHz 大约 4.2~4.5，
+          芯板越厚玻纤占比越高。量产叠层必须找板厂要层压结构图和 εr 数据，EDA 里的阻抗规则只是"意图说明书"。
+        </div>
+      </div>
+    </div>
+
+    <div>
+      <div class="panel">
+        <h2>整板体检</h2>
+        <div id="boardSummary" class="kv"></div>
+      </div>
+      <div class="panel">
+        <h2>每个信号层的参考平面</h2>
+        <div id="verdicts"></div>
+      </div>
+      <div class="panel">
+        <h2>这块叠层适合干什么</h2>
+        <div id="advice" class="kv"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+"use strict";
+/* ---------- 阻抗估算（与 02_impedance_crosstalk.cpp 同一套公式） ---------- */
+const PI = Math.PI;
+function microEpsEff(w, h, er) {
+  const u = w / h;
+  return (er + 1) / 2 + (er - 1) / 2 / Math.sqrt(1 + 12 / u);
+}
+function microZ0(w, h, er, t) {
+  const we = w + (t / PI) * (1 + Math.log(4 * PI * Math.max(1, w / h)));
+  const u = we / h;
+  const root = Math.sqrt(microEpsEff(we, h, er));
+  return u <= 1 ? (60 / root) * Math.log(8 / u + u / 4)
+                : (120 * PI / root) / (u + 1.393 + 0.667 * Math.log(u + 1.444));
+}
+function stripZ0(w, b, er, t) {
+  const we = w + 0.393 * t;
+  return (59.95 / Math.sqrt(er)) * Math.log(4 * b / (PI * we));
+}
+function bisect(f, target, lo, hi) {
+  let flo = f(lo) - target;
+  for (let i = 0; i < 200; i++) {
+    const mid = (lo + hi) / 2, fm = f(mid) - target;
+    if (flo * fm <= 0) hi = mid; else { lo = mid; flo = fm; }
+  }
+  return (lo + hi) / 2;
+}
+/* 在 [wLo,wHi] 上反解目标阻抗（Z0 随 W 单调下降）；解不出返回 null */
+function solveW(f, target, wLo, wHi) {
+  if (f(wLo) < target || f(wHi) > target) return null;
+  return bisect(f, target, wLo, wHi);
+}
+
+/* ---------------------------- 叠层数据模型 ---------------------------- */
+const OZ_MM = { 0.5: 0.018, 1: 0.035, 2: 0.070 };
+const ER_DI = 4.4;
+let layers = [];   // {kind:'cu', role, oz} | {kind:'di', mat, h}
+
+function cu(role, oz) { return { kind: 'cu', role: role, oz: oz }; }
+function di(mat, h)   { return { kind: 'di', mat: mat, h: h }; }
+
+function build2() {
+  return [cu('SIG', 1), di('Core', 1.60), cu('GND', 1)];
+}
+function build4() {
+  return [cu('SIG', 1), di('PP 7628', 0.2134), cu('GND', 1),
+          di('Core', 1.06), cu('PWR', 1), di('PP 7628', 0.2134), cu('SIG', 1)];
+}
+function build4bad() {
+  return [cu('SIG', 1), di('PP 7628', 0.2134), cu('PWR', 1),
+          di('Core', 1.06), cu('GND', 1), di('PP 7628', 0.2134), cu('SIG', 1)];
+}
+function build6() {
+  return [cu('SIG', 1), di('PP 2116', 0.127), cu('GND', 1), di('PP 2116', 0.127),
+          cu('SIG', 1), di('Core', 0.635), cu('PWR', 1), di('PP 2116', 0.127),
+          cu('GND', 1), di('PP 2116', 0.127), cu('SIG', 1)];
+}
+function cuCount(a) { return a.filter(l => l.kind === 'cu').length; }
+
+function loadPreset(name) {
+  layers = name === 'p2' ? build2() : name === 'p4bad' ? build4bad() :
+           name === 'p4' ? build4() : build4();
+  render();
+}
+function setLayers(n) {
+  layers = n === 2 ? build2() : n === 4 ? build4() : build6();
+  render();
+}
+
+/* ------------------------------ 分析 ------------------------------ */
+function analyze() {
+  const results = [];   // 每个 SIG 层的体检结果
+  let hasBad = false, hasWarn = false;
+  const cuIdx = [];
+  layers.forEach((l, i) => { if (l.kind === 'cu') cuIdx.push(i); });
+
+  cuIdx.forEach((idx) => {
+    const L = layers[idx];
+    if (L.role !== 'SIG') return;
+    const pos = idx === 0 ? '顶层' : idx === layers.length - 1 ? '底层' : '内层';
+    // 向上/向下找最近的铜层
+    let up = null, dn = null, hUp = 0, hDn = 0;
+    for (let i = idx - 1, acc = 0; i >= 0; i--) {
+      if (layers[i].kind === 'di') { acc += layers[i].h; continue; }
+      up = layers[i]; hUp = acc; break;
+    }
+    for (let i = idx + 1, acc = 0; i < layers.length; i++) {
+      if (layers[i].kind === 'di') { acc += layers[i].h; continue; }
+      dn = layers[i]; hDn = acc; break;
+    }
+    const isPlane = (x) => x && x.kind === 'cu' && (x.role === 'GND' || x.role === 'PWR');
+    const upPlane = isPlane(up), dnPlane = isPlane(dn);
+    const reasons = [];
+    let level = 'ok';
+    const mark = (lv) => {
+      if (lv === 'bad') level = 'bad';
+      else if (lv === 'warn' && level !== 'bad') level = 'warn';
+    };
+
+    if (!upPlane && !dnPlane) {
+      mark('bad');
+      reasons.push('两侧都没有参考平面——这根线的高频回流无处可去，等于架天线');
+    }
+    if (up && !upPlane && up.role === 'SIG') { mark('warn'); reasons.push('紧邻上层是信号层：相邻层平行走线必须正交'); }
+    if (dn && !dnPlane && dn.role === 'SIG') { mark('warn'); reasons.push('紧邻下层是信号层：相邻层平行走线必须正交'); }
+
+    const refs = [];
+    if (upPlane) refs.push({ role: up.role, h: hUp, dir: '上' });
+    if (dnPlane) refs.push({ role: dn.role, h: hDn, dir: '下' });
+    if (refs.length === 2 && refs[0].role === 'PWR' && refs[1].role === 'PWR') {
+      mark('bad');
+      reasons.push('信号夹在两个电源层之间：电源噪声直接调制成共模，带状线白做了');
+    }
+    if (refs.length === 1 && refs[0].role === 'PWR') {
+      mark(pos === '顶层' ? 'bad' : 'warn');
+      reasons.push('唯一参考是电源层：参考层噪声=你的信号噪声；高速/时钟严禁，低速勉强' +
+        (pos === '顶层' ? '——而顶层恰恰是元件面、高速面，这就是"错误叠层"的典型' : ''));
+    }
+    if (refs.length === 2 && (refs[0].role !== refs[1].role)) {
+      mark('warn');
+      reasons.push('上参考' + refs[0].role + '、下参考' + refs[1].role + '：两层间必须密集去耦电容兜底');
+    }
+    const hMin = refs.length ? Math.min.apply(null, refs.map(r => r.h)) : null;
+    if (hMin !== null && hMin > 1.0) {
+      mark('warn');
+      reasons.push('参考介质 ' + hMin.toFixed(2) + 'mm 太厚：回路大、50Ω 线宽粗到没法布，别跑高速');
+    }
+
+    /* 阻抗估算 */
+    const t = OZ_MM[L.oz];
+    let zNote = '';
+    if (refs.length === 2 && hMin !== null && (refs.length === 2)) {
+      const b = hUp + hDn;
+      const w50 = solveW(w => stripZ0(w, b, ER_DI, t), 50, 0.02, 3);
+      zNote = '带状线（参考间距 b=' + b.toFixed(2) + 'mm）：' +
+              (w50 ? '50Ω 需 W≈<span class="num">' + w50.toFixed(2) + 'mm</span>'
+                   : '<span style="color:var(--bad)">此 b 下做不出 50Ω（介质太薄）</span>');
+    } else if (refs.length === 1) {
+      const h = refs[0].h;
+      const w50 = solveW(w => microZ0(w, h, ER_DI, t), 50, 0.02, 12);
+      zNote = '微带线（介质 H=' + h.toFixed(2) + 'mm）：' +
+              (w50 ? '50Ω 需 W≈<span class="num">' + w50.toFixed(2) + 'mm</span>'
+                   : '此介质下 50Ω 需 W&gt;12mm，放弃');
+    } else if (refs.length === 2) {
+      zNote = '混合参考';
+    }
+    let coupling = '';
+    if (hMin !== null) {
+      coupling = hMin <= 0.3 ? '紧耦合 ✓（回流贴着走）'
+               : hMin <= 0.6 ? '耦合一般'
+               : '松耦合——高频回流抓不住参考面';
+    }
+    if (level === 'bad') hasBad = true;
+    if (level === 'warn') hasWarn = true;
+    results.push({ pos, idx, level, reasons, zNote, coupling, refs });
+  });
+
+  const totalH = layers.reduce((s, l) =>
+    s + (l.kind === 'cu' ? OZ_MM[l.oz] : l.h), 0);
+  const gndPlanes = layers.filter(l => l.kind === 'cu' && l.role === 'GND').length;
+  const pwrPlanes = layers.filter(l => l.kind === 'cu' && l.role === 'PWR').length;
+  return { results, totalH, gndPlanes, pwrPlanes, hasBad, hasWarn };
+}
+
+/* ------------------------------ 渲染 ------------------------------ */
+const ROLE_COLOR = { SIG: '#e8a15c', GND: '#38bdf8', PWR: '#818cf8' };
+const ROLE_NAME = { SIG: '信号 SIG', GND: '地平面 GND', PWR: '电源 PWR' };
+
+function esc(s) { return String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;'); }
+
+function renderSvg(an) {
+  const W = 640, x0 = 120, x1 = 520;
+  const rows = [];
+  layers.forEach((l, i) => {
+    if (l.kind === 'cu') rows.push({ t: 'cu', i, h: 8 + l.oz * 6, l });
+    else rows.push({ t: 'di', i, h: Math.max(14, 8 + l.h * 30), l });
+  });
+  const H = 46 + rows.reduce((s, r) => s + r.h, 0) + 30;
+  const badIdx = {};
+  an.results.forEach(r => { if (r.level === 'bad') badIdx[r.idx] = true; });
+  const warnIdx = {};
+  an.results.forEach(r => { if (r.level === 'warn') warnIdx[r.idx] = true; });
+
+  let y = 40, svg = '<svg viewBox="0 0 ' + W + ' ' + H + '" xmlns="http://www.w3.org/2000/svg">';
+  svg += '<text x="' + (x0 + (x1 - x0) / 2) + '" y="18" fill="#64748b" font-size="11" text-anchor="middle">BOARD TOP ↑（元件面）</text>';
+  for (const r of rows) {
+    if (r.t === 'cu') {
+      const L = r.l;
+      const fill = ROLE_COLOR[L.role];
+      const stroke = badIdx[r.idx] ? '#f87171' : warnIdx[r.idx] ? '#fbbf24' : 'none';
+      svg += '<rect x="' + x0 + '" y="' + y + '" width="' + (x1 - x0) + '" height="' + r.h +
+             '" fill="' + fill + '" opacity="0.9" rx="2"/>';
+      if (stroke !== 'none')
+        svg += '<rect x="' + (x0 - 4) + '" y="' + (y - 3) + '" width="' + (x1 - x0 + 8) +
+               '" height="' + (r.h + 6) + '" fill="none" stroke="' + stroke +
+               '" stroke-width="2" stroke-dasharray="6 3" rx="4"/>';
+      const cuNo = cuIdxBefore(r.i);
+      svg += '<text x="' + (x0 - 10) + '" y="' + (y + r.h / 2 + 4) +
+             '" fill="#94a3b8" font-size="11" text-anchor="end">L' + cuNo + ' ' +
+             (r.i === 0 ? '顶' : r.i === layers.length - 1 ? '底' : '') + '</text>';
+      svg += '<text x="' + (x1 + 10) + '" y="' + (y + r.h / 2 + 4) +
+             '" fill="' + fill + '" font-size="11">' + L.role + ' · ' + L.oz + 'oz (' +
+             OZ_MM[L.oz] * 1000 + 'um)</text>';
+      if (badIdx[r.idx])
+        svg += '<text x="' + (x0 + 8) + '" y="' + (y + r.h / 2 + 4) +
+               '" fill="#0b1220" font-size="11" font-weight="bold">✕ 参考有问题</text>';
+    } else {
+      svg += '<rect x="' + x0 + '" y="' + y + '" width="' + (x1 - x0) + '" height="' + r.h +
+             '" fill="#1a2436" stroke="#334155" rx="2"/>';
+      svg += '<text x="' + (x0 - 10) + '" y="' + (y + r.h / 2 + 4) +
+             '" fill="#64748b" font-size="10" text-anchor="end">' + esc(r.l.mat) + '</text>';
+      svg += '<text x="' + (x1 + 10) + '" y="' + (y + r.h / 2 + 4) +
+             '" fill="#64748b" font-size="10">' + r.l.h.toFixed(3) + 'mm εr≈4.4</text>';
+    }
+    y += r.h;
+  }
+  svg += '</svg>';
+  document.getElementById('svgBox').innerHTML = svg;
+}
+function cuIdxBefore(diIdx) {
+  let n = 0;
+  for (let i = 0; i <= diIdx; i++) if (layers[i].kind === 'cu') n++;
+  return n;
+}
+
+function renderEditor() {
+  let html = '';
+  let cuNo = 0;
+  layers.forEach((l, i) => {
+    if (l.kind === 'cu') {
+      cuNo++;
+      const bad = isBadLayer(i);
+      html += '<div class="layerrow' + (bad ? ' bad' : '') + '">' +
+        '<span class="lname">L' + cuNo + (i === 0 ? ' 顶' : i === layers.length - 1 ? ' 底' : '') + '</span>' +
+        '<select onchange="layers[' + i + '].role=this.value;render()">';
+      ['SIG', 'GND', 'PWR'].forEach(r => {
+        html += '<option value="' + r + '"' + (l.role === r ? ' selected' : '') + '>' + ROLE_NAME[r] + '</option>';
+      });
+      html += '</select><span class="spacer"></span><span class="di-mat">铜厚</span>' +
+        '<select onchange="layers[' + i + '].oz=Number(this.value);render()">';
+      [0.5, 1, 2].forEach(o => {
+        html += '<option value="' + o + '"' + (l.oz === o ? ' selected' : '') + '>' + o + ' oz</option>';
+      });
+      html += '</select></div>';
+    } else {
+      html += '<div class="layerrow"><span class="lname">' + esc(l.mat) + '</span>' +
+        '<select onchange="setDiMat(' + i + ',this.value)">' +
+        diMatOptions(l.mat) + '</select>' +
+        '<span class="di-mat">厚度</span>' +
+        '<input type="number" step="0.016" min="0.05" max="2.5" value="' + l.h +
+        '" onchange="layers[' + i + '].h=Math.max(0.05,Number(this.value));render()">' +
+        '<span class="di-mat">mm</span></div>';
+    }
+  });
+  document.getElementById('editor').innerHTML = html;
+}
+function diMatOptions(mat) {
+  return ['PP 1080', 'PP 2116', 'PP 7628', 'Core']
+    .map(m => '<option value="' + m + '"' + (m === mat ? ' selected' : '') + '>' + m + '</option>')
+    .join('');
+}
+function setDiMat(i, m) {
+  const def = { 'PP 1080': 0.0712, 'PP 2116': 0.127, 'PP 7628': 0.2134, 'Core': 0.635 };
+  layers[i].mat = m;
+  layers[i].h = def[m];
+  render();
+}
+function isBadLayer(i) {
+  const r = analyze().results.find(x => x.idx === i);
+  return r && r.level === 'bad';
+}
+
+function renderVerdicts(an) {
+  if (!an.results.length) {
+    document.getElementById('verdicts').innerHTML =
+      '<div class="verdict warn"><b>没有一个信号层？</b><br>全板都是平面层——这板子不打算走线了吗？至少留顶层/底层当 SIG。</div>';
+    return;
+  }
+  const icon = { ok: '✓', warn: '△', bad: '✕' };
+  let html = '';
+  an.results.forEach(r => {
+    const refTxt = r.refs.length
+      ? r.refs.map(x => x.dir + '方 ' + x.role + ' @ ' + x.h.toFixed(3) + 'mm').join('、')
+      : '无平面可参考';
+    html += '<div class="verdict ' + r.level + '"><b>' + icon[r.level] + ' ' + r.pos +
+      '信号层</b><span class="tag ' + r.level + '">' +
+      (r.level === 'ok' ? '可用' : r.level === 'warn' ? '有讲究' : '不合格') + '</span><br>' +
+      '参考：' + refTxt + (r.coupling ? ' ｜ ' + r.coupling : '') + '<br>' +
+      (r.zNote ? r.zNote + '<br>' : '') +
+      (r.reasons.length ? '<span style="color:var(--ink-muted)">' + r.reasons.map(esc).join('；') + '</span>'
+                        : '<span style="color:var(--ok)">没挑出毛病——但量产前阻抗还是要送板厂核算。</span>') +
+      '</div>';
+  });
+  document.getElementById('verdicts').innerHTML = html;
+}
+
+function renderBoard(an) {
+  document.getElementById('boardSummary').innerHTML =
+    '整板厚度 ≈ <b>' + an.totalH.toFixed(2) + ' mm</b>（默认 1.6mm 板是常规板厂最便宜档位）<br>' +
+    '地平面 <b>' + an.gndPlanes + '</b> 个 ｜ 电源平面 <b>' + an.pwrPlanes + '</b> 个 ｜ 信号层 <b>' +
+    an.results.length + '</b> 个<br>' +
+    '体检结论：<b style="color:' + (an.hasBad ? 'var(--bad)' : an.hasWarn ? 'var(--warn)' : 'var(--ok)') + '">' +
+    (an.hasBad ? '有硬伤，打回重画' : an.hasWarn ? '能用但有讲究，见下面逐条' : '结构健康') + '</b>';
+
+  const a = [];
+  const n = cuCount(layers);
+  if (n === 2) {
+    a.push('2 层板定位：电源、LED、按键、低速 IO、≤25MHz 的晶振。顶层走线，<b>底层必须整层地</b>，一块别舍得切。');
+    a.push('2 层板跑 USB/百兆以太网 = 花钱买 EMC 整改。真要在 2 层板上跑，晶振下面挖空禁走线＋每根线底下留出地的"影子"。');
+  } else if (n === 4) {
+    if (an.hasBad) a.push('当前 4 层结构有硬伤（见红条）。把 GND 挪到紧贴顶层信号的那一层——GND 永远挨着最多的信号。');
+    a.push('标准 4 层 = SIG / GND / PWR / SIG：顶层微带紧耦合 GND（H≈0.2mm），底层参考 PWR——低速可以，USB/时钟尽量全走顶层。');
+    a.push('GND 与 PWR 相邻是一对天然平板电容（约 nF 级/百 cm²），电源平面本身就在帮你去耦——所以这对层间距越紧越好。');
+  } else {
+    a.push('6 层是"每条关键信号都想要好参考"时的答案：SIG-GND-SIG / PWR-GND-SIG 类结构，内层信号做带状线。');
+    a.push('6 层板成本上一个台阶。先问自己：4 层真摆不下了吗？还是只是懒得规划？');
+  }
+  if (an.gndPlanes === 0) a.push('<span style="color:var(--bad)">全板没有一个 GND 平面——这不是 PCB，这是布线迷宫。</span>');
+  if (an.pwrPlanes === 0) a.push('没有独立电源层：电源靠走线，回头用 01 号程序算算线宽够不够载流。');
+  document.getElementById('advice').innerHTML = a.map(x => '· ' + x).join('<br>');
+}
+
+function render() {
+  const an = analyze();
+  renderSvg(an);
+  renderEditor();
+  renderVerdicts(an);
+  renderBoard(an);
+  const n = cuCount(layers);
+  ['n2', 'n4', 'n6'].forEach(id => {
+    document.getElementById(id).className = (Number(id.slice(1)) === n) ? 'active' : '';
+  });
+}
+
+loadPreset('p4');
+</script>
+</body>
+</html>

@@ -1,0 +1,253 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>第 7 关 · 手搓期 — MiniBoard 温湿度采集小卡</title>
+<style>
+:root {
+  --bg: #0f172a; --surface: #1e293b; --surface-2: #334155;
+  --ink: #f1f5f9; --ink-muted: #94a3b8; --ink-dim: #64748b;
+  --rule: #334155; --accent: #38bdf8; --accent-2: #818cf8;
+  --ok: #4ade80; --warn: #fbbf24; --bad: #f87171;
+  --mono: Consolas, "Cascadia Mono", "Courier New", monospace;
+}
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body {
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", "Microsoft YaHei", sans-serif;
+  background: var(--bg); color: var(--ink);
+  line-height: 1.7; font-size: 14px; padding: 30px 20px 70px;
+}
+.container { max-width: 1120px; margin: 0 auto; }
+.back { display: inline-block; margin-bottom: 18px; color: var(--accent); text-decoration: none; font-size: 13px; }
+.back:hover { text-decoration: underline; }
+.header { text-align: center; margin-bottom: 30px; }
+.header .stage {
+  display: inline-block; font-size: 12px; letter-spacing: .12em;
+  color: var(--accent); border: 1px solid var(--accent);
+  border-radius: 999px; padding: 3px 14px; margin-bottom: 14px;
+}
+.header h1 {
+  font-size: 2rem; margin-bottom: 10px;
+  background: linear-gradient(135deg, var(--accent), var(--accent-2));
+  -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent;
+}
+.header p { color: var(--ink-muted); font-size: 14px; max-width: 780px; margin: 0 auto; }
+.panel {
+  background: var(--surface); border: 1px solid var(--rule);
+  border-radius: 14px; padding: 22px 26px; margin-bottom: 22px;
+}
+.panel h2 { font-size: 16px; color: var(--accent); margin-bottom: 12px; }
+.panel > p { color: var(--ink-muted); font-size: 13.5px; }
+.cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 16px; margin: 14px 0 4px; }
+.card {
+  background: var(--bg); border: 1px solid var(--rule); border-radius: 12px;
+  padding: 16px 18px; text-decoration: none; color: inherit; display: block;
+  position: relative; overflow: hidden;
+  transition: transform .18s, border-color .18s, box-shadow .18s;
+}
+.card::before {
+  content: ''; position: absolute; top: 0; left: 0; right: 0; height: 3px;
+  background: linear-gradient(90deg, var(--accent), var(--accent-2));
+}
+.card:hover { transform: translateY(-4px); border-color: var(--accent); box-shadow: 0 12px 32px rgba(2,6,23,.6); }
+.card .no { font-family: var(--mono); font-size: 11px; color: var(--ink-dim); margin-bottom: 6px; }
+.card .title { font-size: 15.5px; font-weight: 700; margin-bottom: 6px; }
+.card .title code { font-family: var(--mono); color: var(--accent); font-size: 14.5px; }
+.card .desc { font-size: 12.5px; color: var(--ink-muted); line-height: 1.65; }
+.card .desc b { color: var(--ink); }
+.card .tags { margin-top: 10px; display: flex; gap: 7px; flex-wrap: wrap; }
+.tag { font-size: 10.5px; padding: 2px 9px; border-radius: 999px; background: var(--surface-2); color: var(--ink-muted); }
+.tag.star { background: rgba(56,189,248,.16); color: var(--accent); }
+.tag.tool { background: rgba(129,140,248,.16); color: var(--accent-2); }
+.tag.live { background: rgba(74,222,128,.14); color: var(--ok); }
+.specs { display: grid; grid-template-columns: repeat(auto-fit, minmax(190px, 1fr)); gap: 12px; margin-top: 12px; }
+.spec {
+  background: var(--bg); border: 1px solid var(--rule); border-radius: 10px;
+  padding: 12px 14px; text-align: center;
+}
+.spec .v { font-family: var(--mono); font-size: 18px; font-weight: 700; color: var(--accent); }
+.spec .k { font-size: 11.5px; color: var(--ink-dim); margin-top: 3px; }
+.order { counter-reset: st; margin-top: 10px; }
+.order li {
+  list-style: none; counter-increment: st;
+  padding: 10px 0 10px 46px; position: relative;
+  border-bottom: 1px dashed var(--rule); color: var(--ink-muted); font-size: 13.5px;
+}
+.order li:last-child { border-bottom: none; }
+.order li::before {
+  content: counter(st); position: absolute; left: 6px; top: 10px;
+  width: 26px; height: 26px; border-radius: 50%;
+  background: linear-gradient(135deg, var(--accent), var(--accent-2));
+  color: #0b1220; font-weight: 700; font-size: 13px;
+  display: flex; align-items: center; justify-content: center;
+}
+.order code { font-family: var(--mono); color: var(--accent); }
+.order b { color: var(--ink); }
+.pits { margin-top: 10px; display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 10px; }
+.pits > div {
+  background: rgba(248,113,113,.06); border: 1px solid var(--rule);
+  border-left: 3px solid var(--bad); border-radius: 9px;
+  padding: 10px 13px; font-size: 12.5px; color: var(--ink-muted);
+}
+.pits b { color: var(--bad); display: block; margin-bottom: 3px; }
+pre.cmd {
+  background: #0b1220; border: 1px solid var(--rule); border-radius: 9px;
+  padding: 13px 16px; font-family: var(--mono); font-size: 12.5px;
+  line-height: 1.85; overflow-x: auto; margin-top: 10px;
+}
+pre.cmd .c { color: var(--ink-dim); }
+pre.cmd .k { color: var(--accent); }
+.note {
+  margin-top: 12px; padding: 10px 14px; border-left: 3px solid var(--warn);
+  background: rgba(251,191,36,.07); border-radius: 0 8px 8px 0;
+  font-size: 12.5px; color: var(--ink-muted);
+}
+.note b { color: var(--warn); }
+table.rep { width: 100%; border-collapse: collapse; margin-top: 10px; font-size: 12.5px; }
+table.rep th, table.rep td { border-bottom: 1px solid var(--rule); padding: 7px 10px; text-align: left; }
+table.rep th { color: var(--ink-dim); font-weight: 600; font-size: 11.5px; }
+table.rep td.mono { font-family: var(--mono); color: var(--accent); }
+table.rep td.pass { color: var(--ok); font-weight: 700; }
+</style>
+</head>
+<body>
+<div class="container">
+
+  <a class="back" href="../硬件学习路线图.html">← 返回总路线图</a>
+
+  <div class="header">
+    <div class="stage">第 7 关 · 手搓期</div>
+    <h1>MiniBoard · USB 供电温湿度采集小卡</h1>
+    <p>
+      前六关学的都是零件和本事，这一关只做一件事：<b style="color:var(--ink)">把零件焊成一个能交付的东西</b>。
+      USB-C 5V → 3.3V LDO → STM32F103 + SHT30 + SSD1306，BOM 压在 ¥25 以内，
+      两层板 50×35mm，静态 &lt;3mA，上电 200ms 出显示，真实 24 小时不死机（课程先用 1000s 压缩仿真验收）。
+      从电源预算到 BOM 审查、固件骨架、通信协议、上电剧本、压缩仿真验收——一条链走通，出师。
+    </p>
+  </div>
+
+  <div class="panel">
+    <h2>硬指标（交付线，差一个都不算完）</h2>
+    <div class="specs">
+      <div class="spec"><div class="v">&lt; 3 mA</div><div class="k">静态功耗（实测 1.72mA）</div></div>
+      <div class="spec"><div class="v">≤ 200 ms</div><div class="k">上电出显示（仿真 80ms）</div></div>
+      <div class="spec"><div class="v">24 h</div><div class="k">不死机（10000 tick 仿真 0 泄漏）</div></div>
+      <div class="spec"><div class="v">&lt; ¥25</div><div class="k">BOM 成本（¥23.52 / 修FAIL ¥23.84）</div></div>
+      <div class="spec"><div class="v">2 层 50×35</div><div class="k">板框与层数（布线 34.8%）</div></div>
+    </div>
+  </div>
+
+  <div class="panel">
+    <h2>九个文件，按顺序啃</h2>
+    <div class="cards">
+      <a class="card" href="tutorial.md">
+        <div class="no">FILE 01 · 读本子</div>
+        <div class="title">主课本 <code>tutorial.md</code></div>
+        <div class="desc">规格书、五个 ADR（电源拓扑/时钟/传感器/显示/看门狗决策）、12 条血泪坑、期末检查表。<b>先读它，后面每一步的理由都在这。</b></div>
+        <div class="tags"><span class="tag star">课本</span><span class="tag">规格与决策</span></div>
+      </a>
+      <a class="card" href="phase1_power_budget.c">
+        <div class="no">FILE 02 · gcc 编译即跑</div>
+        <div class="title">电源预算 <code>phase1_power_budget.c</code></div>
+        <div class="desc">电源树、逐器件电流账、LDO 热、USB 浪涌。<b>实测：省电 1.72mA PASS / 常亮 15.87mA / 报警 41.14mA，LDO 温升 17.5°C。</b></div>
+        <div class="tags"><span class="tag tool">C17</span><span class="tag">电流账</span><span class="tag live">零警告</span></div>
+      </a>
+      <a class="card" href="phase2_bom_drc.c">
+        <div class="no">FILE 03 · gcc 编译即跑</div>
+        <div class="title">BOM 与软 DRC <code>phase2_bom_drc.c</code></div>
+        <div class="desc">40 个料号 ¥23.516，14 条软规则。<b>故意埋了 3 个 FAIL（SWD 无 TVS、晶振 27pF 不匹配、蜂鸣器无续流），找不出来不许过关。</b></div>
+        <div class="tags"><span class="tag tool">C17</span><span class="tag">成本意识</span><span class="tag">3 个 FAIL</span></div>
+      </a>
+      <a class="card" href="phase3_firmware_core.c">
+        <div class="no">FILE 04 · gcc 编译即跑</div>
+        <div class="title">固件骨架 <code>phase3_firmware_core.c</code></div>
+        <div class="desc">HAL 函数指针表抽象 + 分层架构、SHT30 采样+CRC-8、SSD1306、消抖、看门狗、报警滞回。<b>首帧 80ms；IWDG 咬狗演练 1 次；师傅留钩子：滤波报警慢 2 秒，phase6 追账。</b></div>
+        <div class="tags"><span class="tag tool">C17</span><span class="tag">状态机</span><span class="tag">看门狗</span></div>
+      </a>
+      <a class="card" href="phase4_protocol_i2c.c">
+        <div class="no">FILE 05 · gcc 编译即跑</div>
+        <div class="title">I2C 时序 + 行协议 <code>phase4_protocol_i2c.c</code></div>
+        <div class="desc">开漏位级模型：stretching / NACK / <b>死锁 9 clock+STOP 恢复</b>；CRC16 行协议 200 帧 5% 噪声回环；上拉×电容上升时间表（10k@150pF≈1271ns 超标，4.7k≈598ns 是 100kHz 甜点位）。</div>
+        <div class="tags"><span class="tag tool">C17</span><span class="tag">I2C</span><span class="tag">抗噪解析</span></div>
+      </a>
+      <a class="card" href="phase5_bringup.md">
+        <div class="no">FILE 06 · 打印带走</div>
+        <div class="title">上电剧本 <code>phase5_bringup.md</code></div>
+        <div class="desc">串灯泡限流上电三种灯态、10 行分步电压表、BOOT0 烧录、逐模块点亮、15 行现象速查表、量产治具、HALT。<b>每一步都有预期数字，照着念不用现场想。</b></div>
+        <div class="tags"><span class="tag star">实验室纪律</span><span class="tag">剧本</span></div>
+      </a>
+      <a class="card" href="phase6_bench.c">
+        <div class="no">FILE 07 · 期末考试</div>
+        <div class="title">1000s 压缩整机仿真 <code>phase6_bench.c</code></div>
+        <div class="desc">10000 tick（1000s 固件时间）压缩映射到 24 格日历，随机注入六类事件，固定种子。<b>实测成绩单 6/6 PASS：报警延迟 200ms、串口整帧通过率 99.60%、RAM 33.4%/Flash 65.6%、省电窗口 2.43mA。</b></div>
+        <div class="tags"><span class="tag tool">C17</span><span class="tag">系统集成</span><span class="tag live">全 PASS</span></div>
+      </a>
+      <a class="card" href="bringup_animator.html">
+        <div class="no">FILE 08 · 双击打开</div>
+        <div class="title">上电时序动画 <code>bringup_animator.html</code></div>
+        <div class="desc">SVG 电源树 + 上电时序动画，一步步"下一步"推进；下拉注入 5 种故障看波形怎么塌；串灯泡三种灯态图示。<b>纯离线，无外部资源。</b></div>
+        <div class="tags"><span class="tag live">动画</span><span class="tag">故障注入</span></div>
+      </a>
+      <div class="card" style="cursor:default">
+        <div class="no">FILE 09 · 你手里这页</div>
+        <div class="title">导航页 <code>index.html</code></div>
+        <div class="desc">学习顺序、环境命令、坑的索引。<b>学完回来对着期末检查表自测，全勾上才准出师。</b></div>
+        <div class="tags"><span class="tag">导航</span></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="panel">
+    <h2>学习顺序（师傅排的，别乱）</h2>
+    <ol class="order">
+      <li>读 <code>tutorial.md</code> 第一、二章，把五条硬指标和五个 ADR 抄进笔记；</li>
+      <li>跑 <code>phase1</code>，把电流账背下来：<b>省电 1.72mA 是怎么一块钱一块钱省出来的</b>；</li>
+      <li>跑 <code>phase2</code>，在 8 PASS + 3 WARN 里把 <b>3 个故意 FAIL</b> 揪出来，说出各自后果；</li>
+      <li>跑 <code>phase3</code>，重点看喂狗位置为什么在 tick 末尾、报警为什么慢 2 秒；</li>
+      <li>跑 <code>phase4</code>，把死锁恢复那 9 个时钟的协议原理讲给自己听；</li>
+      <li>打印 <code>phase5_bringup.md</code> 贴工位，串灯泡三种灯态练到脱口而出；</li>
+      <li>打开 <code>bringup_animator.html</code> 把 5 种故障各注入一遍，对照波形变化；</li>
+      <li>最后跑 <code>phase6</code> 当期末考——<b>成绩单必须 6/6 PASS 才准合上这一关。</b></li>
+    </ol>
+  </div>
+
+  <div class="panel">
+    <h2>环境与命令（MSYS2 ucrt64，gcc 16.2，警告当错误）</h2>
+    <pre class="cmd"><span class="c"># 四个仿真程序同一个套路，换文件名即可；要求零警告零错误；运行前先 chcp 65001</span>
+chcp 65001
+gcc -std=c17 -O2 -Wall -Wextra <span class="k">phase1_power_budget.c</span> -o phase1_power_budget.exe
+./phase1_power_budget.exe
+
+<span class="c"># phase2 / phase3 / phase4 / phase6 同理。HTML 双击即开，无任何外部依赖。</span></pre>
+    <div class="note"><b>师傅规矩：</b>改参数再跑一遍才算学会——把上拉电阻改 1k 看上升时间表怎么变、
+    把看门狗超时改 100ms 数它咬几次、把噪声从 5% 加到 20% 看解析器崩不崩。仿真是拿来玩的，玩明白了才是你的。</div>
+  </div>
+
+  <div class="panel">
+    <h2>期末成绩单（本目录实测，固定种子可复现）</h2>
+    <table class="rep">
+      <tr><th>验收项</th><th>实测</th><th>判定</th></tr>
+      <tr><td>10000 tick 不死机 / 无复位泄漏</td><td class="mono">意外复位 0 · 计划内咬狗 1（原因可查）</td><td class="pass">PASS</td></tr>
+      <tr><td>报警延迟 ≤ 500ms</td><td class="mono">最差 200ms（原始值 2/3 表决进）</td><td class="pass">PASS</td></tr>
+      <tr><td>串口整帧通过率 ≥ 99%</td><td class="mono">99.60%（497/499；坏帧 0 渗入业务）</td><td class="pass">PASS</td></tr>
+      <tr><td>RAM/Flash &lt; 70%（20KB/64KB）</td><td class="mono">6848B 33.4% / 43008B 65.6%</td><td class="pass">PASS</td></tr>
+      <tr><td>省电窗口平均 &lt; 3mA</td><td class="mono">2.43mA（纯省电态 1.72mA）</td><td class="pass">PASS</td></tr>
+      <tr><td>两次温度阶跃都接住</td><td class="mono">报警进入 2 次 / 退出 2 次</td><td class="pass">PASS</td></tr>
+    </table>
+  </div>
+
+  <div class="panel">
+    <h2>本关三大坑（完整 12 条在 tutorial.md 第六章）</h2>
+    <div class="pits">
+      <div><b>USB-C 不接 CC 5.1k</b>对方根本不给你 VBUS——只焊 C-C 线没焊下拉电阻，板子"插上没反应"查三小时。</div>
+      <div><b>首件不串灯泡直接怼电源</b>短路了烧一片。串灯泡：猛亮=硬短路，亮后转微亮=正常，常微亮=漏电。</div>
+      <div><b>电源轨"有电压没电流"</b>反馈虚焊时量起来 3.3V，一接负载立刻塌。关键点必须加负载复测 + 量对地阻值。</div>
+    </div>
+    <div class="note"><b>出师标准：</b>拿着 phase5 剧本能独立带新人完成首件上电；
+    phase6 成绩单全 PASS 且每一项都能说出"它凭什么 PASS"。全勾上，师傅就一句话：<b>出师了。</b></div>
+  </div>
+
+</div>
+</body>
+</html>

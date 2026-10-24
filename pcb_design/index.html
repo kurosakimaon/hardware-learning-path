@@ -1,0 +1,226 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>第 5 关 · 阵法期 — PCB 设计与 EMC</title>
+<style>
+:root {
+  --bg: #0f172a; --surface: #1e293b; --surface-2: #334155;
+  --ink: #f1f5f9; --ink-muted: #94a3b8; --ink-dim: #64748b;
+  --rule: #334155; --accent: #38bdf8; --accent-2: #818cf8;
+  --ok: #4ade80; --warn: #fbbf24; --bad: #f87171;
+  --mono: Consolas, "Cascadia Mono", "Courier New", monospace;
+}
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body {
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", "Microsoft YaHei", sans-serif;
+  background: var(--bg); color: var(--ink);
+  line-height: 1.7; font-size: 14px; padding: 30px 20px 70px;
+}
+.container { max-width: 1120px; margin: 0 auto; }
+.back { display: inline-block; margin-bottom: 18px; color: var(--accent); text-decoration: none; font-size: 13px; }
+.back:hover { text-decoration: underline; }
+.header { text-align: center; margin-bottom: 30px; }
+.header .stage {
+  display: inline-block; font-size: 12px; letter-spacing: .12em;
+  color: var(--accent); border: 1px solid var(--accent);
+  border-radius: 999px; padding: 3px 14px; margin-bottom: 14px;
+}
+.header h1 {
+  font-size: 2rem; margin-bottom: 10px;
+  background: linear-gradient(135deg, var(--accent), var(--accent-2));
+  -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent;
+}
+.header p { color: var(--ink-muted); font-size: 14px; max-width: 760px; margin: 0 auto; }
+.panel {
+  background: var(--surface); border: 1px solid var(--rule);
+  border-radius: 14px; padding: 22px 26px; margin-bottom: 22px;
+}
+.panel h2 { font-size: 16px; color: var(--accent); margin-bottom: 12px; }
+.panel > p { color: var(--ink-muted); font-size: 13.5px; }
+.cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 16px; margin: 14px 0 4px; }
+.card {
+  background: var(--bg); border: 1px solid var(--rule); border-radius: 12px;
+  padding: 16px 18px; text-decoration: none; color: inherit; display: block;
+  position: relative; overflow: hidden;
+  transition: transform .18s, border-color .18s, box-shadow .18s;
+}
+.card::before {
+  content: ''; position: absolute; top: 0; left: 0; right: 0; height: 3px;
+  background: linear-gradient(90deg, var(--accent), var(--accent-2));
+}
+.card:hover { transform: translateY(-4px); border-color: var(--accent); box-shadow: 0 12px 32px rgba(2,6,23,.6); }
+.card .no { font-family: var(--mono); font-size: 11px; color: var(--ink-dim); margin-bottom: 6px; }
+.card .title { font-size: 15.5px; font-weight: 700; margin-bottom: 6px; }
+.card .title code { font-family: var(--mono); color: var(--accent); font-size: 14.5px; }
+.card .desc { font-size: 12.5px; color: var(--ink-muted); line-height: 1.65; }
+.card .desc b { color: var(--ink); }
+.card .tags { margin-top: 10px; display: flex; gap: 7px; flex-wrap: wrap; }
+.tag { font-size: 10.5px; padding: 2px 9px; border-radius: 999px; background: var(--surface-2); color: var(--ink-muted); }
+.tag.star { background: rgba(56,189,248,.16); color: var(--accent); }
+.tag.tool { background: rgba(129,140,248,.16); color: var(--accent-2); }
+.tag.live { background: rgba(74,222,128,.14); color: var(--ok); }
+.order { counter-reset: st; margin-top: 10px; }
+.order li {
+  list-style: none; counter-increment: st;
+  padding: 10px 0 10px 46px; position: relative;
+  border-bottom: 1px dashed var(--rule); color: var(--ink-muted); font-size: 13.5px;
+}
+.order li:last-child { border-bottom: none; }
+.order li::before {
+  content: counter(st); position: absolute; left: 6px; top: 10px;
+  width: 26px; height: 26px; border-radius: 50%;
+  background: linear-gradient(135deg, var(--accent), var(--accent-2));
+  color: #0b1220; font-weight: 700; font-size: 13px;
+  display: flex; align-items: center; justify-content: center;
+}
+.order code { font-family: var(--mono); color: var(--accent); }
+.order b { color: var(--ink); }
+.pits { margin-top: 10px; display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 10px; }
+.pits > div {
+  background: rgba(248,113,113,.06); border: 1px solid var(--rule);
+  border-left: 3px solid var(--bad); border-radius: 9px;
+  padding: 10px 13px; font-size: 12.5px; color: var(--ink-muted);
+}
+.pits b { color: var(--bad); display: block; margin-bottom: 3px; }
+pre.cmd {
+  background: #0b1220; border: 1px solid var(--rule); border-radius: 9px;
+  padding: 13px 16px; font-family: var(--mono); font-size: 12.5px;
+  line-height: 1.85; overflow-x: auto; margin-top: 10px;
+}
+pre.cmd .c { color: var(--ink-dim); }
+pre.cmd .k { color: var(--accent); }
+.note {
+  margin-top: 12px; padding: 10px 14px; border-left: 3px solid var(--warn);
+  background: rgba(251,191,36,.07); border-radius: 0 8px 8px 0;
+  font-size: 12.5px; color: var(--ink-muted);
+}
+.note b { color: var(--warn); }
+</style>
+</head>
+<body>
+<div class="container">
+
+  <a class="back" href="../硬件学习路线图.html">← 返回总路线图</a>
+
+  <div class="header">
+    <div class="stage">第 5 关 · 阵法期</div>
+    <h1>PCB 设计与 EMC</h1>
+    <p>
+      原理图决定功能上限，PCB 决定你能不能活着到达那个上限。这一关练四件事：
+      <b style="color:var(--ink)">叠层与回流</b>（信号线走到哪，回流就在哪一层跟着走）、
+      <b style="color:var(--ink)">载流与阻抗</b>（线宽是热学题，线不是线是传输线）、
+      <b style="color:var(--ink)">去耦与 EMC</b>（电容不是摆件，是环路的一部分）、
+      <b style="color:var(--ink)">DFM 与上电</b>（DRC 绿不等于能造，能造不等于能过认证）。
+      8 个文件全部离线：gcc 编译即跑，HTML 双击即开。
+    </p>
+  </div>
+
+  <div class="panel">
+    <h2>⌨️ 编译速查（MSYS2 / gcc 16.2，零警告标准）</h2>
+    <pre class="cmd"><span class="c"># 控制台中文乱码先执行：chcp 65001；三个示例逐条编译（-Wall -Wextra 必须零警告）</span>
+<span class="k">gcc -std=c17 -O2 -Wall -Wextra 01_trace_and_via.c -o 01_trace_and_via.exe</span>
+<span class="k">gcc -std=c17 -O2 -Wall -Wextra 02_impedance_crosstalk.c -o 02_impedance_crosstalk.exe</span>
+<span class="k">gcc -std=c17 -O2 -Wall -Wextra 03_decoupling_emc.c -o 03_decoupling_emc.exe</span>
+<span class="k">.\01_trace_and_via.exe</span>          <span class="c"># 1oz/0.3mm/20℃→0.95A；单孔2A温升64℃；5A→2.97mm+9孔</span>
+<span class="k">.\02_impedance_crosstalk.exe</span>    <span class="c"># 50Ω线宽 3.04/1.50/0.35mm；USB差分 W0.38+S0.66；3W→−18.9dB</span>
+<span class="k">.\03_decoupling_emc.exe</span>         <span class="c"># 0603 100nF自谐振19MHz；离引脚10mm恶化9.1倍；同值并联带宽不扩</span></pre>
+    <div class="note">
+      <b>开工第一军规：</b>每个 .c 顶部注释块写明了"预期看到什么"，跑完先对锚点数字再往下读。
+      阻抗和去耦的所有计算都有一个共同前提——<b>参考平面完整</b>。地都碎了，公式算得再准都是装饰品。
+    </div>
+  </div>
+
+  <div class="panel">
+    <h2>📁 文件清单（8 个，全部离线可用）</h2>
+    <div class="cards">
+      <a class="card" href="tutorial.md">
+        <div class="no">MAP · 带教手册</div>
+        <div class="title"><code>tutorial.md</code></div>
+        <div class="desc">师傅的带教课本：为什么从两层板练起、7 条学习目标、每个 .c 输出怎么读、13 个赔过钱的坑、必背数字速查、5 道作业、通关标准。开工前通读，啃完每个文件回来对照。</div>
+        <div class="tags"><span class="tag">地图</span><span class="tag">纯文本</span></div>
+      </a>
+      <a class="card" href="01_trace_and_via.c">
+        <div class="no">STEP 01 · 主菜</div>
+        <div class="title"><code>01_trace_and_via.c</code></div>
+        <div class="desc">走线与过孔的载流/温升计算器：IPC-2221 公式 I=k·ΔT<sup>0.44</sup>·A<sup>0.725</sup>、降额 0.7 的经验账、过孔孔壁铜热模型（单孔 2A→64℃）、多孔并联 n<sup>0.85</sup> 不均流、1~8A 电源线推荐方案表（线宽+孔数+附加措施）。</div>
+        <div class="tags"><span class="tag star">★ 核心</span><span class="tag live">gcc 单文件</span></div>
+      </a>
+      <a class="card" href="02_impedance_crosstalk.c">
+        <div class="no">STEP 02 · 主菜</div>
+        <div class="title"><code>02_impedance_crosstalk.c</code></div>
+        <div class="desc">特征阻抗、时延与串扰计算器：微带/带状线 Z0 扫描表、反解 50Ω 单端与 90Ω USB 差分（W=0.38mm + S=0.66mm）、Tr/6 传输线判据、Bogatin 串扰模型（NEXT/FEXT）、3W 规则值 −18.9dB、相邻层平行走线等效耦合。</div>
+        <div class="tags"><span class="tag star">★ 核心</span><span class="tag live">gcc 单文件</span></div>
+      </a>
+      <a class="card" href="03_decoupling_emc.c">
+        <div class="no">STEP 03 · 主菜</div>
+        <div class="title"><code>03_decoupling_emc.c</code></div>
+        <div class="desc">去耦电容与 EMC 滤波器计算器：RLC 串联模型与自谐振（0603 100nF→19MHz）、安装电感 1mm≈1nH（离引脚 10mm 恶化 9.1 倍）、多容值并联的反谐振峰、目标阻抗法反推 ESL 预算、共模/差模滤波拐点、按芯片类型开的去耦清单。</div>
+        <div class="tags"><span class="tag star">★ 核心</span><span class="tag live">gcc 单文件</span></div>
+      </a>
+      <a class="card" href="stackup_lab.html">
+        <div class="no">教具 ①</div>
+        <div class="title"><code>stackup_lab.html</code></div>
+        <div class="desc">叠层实验室：2/4/6 层切换 + 三个预设（含"四层反面教材"），SVG 剖面实时渲染。逐层做参考平面体检（绿/黄/红），每层实时算 50Ω 微带/带状线宽——公式与 02 是同一套。把参考改到电源层，看它怎么标红。</div>
+        <div class="tags"><span class="tag tool">双击打开</span><span class="tag">交互教具</span></div>
+      </a>
+      <a class="card" href="return_path_animator.html">
+        <div class="no">教具 ②</div>
+        <div class="title"><code>return_path_animator.html</code></div>
+        <div class="desc">回流路径动画：1kHz/100MHz × 平面完整/跨分割四格对照。看 100MHz 回流怎么贴着信号线底下走、跨分割怎么被迫绕出红色大环路；"环路账本"用 10log(面积比)+20log(频率比) 把辐射涨幅算成 dB，附桥接电容的真实效果。</div>
+        <div class="tags"><span class="tag tool">双击打开</span><span class="tag">动画演示</span></div>
+      </a>
+      <a class="card" href="decoupling_animator.html">
+        <div class="no">教具 ③</div>
+        <div class="title"><code>decoupling_animator.html</code></div>
+        <div class="desc">去耦阻抗曲线：亲手摆 1~4 颗电容（容值/封装/走线长度/ESR 全可改），SVG 对数坐标实时画并联 Z-f 曲线，标出谐振点、反谐振峰、100MHz 工作点。四个预设里"三颗同值"和"离引脚 10mm"务必亲手拖一遍。</div>
+        <div class="tags"><span class="tag tool">双击打开</span><span class="tag">交互教具</span></div>
+      </a>
+    </div>
+  </div>
+
+  <div class="panel">
+    <h2>🪜 学习顺序（别乱）</h2>
+    <ol class="order">
+      <li><b>读地图</b>：通读 <code>tutorial.md</code>，知道为什么第一块练习板只有 LDO+MCU+LED，认识 13 个坑长什么样。</li>
+      <li><b>算载流</b>：编译跑 <code>01_trace_and_via.c</code>，对锚点数字（0.95A、64℃、5A→2.97mm），然后改 main 里的电流表加一档 12A。</li>
+      <li><b>玩叠层</b>：打开 <code>stackup_lab.html</code>，三个预设各点一遍，把每个红色警告的"为什么"说给自己听。</li>
+      <li><b>算阻抗</b>：编译跑 <code>02_impedance_crosstalk.c</code>，重点记 50Ω 三个线宽（3.04/1.50/0.35mm）和 Tr/6 判据。</li>
+      <li><b>看回流</b>：打开 <code>return_path_animator.html</code>，切四格对照，看懂环路账本里 20log(f) 那一项为什么吓人。</li>
+      <li><b>算去耦</b>：编译跑 <code>03_decoupling_emc.c</code>，再用 <code>decoupling_animator.html</code> 把"反面教材"预设拖成正面教材——这一步做到位，去耦就算过关。</li>
+      <li><b>交作业</b>：做 tutorial.md【六】的 5 道作业，毕业考是那张红笔回流自查的纸面板。</li>
+    </ol>
+  </div>
+
+  <div class="panel">
+    <h2>🕳️ 本关高频坑（完整 13 条在 tutorial.md）</h2>
+    <div class="pits">
+      <div><b>高速线跨分割</b>回流被迫绕出大环路，环路高度 1.6mm→约 18mm（面积约 11 倍，+10.5dB）。先改叠层，其次挪线，桥接电容是下策。</div>
+      <div><b>去耦电容离引脚 10mm</b>回路 10mm≈10nH，100MHz 处 6.7Ω——这颗电容对高频等于没放。量的是回路总长，不是直瞄距离。</div>
+      <div><b>电源线 0.2mm"能连就行"</b>1oz 外层 0.2mm 降额后只有 0.71A。线宽要在 EDA 的 net class 里锁死，否则换人接手就退回 0.2。</div>
+      <div><b>单颗过孔走大电流</b>0.3mm 孔孔壁截面和 0.3mm 走线同量级，但散热面积只有孔壁，单孔 2A 保守温升 64℃。多孔并联收益是 n^0.85 不是 n。</div>
+      <div><b>参考层不完整硬做阻抗</b>公式的前提是参考平面完整。顺序永远是：先体检到绿，再谈线宽。</div>
+      <div><b>DRC 全绿就发板</b>DRC 查电气对不对，工厂查做不做得出来。发板前过一遍工厂 capability 表和 DFM 清单。</div>
+      <div><b>首件直接插芯片上电</b>先不焊 IC：量电源对地阻值→限流 50~100mA 空载上电→分域解锁→最后才上芯片。</div>
+      <div><b>覆铜乱接 / 铜皮孤岛</b>悬浮铜岛是窄带辐射源加 ESD 随机放电路径。大面积覆铜要么实心地，要么删掉。</div>
+    </div>
+  </div>
+
+  <div class="panel">
+    <h2>🎯 通关暗号（师傅抽查就抽这几个数）</h2>
+    <p>
+      <code style="font-family:var(--mono);color:var(--accent)">1oz 外层 0.3mm @20℃ ≈ 0.95A</code> ·
+      <code style="font-family:var(--mono);color:var(--accent)">50Ω 微带 @1.6mm ≈ 3.04mm</code> ·
+      <code style="font-family:var(--mono);color:var(--accent)">FR4 上 6mil ≈ 1ps</code> ·
+      <code style="font-family:var(--mono);color:var(--accent)">0603 100nF 自谐振 ≈ 19MHz</code> ·
+      <code style="font-family:var(--mono);color:var(--accent)">安装电感 1mm ≈ 1nH</code> ·
+      <code style="font-family:var(--mono);color:var(--accent)">3W 规则 ≈ −18.9dB</code>。
+      三句口诀：<b style="color:var(--ink)">信号线走到哪，回流就在哪一层跟着走；电容不是摆件，是环路的一部分；
+      DRC 绿不等于能造，能造不等于能过认证。</b>
+    </p>
+  </div>
+
+</div>
+</body>
+</html>

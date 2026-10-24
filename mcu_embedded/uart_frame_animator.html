@@ -1,0 +1,340 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>UART 波形时序动画 · 第 4 关 · 兵器期</title>
+<style>
+:root{
+  --bg:#0f172a; --surface:#1e293b; --surface-2:#334155;
+  --ink:#f1f5f9; --ink-muted:#94a3b8; --ink-dim:#64748b;
+  --rule:#334155; --accent:#38bdf8; --accent-2:#818cf8;
+  --ok:#4ade80; --warn:#fbbf24; --bad:#f87171;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{
+  background:var(--bg);color:var(--ink);
+  font-family:-apple-system,BlinkMacSystemFont,"Segoe UI","PingFang SC","Microsoft YaHei",sans-serif;
+  font-size:14px;line-height:1.7;padding:24px 20px 60px;
+}
+.wrap{max-width:1240px;margin:0 auto}
+a.back{color:var(--accent);text-decoration:none;font-size:13px}
+a.back:hover{text-decoration:underline}
+.head{display:flex;align-items:center;gap:14px;flex-wrap:wrap;margin-bottom:6px}
+.stage{
+  background:linear-gradient(90deg,var(--accent-2),var(--accent));
+  color:#0f172a;font-weight:700;font-size:12px;letter-spacing:1px;
+  padding:3px 12px;border-radius:999px;
+}
+h1{font-size:22px;font-weight:700}
+.sub{color:var(--ink-muted);font-size:13px;margin-bottom:18px}
+.grid{display:grid;grid-template-columns:300px 1fr;gap:16px}
+@media (max-width:980px){.grid{grid-template-columns:1fr}}
+.panel{background:var(--surface);border:1px solid var(--rule);border-radius:10px;padding:16px}
+.panel h2{font-size:15px;margin-bottom:10px;color:var(--accent)}
+label{display:block;color:var(--ink-muted);font-size:12px;margin:10px 0 4px}
+input[type=number],select{
+  width:100%;background:var(--surface-2);border:1px solid var(--rule);border-radius:6px;
+  color:var(--ink);padding:6px 8px;font-family:Consolas,monospace;font-size:13px;
+}
+input[type=range]{width:100%;accent-color:var(--accent)}
+.row2{display:flex;gap:8px}
+.row2>div{flex:1}
+.presets{display:flex;flex-direction:column;gap:8px;margin-top:6px}
+button{
+  background:var(--surface-2);border:1px solid var(--rule);color:var(--ink);
+  border-radius:6px;padding:7px 10px;font-size:13px;cursor:pointer;font-family:inherit;
+}
+button:hover{border-color:var(--accent);color:var(--accent)}
+button.preset{border-style:dashed;text-align:left}
+button.play{background:var(--accent);color:#0f172a;font-weight:700;border:none}
+.errval{color:var(--warn);font-family:Consolas,monospace;font-size:12px}
+.verdict{
+  border-radius:8px;padding:10px 14px;margin-top:12px;font-size:14px;
+  border:1px solid var(--rule);background:var(--surface-2);
+}
+.verdict.ok{border-color:var(--ok);color:var(--ok)}
+.verdict.warn{border-color:var(--warn);color:var(--warn)}
+.verdict.bad{border-color:var(--bad);color:var(--bad);font-weight:700}
+.mono{font-family:Consolas,monospace}
+.kv{display:grid;grid-template-columns:auto 1fr;gap:2px 12px;font-size:13px;margin-top:10px}
+.kv b{color:var(--ink-muted);font-weight:400}
+.kv span{font-family:Consolas,monospace}
+svg{width:100%;height:auto;display:block;background:var(--bg);border:1px solid var(--rule);border-radius:8px}
+.note{
+  margin-top:16px;background:var(--surface);border-left:3px solid var(--accent);
+  border-radius:0 8px 8px 0;padding:12px 14px;color:var(--ink-muted);font-size:13px;
+}
+.note b{color:var(--ink)}
+.tip{font-size:12px;color:var(--ink-dim);margin-top:8px}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <a class="back" href="../硬件学习路线图.html">← 返回总路线图</a>
+  <div class="head" style="margin-top:8px">
+    <span class="stage">第 4 关 · 兵器期</span>
+    <h1>UART 波形时序动画 —— 看时钟误差怎么咬死你的帧</h1>
+  </div>
+  <p class="sub">师傅原话：「UART 没有时钟线，全靠两边各自数格子。格子宽度差一点点没事，差多了，接收端采样点就挪到隔壁格子里去了——数据还是那些数据，读出来就是错的。」拖误差滑块，亲眼看采样点怎么漂出位窗口。</p>
+
+  <div class="grid">
+    <div class="panel">
+      <h2>① 帧参数</h2>
+      <label>波特率 (bps)</label>
+      <input type="number" id="baud" value="115200" min="300" max="5000000" step="1">
+      <div class="row2">
+        <div><label>数据位</label>
+          <select id="databits">
+            <option value="5">5</option><option value="6">6</option><option value="7">7</option>
+            <option value="8" selected>8</option><option value="9">9</option>
+          </select>
+        </div>
+        <div><label>校验</label>
+          <select id="parity">
+            <option value="N" selected>无 (N)</option>
+            <option value="O">奇 (O)</option>
+            <option value="E">偶 (E)</option>
+          </select>
+        </div>
+        <div><label>停止位</label>
+          <select id="stop">
+            <option value="1" selected>1</option>
+            <option value="1.5">1.5</option>
+            <option value="2">2</option>
+          </select>
+        </div>
+      </div>
+      <label>发送数据 (hex，如 55)</label>
+      <input type="text" id="txdata" value="55" maxlength="4">
+
+      <h2 style="margin-top:18px">② 两边时钟偏差</h2>
+      <label>发送端 TX 偏差：<span class="errval" id="etv">0.00%</span></label>
+      <input type="range" id="et" min="-5" max="5" step="0.01" value="0">
+      <label>接收端 RX 偏差：<span class="errval" id="erv">0.00%</span></label>
+      <input type="range" id="er" min="-5" max="5" step="0.01" value="0">
+      <div class="tip">偏差 = 各自波特率相对标称值的偏移。晶振精度、BRR 取整误差都算在这里。8N1 的理论总预算约 ±5.26%（0.5/9.5 位），工程上按总预算 ±4%、两边各 ±2% 留余量。</div>
+
+      <h2 style="margin-top:18px">③ 预设场景</h2>
+      <div class="presets">
+        <button class="preset" id="p1">🔧 8MHz 晶振跑 115200<br><span style="color:var(--ink-dim);font-size:12px">BRR 取整后 TX 偏 +0.64%，对面 16MHz 零误差 → 健康通过</span></button>
+        <button class="preset" id="p2">✅ 16MHz → 115200 完美<br><span style="color:var(--ink-dim);font-size:12px">USARTDIV=8.6806→取整 8.6875，误差仅约 0.08%，可当 0% 用</span></button>
+        <button class="preset" id="p3">💥 两边各偏 2% 的极限<br><span style="color:var(--ink-dim);font-size:12px">±2% 时最坏余量只剩 0.127 位宽；推到 ±2.7% → 停止位当场翻车</span></button>
+      </div>
+      <div style="margin-top:16px">
+        <button class="play" id="play">▶ 播放接收动画</button>
+        <button id="reset">复位</button>
+      </div>
+    </div>
+
+    <div>
+      <div class="panel">
+        <h2>波形与时序（TX 电平 + RX 采样点）</h2>
+        <svg id="wave" viewBox="0 0 1000 300" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="UART 帧波形与采样点">
+          <g id="gGrid"></g>
+          <g id="gWave"></g>
+          <g id="gSamples"></g>
+          <g id="gScan"></g>
+        </svg>
+        <div class="kv" id="stats"></div>
+        <div class="verdict" id="verdict"></div>
+      </div>
+      <div class="note" id="explain">
+        <b>怎么读这张图：</b>上面的折线是 TX 引脚的真实电平（空闲高，起始位拉低 1 个位宽）。下面的圆点是接收端的采样时刻——接收端用自己的时钟"数格子"，第 k 个采样点落在发送端时间轴的 (k+0.5)×r 个位宽处，r 是两边位周期之比。圆点还落在自己那格（竖虚线分隔）里就采对；漂进隔壁格子就采错。停止位采到 0 → 帧错误；校验位采歪 → 校验错误；数据位采歪 → 收到的字节和发出去的不是一回事。
+      </div>
+      <div class="note">
+        <b>老师傅点拨：</b>为什么 8N1 预算只有 ±4% 而不是 ±50%？因为接收端在每个起始位下降沿重新对齐一次，之后全靠数格子。最坏情况：误差全朝一个方向，采样点从起始位中心漂到停止位采样点（第 10 个格子，距对齐点 9.5 个位宽）的边缘；每位容错半位，9.5 位就摊掉 0.5 位，所以理论总预算是 0.5/9.5 ≈ ±5.26%。工程上按<b>单边误差 ≤ ±2%、两边最坏合计 ≤ ±4%</b> 定规矩，相对 5.26% 留约 1.26% 余量。用 8MHz 晶振跑高波特率，BRR 取整误差会飙到 3% 以上（自己跑 <span class="mono">02_uart_timing.c</span> 的表看），这时候不是 UART 坏了，是你的时钟不配。
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+"use strict";
+/* ================= 模型（与 02_uart_timing.c 同一套数学） =================
+   r = RX位周期 / TX位周期 = (1+et) / (1+er)   （et/er 为各自波特率偏差）
+   接收端第 k 个采样点（k=0 为起始位）落在发送端时间轴 t_k = (k+0.5)*r 位宽处。
+   采样值 = TX 波形在 t_k 的电平；t_k 若越出第 k 格 [k, k+1]，就采到隔壁位去。 */
+const $=id=>document.getElementById(id);
+const W=1000,H=300,PAD=40;
+let scanX=null, rafId=null;
+
+function frameBits(){
+  const db=+$('databits').value;
+  const data=parseInt($('txdata').value.replace(/[^0-9a-fA-F]/g,'')||'0',16);
+  const pv=$('parity').value;
+  const sb=+$('stop').value;
+  const bits=[]; const tags=[];
+  bits.push(0); tags.push('S');
+  const mask=(db>=32)?0xFFFFFFFF:((1<<db)-1);
+  const d=data&mask;
+  for(let i=0;i<db;i++){ bits.push((d>>i)&1); tags.push('D'+i); }
+  let ones=0; for(let i=0;i<db;i++) ones+=(d>>i)&1;
+  if(pv==='O'){ bits.push(ones%2===0?1:0); tags.push('P'); }
+  else if(pv==='E'){ bits.push(ones%2); tags.push('P'); }
+  const nStopBits=Math.ceil(sb); // 1.5 停止位按 2 格处理（接收端只采第一个停止位）
+  for(let i=0;i<nStopBits;i++){ bits.push(1); tags.push(i===0?'St':'St2'); }
+  const totalSlots = 1 + db + (pv==='N'?0:1) + nStopBits;
+  return {bits:bits, tags:tags, data:d, db:db, pv:pv, nStop:nStopBits, totalSlots:totalSlots, hasParity:pv!=='N'};
+}
+
+/* TX 电平：t 以"发送端位宽"为单位。停止位之后回到空闲 1。 */
+function txLevel(f, t){
+  if(t < 0) return 1;
+  if(t >= f.bits.length) return 1;
+  return f.bits[Math.floor(t)]; // 停止位 1.5 时最后半格仍是 1（bits 里已放 2 个 1 或用空闲 1 兜底）
+}
+
+function analyze(){
+  const baud=Math.max(300,+$('baud').value||115200);
+  const et=+$('et').value/100, er=+$('er').value/100;
+  const f=frameBits();
+  const r=(1+et)/(1+er);
+  const nSamples=f.bits.length; // 采样次数 = 位数（起始+数据+校验+停止位格子数）
+  const rx=[]; let worst=1e9, worstK=-1, crossedK=-1;
+  for(let k=0;k<nSamples;k++){
+    const t=(k+0.5)*r;
+    const inWin=Math.min(t-k, k+1-t); // 距本格边缘的余量（位宽单位）
+    if(inWin<worst){ worst=inWin; worstK=k; }
+    if(inWin<=0 && crossedK<0) crossedK=k;
+    rx.push({k:k, t:t, v:txLevel(f,t), inWin:inWin});
+  }
+  // 判定
+  const idxD0=1, idxStop=1+f.db+(f.hasParity?1:0);
+  let rxData=0;
+  for(let i=0;i<f.db;i++) rxData |= (rx[idxD0+i].v<<i);
+  let rxParity=null;
+  if(f.hasParity) rxParity=rx[1+f.db].v;
+  const stopOK = rx[idxStop] ? rx[idxStop].v===1 : true;
+  let parityOK=true;
+  if(f.hasParity){
+    let ones=0; for(let i=0;i<f.db;i++) ones+=(rxData>>i)&1;
+    parityOK = (f.pv==='E') ? ((ones+rxParity)%2===0) : ((ones+rxParity)%2===1);
+  }
+  const dataOK = (rxData===f.data);
+  return {baud:baud, et:et, er:er, r:r, f:f, rx:rx, worst:worst, worstK:worstK,
+          crossedK:crossedK, rxData:rxData, stopOK:stopOK, parityOK:parityOK, dataOK:dataOK};
+}
+
+function fmtHex(v,n){ let s=v.toString(16).toUpperCase(); while(s.length<n)s='0'+s; return s; }
+
+function render(){
+  if(rafId){ cancelAnimationFrame(rafId); rafId=null; }
+  const A=analyze(), f=A.f;
+  const total=Math.max(f.totalSlots, f.bits.length)*Math.max(1,A.r)+0.2;
+  const sx=t=>PAD + t/total*(W-PAD*2);
+  const hiY=60, loY=140, rxY=215;
+
+  let grid='', wave='', samples='', scan='';
+  // 位格子
+  const nCells=f.bits.length;
+  for(let k=0;k<nCells;k++){
+    const x0=sx(k), x1=sx(k+1);
+    grid+=`<line x1="${x0}" y1="${hiY-26}" x2="${x0}" y2="${rxY+18}" stroke="#334155" stroke-width="1"/>`;
+    const cx=(x0+x1)/2;
+    const tag=f.tags[k]||'St';
+    grid+=`<text x="${cx}" y="${rxY+40}" fill="#94a3b8" font-size="11" text-anchor="middle">${tag}</text>`;
+    grid+=`<text x="${cx}" y="${rxY+55}" fill="#64748b" font-size="11" text-anchor="middle">${f.bits[k]}</text>`;
+  }
+  // RX 位边界（rx 时间轴上 k+0.5 处，换算到 tx 轴 = (k+0.5)*r）：采样时刻竖线
+  for(let k=0;k<A.rx.length;k++){
+    const xs=sx((k+0.5)*A.r);
+    const crossed=A.rx[k].inWin<=0;
+    grid+=`<line x1="${xs}" y1="${hiY-26}" x2="${xs}" y2="${rxY+18}" stroke="${crossed?'#f87171':'#818cf8'}" stroke-width="1" stroke-dasharray="3 3" opacity="0.55"/>`;
+  }
+  // TX 波形折线（含空闲段）
+  const tEnd=total;
+  let prev=1, d=`M ${sx(-0.5)} ${hiY} L ${sx(0)} ${hiY}`;
+  for(let t=0.0001;t<tEnd;t+=0.02){
+    const v=txLevel(f,t);
+    const y=v?hiY:loY;
+    if(v!==prev){ d+=` L ${sx(t)} ${y===hiY?loY:hiY} L ${sx(t)} ${y}`; prev=v; }
+  }
+  d+=` L ${sx(tEnd)} ${prev?hiY:loY}`;
+  wave+=`<path d="${d}" fill="none" stroke="#38bdf8" stroke-width="2.5"/>`;
+  wave+=`<text x="${PAD-6}" y="${hiY+4}" fill="#64748b" font-size="11" text-anchor="end">1</text>`;
+  wave+=`<text x="${PAD-6}" y="${loY+4}" fill="#64748b" font-size="11" text-anchor="end">0</text>`;
+  wave+=`<text x="${PAD}" y="30" fill="#94a3b8" font-size="12">TX 引脚电平（发送端真实时间轴）</text>`;
+  wave+=`<line x1="${PAD}" y1="${rxY}" x2="${W-PAD}" y2="${rxY}" stroke="#334155" stroke-width="1"/>`;
+  wave+=`<text x="${PAD}" y="${rxY-12}" fill="#94a3b8" font-size="12">RX 采样点（接收端自己的时钟数出来的中心时刻）</text>`;
+  // 采样点
+  for(let k=0;k<A.rx.length;k++){
+    const s=A.rx[k];
+    const x=sx(s.t), y=rxY-16;
+    const crossed=s.inWin<=0;
+    const near=!crossed && s.inWin<0.1;
+    const col=crossed?'#f87171':(near?'#fbbf24':'#4ade80');
+    samples+=`<circle cx="${x}" cy="${y}" r="6" fill="${col}" opacity="0.9"><title>${f.tags[k]}：采样值 ${s.v}，距格边 ${ (s.inWin).toFixed(3) } 位宽${crossed?'（已漂出 → 采到隔壁位）':''}</title></circle>`;
+    samples+=`<line x1="${x}" y1="${y+6}" x2="${x}" y2="${rxY}" stroke="${col}" stroke-width="1" opacity="0.6"/>`;
+    samples+=`<text x="${x}" y="${y-10}" fill="${col}" font-size="11" text-anchor="middle">${s.v}</text>`;
+  }
+  if(scanX!==null){
+    const xs=sx(scanX);
+    scan+=`<line x1="${xs}" y1="${hiY-30}" x2="${xs}" y2="${rxY+20}" stroke="#fbbf24" stroke-width="2"/>`;
+  }
+
+  $('gGrid').innerHTML=grid; $('gWave').innerHTML=wave;
+  $('gSamples').innerHTML=samples; $('gScan').innerHTML=scan;
+
+  // 统计
+  const bitUs=1e6/A.baud*(1+A.et); // TX 实际位宽 µs
+  const rxBitUs=1e6/A.baud*(1+A.er);
+  $('stats').innerHTML=
+    '<b>TX 实际波特率</b><span>'+ (A.baud*(1+A.et)).toFixed(1) +' bps（位宽 '+bitUs.toFixed(2)+' µs）</span>'+
+    '<b>RX 实际波特率</b><span>'+ (A.baud*(1+A.er)).toFixed(1) +' bps（位宽 '+rxBitUs.toFixed(2)+' µs）</span>'+
+    '<b>位周期比 r = RX/TX</b><span>'+A.r.toFixed(5)+'</span>'+
+    '<b>帧长</b><span>'+f.totalSlots+' 位 = '+(f.totalSlots*bitUs).toFixed(1)+' µs</span>'+
+    '<b>最坏采样余量</b><span style="color:'+(A.worst<=0?'#f87171':(A.worst<0.1?'#fbbf24':'#4ade80'))+'">'+A.worst.toFixed(3)+' 位宽（第 '+(f.tags[A.worstK]||'')+' 格）</span>';
+
+  // 结论
+  const v=$('verdict');
+  if(!A.stopOK){
+    v.className='verdict bad';
+    v.textContent='💥 帧错误（Framing Error）：停止位采样点漂出窗口，收到 '+A.rx[1+f.db+(f.hasParity?1:0)].v+'（应为 1）。硬件置 FE 标志，这帧作废。';
+  } else if(f.hasParity && !A.parityOK){
+    v.className='verdict bad';
+    v.textContent='💥 校验错误（Parity Error）：收到数据 0x'+fmtHex(A.rxData,Math.ceil(f.db/4))+'，校验位不满足'+(f.pv==='E'?'偶':'奇')+'校验。典型来源：某一位采样点恰好越过格子边。';
+  } else if(!A.dataOK){
+    v.className='verdict warn';
+    v.textContent='⚠ 数据被污染：发出 0x'+fmtHex(f.data,Math.ceil(f.db/4))+'，收到 0x'+fmtHex(A.rxData,Math.ceil(f.db/4))+'，但停止位/校验都没报错——这是最阴的：错误帧"看起来合法"。';
+  } else if(A.worst<0.1){
+    v.className='verdict warn';
+    v.textContent='⚠ 本帧侥幸收对，但最坏采样余量只剩 '+A.worst.toFixed(3)+' 位宽（约 '+(A.worst*bitUs).toFixed(0)+' µs）。温度一漂、晶振一老，下一帧就翻车。';
+  } else {
+    v.className='verdict ok';
+    v.textContent='✅ 全部 '+A.rx.length+' 个采样点都在各自位窗口内，最坏余量 '+A.worst.toFixed(3)+' 位宽（≈'+(A.worst*bitUs).toFixed(0)+' µs）。收到 0x'+fmtHex(A.rxData,Math.ceil(f.db/4))+'，正确。';
+  }
+}
+
+/* 播放动画：扫描线走完一帧，逐点点亮采样点 */
+function play(){
+  if(rafId){ cancelAnimationFrame(rafId); rafId=null; }
+  const A=analyze(), f=A.f;
+  const total=Math.max(f.totalSlots,f.bits.length)*Math.max(1,A.r)+0.2;
+  const dur=4000, t0=performance.now();
+  function step(now){
+    const p=Math.min(1,(now-t0)/dur);
+    scanX=p*total-0.5;
+    render();
+    if(p<1) rafId=requestAnimationFrame(step);
+    else { scanX=null; render(); }
+  }
+  rafId=requestAnimationFrame(step);
+}
+
+function bind(){
+  ['baud','databits','parity','stop','txdata'].forEach(id=>$(id).addEventListener('input',()=>{scanX=null;render();}));
+  ['et','er'].forEach(id=>$(id).addEventListener('input',()=>{
+    $(id==='et'?'etv':'erv').textContent=(+$(id).value).toFixed(2)+'%';
+    scanX=null; render();
+  }));
+  $('play').addEventListener('click',play);
+  $('reset').addEventListener('click',()=>{ $('et').value=0; $('er').value=0; $('etv').textContent='0.00%'; $('erv').textContent='0.00%'; scanX=null; render(); });
+  $('p1').addEventListener('click',()=>{ $('baud').value=115200; $('databits').value='8'; $('parity').value='N'; $('stop').value='1'; $('txdata').value='55'; $('et').value=0.64; $('er').value=0; $('etv').textContent='0.64%'; $('erv').textContent='0.00%'; render(); });
+  $('p2').addEventListener('click',()=>{ $('baud').value=115200; $('databits').value='8'; $('parity').value='N'; $('stop').value='1'; $('txdata').value='55'; $('et').value=0; $('er').value=0; $('etv').textContent='0.00%'; $('erv').textContent='0.00%'; render(); });
+  $('p3').addEventListener('click',()=>{ $('baud').value=115200; $('databits').value='8'; $('parity').value='N'; $('stop').value='1'; $('txdata').value='55'; $('et').value=-2; $('er').value=2; $('etv').textContent='-2.00%'; $('erv').textContent='2.00%'; render(); });
+}
+bind(); render();
+</script>
+</body>
+</html>

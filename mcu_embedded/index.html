@@ -1,0 +1,239 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>第 4 关 · 兵器期 — MCU 与嵌入式</title>
+<style>
+:root {
+  --bg: #0f172a; --surface: #1e293b; --surface-2: #334155;
+  --ink: #f1f5f9; --ink-muted: #94a3b8; --ink-dim: #64748b;
+  --rule: #334155; --accent: #38bdf8; --accent-2: #818cf8;
+  --ok: #4ade80; --warn: #fbbf24; --bad: #f87171;
+  --mono: Consolas, "Cascadia Mono", "Courier New", monospace;
+}
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body {
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", "Microsoft YaHei", sans-serif;
+  background: var(--bg); color: var(--ink);
+  line-height: 1.7; font-size: 14px; padding: 30px 20px 70px;
+}
+.container { max-width: 1120px; margin: 0 auto; }
+.back { display: inline-block; margin-bottom: 18px; color: var(--accent); text-decoration: none; font-size: 13px; }
+.back:hover { text-decoration: underline; }
+.header { text-align: center; margin-bottom: 30px; }
+.header .stage {
+  display: inline-block; font-size: 12px; letter-spacing: .12em;
+  color: var(--accent); border: 1px solid var(--accent);
+  border-radius: 999px; padding: 3px 14px; margin-bottom: 14px;
+}
+.header h1 {
+  font-size: 2rem; margin-bottom: 10px;
+  background: linear-gradient(135deg, var(--accent), var(--accent-2));
+  -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent;
+}
+.header p { color: var(--ink-muted); font-size: 14px; max-width: 760px; margin: 0 auto; }
+.panel {
+  background: var(--surface); border: 1px solid var(--rule);
+  border-radius: 14px; padding: 22px 26px; margin-bottom: 22px;
+}
+.panel h2 { font-size: 16px; color: var(--accent); margin-bottom: 12px; }
+.panel > p { color: var(--ink-muted); font-size: 13.5px; }
+.cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 16px; margin: 14px 0 4px; }
+.card {
+  background: var(--bg); border: 1px solid var(--rule); border-radius: 12px;
+  padding: 16px 18px; text-decoration: none; color: inherit; display: block;
+  position: relative; overflow: hidden;
+  transition: transform .18s, border-color .18s, box-shadow .18s;
+}
+.card::before {
+  content: ''; position: absolute; top: 0; left: 0; right: 0; height: 3px;
+  background: linear-gradient(90deg, var(--accent), var(--accent-2));
+}
+.card:hover { transform: translateY(-4px); border-color: var(--accent); box-shadow: 0 12px 32px rgba(2,6,23,.6); }
+.card .no { font-family: var(--mono); font-size: 11px; color: var(--ink-dim); margin-bottom: 6px; }
+.card .title { font-size: 15.5px; font-weight: 700; margin-bottom: 6px; }
+.card .title code { font-family: var(--mono); color: var(--accent); font-size: 14.5px; }
+.card .desc { font-size: 12.5px; color: var(--ink-muted); line-height: 1.65; }
+.card .desc b { color: var(--ink); }
+.card .tags { margin-top: 10px; display: flex; gap: 7px; flex-wrap: wrap; }
+.tag { font-size: 10.5px; padding: 2px 9px; border-radius: 999px; background: var(--surface-2); color: var(--ink-muted); }
+.tag.star { background: rgba(56,189,248,.16); color: var(--accent); }
+.tag.tool { background: rgba(129,140,248,.16); color: var(--accent-2); }
+.tag.live { background: rgba(74,222,128,.14); color: var(--ok); }
+.order { counter-reset: st; margin-top: 10px; }
+.order li {
+  list-style: none; counter-increment: st;
+  padding: 10px 0 10px 46px; position: relative;
+  border-bottom: 1px dashed var(--rule); color: var(--ink-muted); font-size: 13.5px;
+}
+.order li:last-child { border-bottom: none; }
+.order li::before {
+  content: counter(st); position: absolute; left: 6px; top: 10px;
+  width: 26px; height: 26px; border-radius: 50%;
+  background: linear-gradient(135deg, var(--accent), var(--accent-2));
+  color: #0b1220; font-weight: 700; font-size: 13px;
+  display: flex; align-items: center; justify-content: center;
+}
+.order code { font-family: var(--mono); color: var(--accent); }
+.order b { color: var(--ink); }
+.pits { margin-top: 10px; display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 10px; }
+.pits > div {
+  background: rgba(248,113,113,.06); border: 1px solid var(--rule);
+  border-left: 3px solid var(--bad); border-radius: 9px;
+  padding: 10px 13px; font-size: 12.5px; color: var(--ink-muted);
+}
+.pits b { color: var(--bad); display: block; margin-bottom: 3px; }
+pre.cmd {
+  background: #0b1220; border: 1px solid var(--rule); border-radius: 9px;
+  padding: 13px 16px; font-family: var(--mono); font-size: 12.5px;
+  line-height: 1.85; overflow-x: auto; margin-top: 10px;
+}
+pre.cmd .c { color: var(--ink-dim); }
+pre.cmd .k { color: var(--accent); }
+.note {
+  margin-top: 12px; padding: 10px 14px; border-left: 3px solid var(--warn);
+  background: rgba(251,191,36,.07); border-radius: 0 8px 8px 0;
+  font-size: 12.5px; color: var(--ink-muted);
+}
+.note b { color: var(--warn); }
+</style>
+</head>
+<body>
+<div class="container">
+
+  <a class="back" href="../硬件学习路线图.html">← 返回总路线图</a>
+
+  <div class="header">
+    <div class="stage">第 4 关 · 兵器期</div>
+    <h1>MCU 与嵌入式</h1>
+    <p>
+      HAL 是组装好的成枪，寄存器是枪膛里每一发子弹的上膛方式。这一关先把兵器拆着看：
+      <b style="color:var(--ink)">GPIO 位域</b>（BSRR 为什么存在、ODR 怎么抹掉别人的引脚）、
+      <b style="color:var(--ink)">UART 时序</b>（BRR 怎么算、±2% 误差预算从哪来）、
+      <b style="color:var(--ink)">I2C 总线</b>（上拉电阻区间、死锁与 9 脉冲恢复）、
+      <b style="color:var(--ink)">调度与中断</b>（最坏延迟怎么算、ISR 忙等怎么饿死低优先级、看门狗怎么配才算配）。
+      9 个文件全部离线：4 个 .c 用软件模型模拟寄存器、无硬件编译即跑，3 个 HTML 双击即开。
+    </p>
+  </div>
+
+  <div class="panel">
+    <h2>⌨️ 编译速查（MSYS2 / gcc 16.2，零警告标准）</h2>
+    <pre class="cmd"><span class="c"># 控制台中文乱码先执行：chcp 65001；四个示例逐条编译（-Wall -Wextra 必须零警告）</span>
+<span class="k">gcc -std=c17 -O2 -Wall -Wextra 01_gpio_registers.c -o 01_gpio_registers.exe</span>
+<span class="k">gcc -std=c17 -O2 -Wall -Wextra 02_uart_timing.c -o 02_uart_timing.exe</span>
+<span class="k">gcc -std=c17 -O2 -Wall -Wextra 03_i2c_bus.c -o 03_i2c_bus.exe</span>
+<span class="k">gcc -std=c17 -O2 -Wall -Wextra 04_scheduler_irq.c -o 04_scheduler_irq.exe</span>
+<span class="k">.\01_gpio_registers.exe</span>    <span class="c"># 复位值 0xA8000000；四配置后 MODER=A8085400；竞态 0x28 vs BSRR 0xA8</span>
+<span class="k">.\02_uart_timing.exe</span>       <span class="c"># 72M/115200→BRR=0x271 误差 0.00%；8M/921600 偏差 −3.55%▲</span>
+<span class="k">.\03_i2c_bus.exe</span>           <span class="c"># 3.3V/150pF→1.1k~7.9kΩ；死锁 9 脉冲恢复 SDA=1</span>
+<span class="k">.\04_scheduler_irq.exe</span>     <span class="c"># TIM 最坏延迟 40µs；ISR 忙等 5ms→100ms 处 IWDG 复位</span></pre>
+    <div class="note">
+      <b>开工第一军规：</b>每个 .c 顶部注释块写明了"预期看到什么"，跑完先对锚点数字再往下读。
+      四个程序共用同一套<b>寄存器快照法</b>：配置 → 打印逐位快照 → 先心算再对答案 → 改参数验证。对不上答案的那一刻才是学习发生的那一刻。
+    </div>
+  </div>
+
+  <div class="panel">
+    <h2>📁 本关文件清单（9 个，全部离线可用）</h2>
+    <div class="cards">
+      <a class="card" href="tutorial.md">
+        <div class="no">MAP · 带教手册</div>
+        <div class="title"><code>tutorial.md</code></div>
+        <div class="desc">师傅的带教课本：为什么先寄存器后 HAL、7 条可检验学习目标、GPIO/UART/I2C/NVIC/时钟树/SWD 六块主线、BRR 与采样几何手算、13 个赔过钱的坑、SWD 连不上三板斧、5 道作业带答案要点、通关标准。开工前通读。</div>
+        <div class="tags"><span class="tag">地图</span><span class="tag">纯文本</span></div>
+      </a>
+      <a class="card" href="01_gpio_registers.c">
+        <div class="no">STEP 01 · 主菜</div>
+        <div class="title"><code>01_gpio_registers.c</code></div>
+        <div class="desc">GPIO 影子寄存器模型：MODER/OTYPER/OSPEEDR/PUPDR/IDR/ODR/BSRR 逐位定义与快照打印；四种模式切换；100 tick 主循环消抖状态机；<b>BSRR vs ODR 竞争实录</b>——中断插进读改写缝隙：ODR 路径 0x28（丢中断刚点亮的 PA7），BSRR 路径 0xA8（全保住）。</div>
+        <div class="tags"><span class="tag star">★ 核心</span><span class="tag live">gcc 单文件</span></div>
+      </a>
+      <a class="card" href="02_uart_timing.c">
+        <div class="no">STEP 02 · 主菜</div>
+        <div class="title"><code>02_uart_timing.c</code></div>
+        <div class="desc">BRR 计算器与 UART 时序实验室：8/16/72/168MHz × 9600/115200/921600 全表（&gt;2% 标红）；±2% 误差预算从 8N1 采样几何推导；帧模型慢 6% 把 0x55 静默打成 0xD5、快 6% 报帧错误；无锁环形缓冲区溢出实录（到达 20/入队 18/丢 2）。</div>
+        <div class="tags"><span class="tag star">★ 核心</span><span class="tag live">gcc 单文件</span></div>
+      </a>
+      <a class="card" href="03_i2c_bus.c">
+        <div class="no">STEP 03 · 主菜</div>
+        <div class="title"><code>03_i2c_bus.c</code></div>
+        <div class="desc">I2C 开漏总线模型：线与仲裁、上拉电阻区间实算（Rmin=Vdd/3mA、Rmax=tr/0.847Cb，四组场景含"区间为空"死局）；START/地址/ACK/STOP 逐位波形字符图；clock stretching；<b>从机死锁与 9 脉冲总线恢复</b>完整过程。</div>
+        <div class="tags"><span class="tag star">★ 核心</span><span class="tag live">gcc 单文件</span></div>
+      </a>
+      <a class="card" href="04_scheduler_irq.c">
+        <div class="no">STEP 04 · 主菜</div>
+        <div class="title"><code>04_scheduler_irq.c</code></div>
+        <div class="desc">软件 NVIC + 任务调度器：抢占/子优先级分组、pending 位图、PRIMASK 临界区；TIM/UART/ADC 三中断源跑 2000+ tick（TIM 最坏延迟 40µs）；<b>ISR 忙等 5ms → 低优先级挂起 98950µs → 喂狗 0 次 → 100ms IWDG 复位</b>，再看修正版；裸机优先级反转 1401µs vs 601µs；IWDG 超时计算表（400ms 实际 267~533ms）。</div>
+        <div class="tags"><span class="tag star">★ 核心</span><span class="tag live">gcc 单文件</span></div>
+      </a>
+      <a class="card" href="register_playground.html">
+        <div class="no">教具 ①</div>
+        <div class="title"><code>register_playground.html</code></div>
+        <div class="desc">GPIO 寄存器沙盒：选引脚改 MODER/PUPDR/OSPEEDR/OTYPER，BSRR/ODR 四种写法按钮，5 个 32 位位图逐位 hover 出含义；右侧引脚内部等效电路 SVG 随模式联动（PMOS/NMOS/上下拉/施密特/ADC）；IDR 按电路模型推断不等于 ODR；<b>"错误示范：ODR = 1&lt;&lt;3"</b>一键抹掉三盏灯。</div>
+        <div class="tags"><span class="tag tool">双击打开</span><span class="tag">交互教具</span></div>
+      </a>
+      <a class="card" href="uart_frame_animator.html">
+        <div class="no">教具 ②</div>
+        <div class="title"><code>uart_frame_animator.html</code></div>
+        <div class="desc">UART 波形时序动画：波特率/数据位/奇偶/停止位/发送数据全可调，TX 电平 + RX 采样点同屏；拖 TX/RX 偏差滑块看采样点漂出位窗口，帧错误/校验错误/静默错码当场分类。三个预设：8MHz 跑 115200（+0.64%）、16MHz 完美配置、两边各偏 2% 的极限。</div>
+        <div class="tags"><span class="tag tool">双击打开</span><span class="tag">动画演示</span></div>
+      </a>
+      <a class="card" href="clock_tree.html">
+        <div class="no">教具 ③</div>
+        <div class="title"><code>clock_tree.html</code></div>
+        <div class="desc">STM32F103 时钟树交互图：HSE/HSI/PLL 选源、PLLMUL 与 ÷2、AHB/APB1(≤36)/APB2(≤72)/ADC(≤14)/USB(=48) 预分频实时计算，SVG 活跃路径高亮、超限段标红加告警清单。四个预设含"教科书 72MHz""HSE 不起振 CSS 打回 HSI""APB1 忘 ÷2 超限""能跑 USB 的 48MHz"。</div>
+        <div class="tags"><span class="tag tool">双击打开</span><span class="tag">交互教具</span></div>
+      </a>
+      <div class="card" style="cursor:default">
+        <div class="no">README · 学习顺序</div>
+        <div class="title">就在下面 👇</div>
+        <div class="desc">顺序别乱：01 → 沙盒 → 02 → 波形动画 → 03 → 04 → 时钟树。每跑完一个文件回 tutorial.md 对答案；HTML 不是动画片，是实验台——<b>每个演示先预测结果再点按钮</b>，预测错了的地方才是你真正的知识漏洞。</div>
+        <div class="tags"><span class="tag">导学</span></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="panel">
+    <h2>🪜 学习顺序（别乱）</h2>
+    <ol class="order">
+      <li><b>读地图</b>：通读 <code>tutorial.md</code>，记住四句：改输出只用 BSRR；误差是链路总和；上拉是区间不是定值；ISR 的字数要像省电一样省。</li>
+      <li><b>玩寄存器</b>：编译跑 <code>01_gpio_registers.c</code>，对锚点数字（复位值 0xA8000000、四配置后 MODER=A8085400、竞态 0x28 vs 0xA8），再打开 <code>register_playground.html</code> 按一遍"错误示范"。</li>
+      <li><b>算波特率</b>：跑 <code>02_uart_timing.c</code>，用手复算 72M→0x271 和 8M→0x045 两笔账；然后打开 <code>uart_frame_animator.html</code> 把偏差推到刚好帧错误（±2.7% 附近），和 ±5.26% 公式对上。</li>
+      <li><b>玩总线</b>：跑 <code>03_i2c_bus.c</code>，重点看 300ns/1000pF 那组"区间为空"的死局和 9 脉冲恢复逐拍过程；把恢复逻辑抄进你自己的驱动模板。</li>
+      <li><b>看调度</b>：跑 <code>04_scheduler_irq.c</code>，五个演示按顺序读输出：先算 40µs 最坏延迟的三项构成，再看饿死→复位实录，最后用 IWDG 表反推你自己项目的狗档位。</li>
+      <li><b>过时钟</b>：打开 <code>clock_tree.html</code>，四个预设挨个点，把每条红色告警的"为什么"说给自己听；然后关掉预设，自己凑一个 HSE 8MHz 下 CPU 最高、USB 能用的配置。</li>
+      <li><b>交作业</b>：做 tutorial.md【七】的 5 道作业（后附答案要点），毕业自测是【八】通关标准的六条勾选框。</li>
+    </ol>
+  </div>
+
+  <div class="panel">
+    <h2>🕳️ 本关高频坑（完整 13 条在 tutorial.md）</h2>
+    <div class="pits">
+      <div><b>ODR 读改写抹别人引脚</b><code style="font-family:var(--mono)">ODR |= 1&lt;&lt;3</code> 是三步操作，中断插进缝隙就丢位。带中断的系统改输出只准用 BSRR，0x28 那次就是证据。</div>
+      <div><b>EXTI 忘清挂起位</b>PR 位是硬件电铃，不敲掉就退出即重进——中断风暴 + 主循环饿死 + 狗复位，三件套连环迷惑。</div>
+      <div><b>ISR 里忙等/浮点 printf</b>ISR 忙等 5ms 而周期 1ms：返回当拍二次进入，TIM 连占 99ms，喂狗 0 次。ISR 只置标志 + 搬字节，重活进延迟队列。</div>
+      <div><b>HSE 死等 HSERDY</b><code style="font-family:var(--mono)">while(!(CR&amp;HSERDY));</code> 晶振虚焊就永远卡这。必须带超时退 HSI，"上电没反应"有一半是这么来的。</div>
+      <div><b>APB1 忘 ÷2</b>72MHz 灌进 36MHz 域，串口 2 偶发乱码、I2C 高温 NACK——超频初期九次半是对的，就那半次要命。</div>
+      <div><b>I2C 上拉"经验值 4.7k"打天下</b>升 400kHz（tr≤300ns）就原形毕露。Rmin=Vdd/3mA、Rmax=tr/0.847Cb，区间为空就降容性降速率。</div>
+      <div><b>看门狗无条件喂</b>主循环开头一句喂狗=装了个从不响的火警。按心跳喂：关键任务全置位才喂，卡死立刻断喂。</div>
+      <div><b>SWD 引脚被固件复用后"变砖"</b>BOOT0 拉高进 System Memory 擦固件是唯一后悔药——板子上 BOOT0 测试点必须留。</div>
+    </div>
+  </div>
+
+  <div class="panel">
+    <h2>🎯 通关暗号（师傅抽查就抽这几个数）</h2>
+    <p>
+      <code style="font-family:var(--mono);color:var(--accent)">72MHz→115200：BRR=0x271 误差 0.00%</code> ·
+      <code style="font-family:var(--mono);color:var(--accent)">8N1 采样极限 ±5.26%，工程预算 ±2%</code> ·
+      <code style="font-family:var(--mono);color:var(--accent)">3.3V/150pF 上拉 1.1k~7.9kΩ</code> ·
+      <code style="font-family:var(--mono);color:var(--accent)">IWDG 超时=预分频×(重装值+1)÷40kHz，LSI 30~60kHz</code> ·
+      <code style="font-family:var(--mono);color:var(--accent)">最坏中断延迟=临界区剩余+上级尾巴+入栈</code> ·
+      <code style="font-family:var(--mono);color:var(--accent)">APB1≤36 / APB2≤72 / ADC≤14 / USB=48</code>。
+      三句口诀：<b style="color:var(--ink)">改输出只用 BSRR；误差是链路所有环节的总和；ISR 里睡一觉，系统里死一片。</b>
+    </p>
+  </div>
+
+</div>
+</body>
+</html>

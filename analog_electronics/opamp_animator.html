@@ -1,0 +1,519 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>运放输出波形实验室 · 第 2 关 · 模拟电路</title>
+<style>
+:root {
+  --bg: #0f172a;
+  --surface: #1e293b;
+  --surface-2: #334155;
+  --ink: #f1f5f9;
+  --ink-muted: #94a3b8;
+  --ink-dim: #64748b;
+  --rule: #334155;
+  --accent: #38bdf8;
+  --accent-2: #818cf8;
+  --ok: #4ade80;
+  --warn: #fbbf24;
+  --bad: #f87171;
+}
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body {
+  background: var(--bg);
+  color: var(--ink);
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", "Microsoft YaHei", sans-serif;
+  font-size: 14px;
+  line-height: 1.7;
+  padding: 20px 26px 60px;
+}
+a { color: var(--accent); text-decoration: none; }
+a:hover { text-decoration: underline; }
+.topbar { display: flex; align-items: center; gap: 14px; margin-bottom: 6px; }
+.badge {
+  display: inline-block; padding: 3px 12px; border-radius: 999px;
+  background: var(--surface-2); color: var(--accent);
+  font-size: 12px; letter-spacing: 1px;
+}
+h1 { font-size: 22px; margin: 10px 0 4px; }
+.sub { color: var(--ink-muted); margin-bottom: 18px; }
+.layout { display: grid; grid-template-columns: 320px 1fr 300px; gap: 16px; align-items: start; }
+.panel {
+  background: var(--surface); border: 1px solid var(--rule);
+  border-radius: 10px; padding: 16px;
+}
+.panel h2 { font-size: 14px; color: var(--accent); margin-bottom: 10px; letter-spacing: 1px; }
+.ctl { margin-bottom: 12px; }
+.ctl label { display: flex; justify-content: space-between; color: var(--ink-muted); font-size: 12.5px; }
+.ctl label b { color: var(--ink); font-weight: 600; font-family: Consolas, monospace; }
+.ctl input[type=range] { width: 100%; accent-color: var(--accent); }
+select {
+  width: 100%; background: var(--surface-2); color: var(--ink);
+  border: 1px solid var(--rule); border-radius: 6px; padding: 6px 8px;
+  font-family: inherit; font-size: 13px;
+}
+.presets { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 14px; }
+.presets button {
+  background: var(--surface-2); color: var(--ink); border: 1px solid var(--rule);
+  border-radius: 6px; padding: 6px 10px; cursor: pointer; font-family: inherit; font-size: 12.5px;
+}
+.presets button:hover { border-color: var(--accent); color: var(--accent); }
+.diagnosis {
+  border-radius: 8px; padding: 10px 12px; margin-bottom: 12px;
+  background: var(--surface-2); border-left: 4px solid var(--ok);
+  font-size: 13px; min-height: 44px;
+}
+.diagnosis.warn { border-left-color: var(--warn); }
+.diagnosis.bad { border-left-color: var(--bad); }
+.readout { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+.cell { background: var(--surface-2); border-radius: 8px; padding: 8px 10px; }
+.cell .k { color: var(--ink-dim); font-size: 11.5px; }
+.cell .v { font-family: Consolas, monospace; font-size: 15px; color: var(--ink); }
+.cell .v.good { color: var(--ok); }
+.cell .v.warn { color: var(--warn); }
+.cell .v.bad { color: var(--bad); }
+svg { width: 100%; height: auto; display: block; background: #0b1120; border-radius: 8px; }
+.legend { display: flex; gap: 18px; margin-top: 8px; color: var(--ink-muted); font-size: 12.5px; }
+.legend i { display: inline-block; width: 18px; height: 3px; vertical-align: middle; margin-right: 6px; }
+.note { color: var(--ink-dim); font-size: 12.5px; margin-top: 12px; }
+@media (max-width: 1100px) { .layout { grid-template-columns: 1fr; } }
+</style>
+</head>
+<body>
+<div class="topbar">
+  <a href="index.html">← 返回本模块目录</a>
+  <a href="../硬件学习路线图.html">← 返回总路线图</a>
+  <span class="badge">第 2 关 · 炼气期</span>
+</div>
+<h1>运放输出波形实验室</h1>
+<div class="sub">
+  拖动左边滑杆改参数，SVG 实时画出输入/输出波形。撞轨、压摆率限制、GBW 衰减——
+  三种翻车姿势，亲眼看到才算学会。
+</div>
+
+<div class="presets">
+  <button id="pIdeal">preset：理想情况</button>
+  <button id="pRail">preset：撞轨</button>
+  <button id="pSR">preset：压摆率不足</button>
+  <button id="pGBW">preset：GBW 不足</button>
+</div>
+
+<div class="layout">
+  <div class="panel">
+    <h2>电 路 参 数</h2>
+    <div class="ctl">
+      <label>拓扑</label>
+      <select id="topo">
+        <option value="inv">反相（−R2/R1）</option>
+        <option value="noninv" selected>同相（1+R2/R1）</option>
+        <option value="foll">电压跟随（增益 1）</option>
+      </select>
+    </div>
+    <div class="ctl">
+      <label>R1（Ω）<b id="vR1"></b></label>
+      <input type="range" id="R1" min="0" max="99" step="1">
+    </div>
+    <div class="ctl">
+      <label>R2（Ω）<b id="vR2"></b></label>
+      <input type="range" id="R2" min="0" max="99" step="1">
+    </div>
+    <div class="ctl">
+      <label>电源轨 ±V（V）<b id="vRail"></b></label>
+      <input type="range" id="rail">
+    </div>
+    <div class="ctl">
+      <label>GBW（MHz）<b id="vGBW"></b></label>
+      <input type="range" id="gbw">
+    </div>
+    <div class="ctl">
+      <label>压摆率 SR（V/µs）<b id="vSR"></b></label>
+      <input type="range" id="sr">
+    </div>
+    <div class="ctl">
+      <label>输入正弦频率（kHz）<b id="vF"></b></label>
+      <input type="range" id="freq">
+    </div>
+    <div class="ctl">
+      <label>输入幅度（V 峰值）<b id="vA"></b></label>
+      <input type="range" id="amp">
+    </div>
+    <div class="note">
+      模型：单极点 GBW 开环增益 + 有限压摆率 + 输出摆幅距轨 50mV。
+      输出摆幅 = min(理想幅度 × GBW 衰减, SR 限制, 轨 − 50mV)。
+    </div>
+  </div>
+
+  <div class="panel">
+    <h2>波 形（一个周期 × 2）</h2>
+    <svg id="scope" viewBox="0 0 640 360" xmlns="http://www.w3.org/2000/svg"></svg>
+    <div class="legend">
+      <span><i style="background:#64748b"></i>输入 vin</span>
+      <span><i style="background:#38bdf8"></i>输出 vout（理想）</span>
+      <span><i style="background:#4ade80"></i>输出 vout（实际）</span>
+      <span><i style="background:#f87171"></i>限幅/失真标记</span>
+    </div>
+    <div class="note" id="shapeNote"></div>
+  </div>
+
+  <div class="panel">
+    <h2>诊 断 与 账 本</h2>
+    <div class="diagnosis" id="diag"></div>
+    <div class="readout">
+      <div class="cell"><div class="k">理想增益</div><div class="v" id="oIdeal"></div></div>
+      <div class="cell"><div class="k">实际增益（有限 Aol）</div><div class="v" id="oReal"></div></div>
+      <div class="cell"><div class="k">Aol 误差</div><div class="v" id="oErr"></div></div>
+      <div class="cell"><div class="k">−3dB 闭环带宽</div><div class="v" id="oBW"></div></div>
+      <div class="cell"><div class="k">f_max(SR) 满功率带宽</div><div class="v" id="oFmax"></div></div>
+      <div class="cell"><div class="k">当前所需压摆率</div><div class="v" id="oNeed"></div></div>
+      <div class="cell"><div class="k">输出幅度需求</div><div class="v" id="oAmp"></div></div>
+      <div class="cell"><div class="k">可用摆幅（轨−50mV）</div><div class="v" id="oSwing"></div></div>
+    </div>
+    <div class="note">
+      师傅提醒：−3dB 带宽和满功率带宽是两本账。前者是 GBW/NG，
+      后者是 SR/(2π·V_peak)。正弦"看着还在"不代表谐波没烂。
+    </div>
+  </div>
+</div>
+
+<script>
+"use strict";
+
+/* ---------- 工具 ---------- */
+var $ = function (id) { return document.getElementById(id); };
+
+function fmtOhm(v) {
+  if (v >= 1e6) return (v / 1e6).toFixed(v % 1e6 === 0 ? 0 : 2) + " MΩ";
+  if (v >= 1e3) return (v / 1e3).toFixed(v % 1e3 === 0 ? 0 : 2) + " kΩ";
+  return v.toFixed(0) + " Ω";
+}
+function fmtHz(f) {
+  if (!isFinite(f)) return "—";
+  if (f >= 1e6) return (f / 1e6).toFixed(2) + " MHz";
+  if (f >= 1e3) return (f / 1e3).toFixed(1) + " kHz";
+  return f.toFixed(1) + " Hz";
+}
+
+/* ---------- 滑杆定义（值 -> 滑杆位置） ---------- */
+var R_STEPS = [
+  10, 22, 47, 100, 220, 470, 1000, 2200, 4700, 10000, 22000, 47000,
+  100000, 220000, 470000, 1000000, 2200000, 4700000
+];
+function rToSlider(v) {
+  var best = 0, bd = Infinity, i;
+  for (i = 0; i < R_STEPS.length; ++i) {
+    var d = Math.abs(Math.log(R_STEPS[i] / v));
+    if (d < bd) { bd = d; best = i; }
+  }
+  return best;
+}
+
+/* 连续滑杆：min, max, 用对数或线性映射 */
+function makeMap(min, max, log) {
+  return function (pos) {           /* pos: 0..1 */
+    if (log) return min * Math.pow(max / min, pos);
+    return min + (max - min) * pos;
+  };
+}
+var MAP = {
+  rail: makeMap(1.0, 18.0, false),
+  gbw:  makeMap(0.05, 100.0, true),
+  sr:   makeMap(0.05, 50.0, true),
+  freq: makeMap(0.05, 500.0, true),   /* kHz */
+  amp:  makeMap(0.005, 5.0, true)     /* V 峰值 */
+};
+function invMap(min, max, log, v) {   /* 值 -> 0..1 */
+  if (log) return Math.log(v / min) / Math.log(max / min);
+  return (v - min) / (max - min);
+}
+
+/* ---------- 参数状态 ---------- */
+var P = {
+  topo: "noninv",
+  R1: 10000, R2: 100000,
+  rail: 15, gbw: 1e6, sr: 0.5,
+  freq: 1000, amp: 0.05
+};
+
+/* ---------- 电路模型 ---------- */
+function idealGain() {
+  if (P.topo === "inv") return -P.R2 / P.R1;
+  if (P.topo === "noninv") return 1 + P.R2 / P.R1;
+  return 1;
+}
+/* 反馈系数 β；噪声增益 NG = 1/β */
+function betaOf() {
+  if (P.topo === "foll") return 1;
+  return P.R1 / (P.R1 + P.R2);
+}
+/* 单极点模型：Aol(s) = Aol0 / (1 + s·Aol0/GBW)，Aol0 = GBW/fb */
+function closedLoopGainAt(f) {
+  var fb = P.gbw / 1e5;                 /* 主极点：Aol0 = 1e5 */
+  var NG = 1 / betaOf();
+  var w = 2 * Math.PI * f;
+  var wp = 2 * Math.PI * fb;
+  /* Aol(jw) 复数 */
+  var are = 1e5 / (1 + (w / wp) * (w / wp));
+  var aim = -1e5 * (w / wp) / (1 + (w / wp) * (w / wp));
+  /* 闭环增益 = 理想增益 × F，F = T/(1+T)，T = Aol·β = Aol/NG（环路增益） */
+  var T_re = are / NG, T_im = aim / NG;
+  var den_re = 1 + T_re, den_im = T_im;
+  var d2 = den_re * den_re + den_im * den_im;
+  var fre = (T_re * den_re + T_im * den_im) / d2;   /* F = T/(1+T) */
+  var fim = (T_im * den_re - T_re * den_im) / d2;
+  var magF = Math.sqrt(fre * fre + fim * fim);
+  return magF * Math.abs(idealGain()) * (idealGain() < 0 ? -1 : 1);
+}
+function f3dB() {
+  var fb = P.gbw / 1e5;
+  var NG = 1 / betaOf();
+  return Math.sqrt(P.gbw * P.gbw + fb * fb) / NG;  /* ≈ GBW/NG */
+}
+
+/* ---------- 输出波形（时域一维迭代模型） ----------
+ * 每个时间步：目标值 = 理想增益 × vin（含 GBW 幅度衰减）；
+ * 每步最大变化受 SR 限制；结果再被电源轨削平。 */
+function simulate(vinFn, n, dt) {
+  var gId = idealGain();
+  var mag = Math.abs(closedLoopGainAt(P.freq));
+  var gEff = gId < 0 ? -mag : mag;
+  var voutMax = P.rail - 0.05;
+  var voutMin = -P.rail + 0.05;
+  var srVs = P.sr * 1e6;               /* V/s */
+  var maxStep = srVs * dt;
+  var out = new Array(n);
+  var v = vinFn(0) * gEff;
+  if (v > voutMax) v = voutMax;
+  if (v < voutMin) v = voutMin;
+  var clipped = false, slewed = false;
+  var i, k;
+  for (i = 0; i < n; ++i) {
+    var t = i * dt;
+    var target = vinFn(t) * gEff;
+    if (target > voutMax) { target = voutMax; }
+    if (target < voutMin) { target = voutMin; }
+    var want = target - v;
+    if (want > maxStep) { want = maxStep; slewed = true; }
+    else if (want < -maxStep) { want = -maxStep; slewed = true; }
+    /* 只有目标本身就撞轨才算"削波"，跟不上只算"压摆率限制" */
+    var raw = vinFn(t) * gEff;
+    if (raw > voutMax + 1e-12 || raw < voutMin - 1e-12) clipped = true;
+    v += want;
+    out[i] = v;
+  }
+  /* 纯三角判定：峰值处斜率是否全程贴着 SR（去掉撞轨段） */
+  var tri = slewed;
+  if (clipped) tri = false;
+  return { out: out, clipped: clipped, slewed: slewed, tri: tri, gEff: gEff };
+}
+
+/* ---------- SVG 绘制 ---------- */
+var NS = "http://www.w3.org/2000/svg";
+function el(name, attrs) {
+  var e = document.createElementNS(NS, name);
+  for (var k in attrs) e.setAttribute(k, attrs[k]);
+  return e;
+}
+function path(arr, mapY) {
+  var d = "", i;
+  for (i = 0; i < arr.length; ++i)
+    d += (i === 0 ? "M" : "L") + arr[i].x.toFixed(1) + " " + mapY(arr[i].v).toFixed(1);
+  return d;
+}
+
+function draw(sim) {
+  var svg = $("scope");
+  while (svg.firstChild) svg.removeChild(svg.firstChild);
+  var W = 640, H = 360, padL = 46, padR = 10, padT = 16, padB = 30;
+  var plotW = W - padL - padR, plotH = H - padT - padB;
+
+  /* 纵轴范围：覆盖输入与输出的最大值 */
+  var vmax = Math.max(P.amp, P.rail) * 1.1;
+  var midY = padT + plotH / 2;
+  var scaleY = (plotH / 2) / vmax;
+  var yOf = function (v) { return midY - v * scaleY; };
+
+  /* 网格与坐标 */
+  var g = el("g", {});
+  var ticks = [-P.rail, -P.rail + 0.05, 0, P.rail - 0.05, P.rail];
+  var names = ["−V", "−V+50mV", "0", "+V−50mV", "+V"];
+  var i;
+  for (i = 0; i < 5; ++i) {
+    g.appendChild(el("line", {
+      x1: padL, y1: yOf(ticks[i]), x2: W - padR, y2: yOf(ticks[i]),
+      stroke: (i === 0 || i === 4) ? "#f8717155" : ((i === 1 || i === 3) ? "#fbbf2444" : "#33415577"),
+      "stroke-width": (i === 2) ? 1.2 : 1,
+      "stroke-dasharray": (i === 0 || i === 4) ? "6 4" : "none"
+    }));
+    var t = el("text", { x: padL - 4, y: yOf(ticks[i]) + 4, "text-anchor": "end",
+      "font-size": 10, fill: "#64748b" });
+    t.textContent = names[i];
+    g.appendChild(t);
+  }
+  svg.appendChild(g);
+
+  var n = sim.out.length;
+  var xOf = function (i2) { return padL + plotW * i2 / (n - 1); };
+
+  /* 输入（灰） */
+  var vin = [], i2;
+  for (i2 = 0; i2 < n; ++i2) vin.push({ x: xOf(i2), v: P.amp * Math.sin(2 * Math.PI * P.freq * (i2 * DT)) });
+  svg.appendChild(el("path", { d: path(vin, yOf), stroke: "#64748b", "stroke-width": 1.5, fill: "none" }));
+
+  /* 理想输出（紫，细） */
+  var idl = [];
+  var gId = idealGain();
+  for (i2 = 0; i2 < n; ++i2) idl.push({ x: xOf(i2), v: vin[i2].v * gId });
+  svg.appendChild(el("path", { d: path(idl, yOf), stroke: "#818cf8", "stroke-width": 1, fill: "none", "stroke-dasharray": "4 4" }));
+
+  /* 实际输出（绿） */
+  var act = [];
+  for (i2 = 0; i2 < n; ++i2) act.push({ x: xOf(i2), v: sim.out[i2] });
+  svg.appendChild(el("path", { d: path(act, yOf), stroke: "#4ade80", "stroke-width": 2.2, fill: "none" }));
+
+  /* 削波/压摆率标注 */
+  if (sim.clipped) {
+    var cy = P.rail - 0.05;
+    var tx = el("text", { x: W / 2, y: yOf(cy) - 6, "text-anchor": "middle",
+      "font-size": 14, fill: "#f87171", "font-weight": "bold" });
+    tx.textContent = "削波（撞轨）";
+    svg.appendChild(tx);
+  } else if (sim.tri) {
+    var ty = P.amp * Math.abs(sim.gEff);
+    var tx2 = el("text", { x: W / 2, y: yOf(ty) + 20, "text-anchor": "middle",
+      "font-size": 14, fill: "#f87171", "font-weight": "bold" });
+    tx2.textContent = "压摆率限制（正弦被画成三角）";
+    svg.appendChild(tx2);
+  }
+  if (Math.abs(Math.abs(sim.gEff) - Math.abs(idealGain())) / Math.abs(idealGain()) > 0.03 && !sim.clipped && !sim.tri) {
+    var tx3 = el("text", { x: W / 2, y: H - 8, "text-anchor": "middle",
+      "font-size": 12, fill: "#fbbf24" });
+    tx3.textContent = "GBW 不足：幅度已按闭环带宽衰减";
+    svg.appendChild(tx3);
+  }
+}
+
+/* ---------- 主更新 ---------- */
+var DT = 0;   /* 每样本时间步长，在 update 里算 */
+
+function update() {
+  /* 同步滑杆显示 */
+  $("vR1").textContent = fmtOhm(P.R1);
+  $("vR2").textContent = fmtOhm(P.R2);
+  $("vRail").textContent = P.rail.toFixed(1) + " V";
+  $("vGBW").textContent = (P.gbw / 1e6).toFixed(2) + " MHz";
+  $("vSR").textContent = P.sr.toFixed(2) + " V/µs";
+  $("vF").textContent = (P.freq / 1000).toFixed(2) + " kHz";
+  $("vA").textContent = (P.amp * 1000).toFixed(0) + " mV";
+
+  var gId = idealGain();
+  var mag = Math.abs(closedLoopGainAt(P.freq));
+  var gEff = gId < 0 ? -mag : mag;
+
+  /* 账本 */
+  var NG = 1 / betaOf();
+  var AolDC = 1e5;
+  var errDC = 100 / (1 + AolDC / NG);               /* 直流时 Aol 误差 % */
+  var f3 = f3dB();
+  var ampNeed = P.amp * Math.abs(gId);
+  var voutMax = P.rail - 0.05;
+  var fMaxSR = P.sr * 1e6 / (2 * Math.PI * Math.min(ampNeed, voutMax));
+  var srNeed = 2 * Math.PI * P.freq * Math.min(ampNeed, voutMax) / 1e6;
+
+  $("oIdeal").textContent = gId.toFixed(2) + " 倍";
+  $("oReal").textContent = mag.toFixed(2) + " 倍";
+  var errNow = 100 * Math.abs((mag - Math.abs(gId)) / gId);
+  $("oErr").textContent = errNow < 0.01 ? "<0.01%（Aol 直流限 " + errDC.toFixed(2) + "%）"
+                                        : errNow.toFixed(1) + "%";
+  $("oBW").textContent = fmtHz(f3);
+  $("oFmax").textContent = fmtHz(fMaxSR);
+  $("oNeed").textContent = srNeed.toFixed(3) + " V/µs";
+  $("oAmp").textContent = ampNeed.toFixed(3) + " V";
+  $("oSwing").textContent = "±" + voutMax.toFixed(2) + " V";
+
+  /* 时域仿真 */
+  var cycles = 2;
+  var n = 400;
+  DT = 1 / P.freq / (n / cycles);
+  var vinFn = function (t) { return P.amp * Math.sin(2 * Math.PI * P.freq * t); };
+  var sim = simulate(vinFn, n, DT);
+  draw(sim);
+
+  /* 诊断一句话 */
+  var diag = $("diag");
+  var cls = "", msg = "";
+  if (sim.clipped) {
+    cls = "bad";
+    msg = "撞轨了：需要 " + ampNeed.toFixed(2) + "V 幅度，但只剩 ±" + voutMax.toFixed(2) +
+          "V 摆幅。顶部被削平 = 谐波全家桶，抬电源轨、降增益或降输入幅度。";
+  } else if (sim.tri) {
+    cls = "bad";
+    msg = "压摆率不够：需 " + srNeed.toFixed(2) + " V/µs，芯片只有 " + P.sr.toFixed(2) +
+          " V/µs，正弦已经被画成三角波（f_max = " + fmtHz(fMaxSR) + "）。";
+  } else if (errNow > 3) {
+    cls = "warn";
+    msg = "GBW 不够：工作频率 " + fmtHz(P.freq) + " 已接近闭环带宽 " + fmtHz(f3) +
+          "，实际增益只剩 " + mag.toFixed(1) + " 倍（理想 " + Math.abs(gId).toFixed(1) + "），幅度掉了 " +
+          errNow.toFixed(0) + "%。";
+  } else {
+    cls = "";
+    msg = "工作正常：增益 " + mag.toFixed(2) + "，误差 " +
+          (errNow < 0.01 ? "<0.01%" : errNow.toFixed(2) + "%") +
+          "，距撞轨和压摆率限制都有余量。";
+  }
+  diag.className = "diagnosis" + (cls ? " " + cls : "");
+  diag.textContent = msg;
+
+  $("shapeNote").textContent =
+    sim.clipped ? "输出形状：正弦顶部/底部被削平（削波），剩余频谱全是奇次谐波。"
+    : sim.tri ? "输出形状：三角波——线性爬升代替了正弦曲率，THD 大幅恶化。"
+    : (errNow > 3 ? "输出形状：还是正弦，但幅度比理想值小了一截（GBW 衰减）。"
+                  : "输出形状：干净的正弦，幅度 = 理想增益 × 输入幅度。");
+}
+
+/* ---------- preset ---------- */
+function applyPreset(o) {
+  var k;
+  for (k in o) P[k] = o[k];
+  syncSliders();
+  update();
+}
+var PRESETS = {
+  ideal:  { topo: "noninv", R1: 1000,  R2: 9000,   rail: 15, gbw: 20e6,  sr: 10,   freq: 1000,  amp: 0.1 },
+  rail:   { topo: "noninv", R1: 1000,  R2: 47000,  rail: 5,  gbw: 10e6,  sr: 8,    freq: 1000,  amp: 0.2 },
+  slew:   { topo: "noninv", R1: 1000,  R2: 990000, rail: 15, gbw: 1e6,   sr: 0.6,  freq: 20000, amp: 0.1 },
+  gbwlow: { topo: "noninv", R1: 1000,  R2: 99000,  rail: 15, gbw: 1e6,   sr: 15,   freq: 100000, amp: 0.05 }
+};
+
+/* ---------- 滑杆 <-> 状态 ---------- */
+function syncSliders() {
+  $("topo").value = P.topo;
+  $("R1").value = rToSlider(P.R1);
+  $("R2").value = rToSlider(P.R2);
+  $("rail").value = Math.round(invMap(1, 18, false, P.rail) * 100);
+  $("gbw").value = Math.round(invMap(0.05, 100, true, P.gbw / 1e6) * 100);
+  $("sr").value = Math.round(invMap(0.05, 50, true, P.sr) * 100);
+  $("freq").value = Math.round(invMap(0.05, 500, true, P.freq / 1000) * 100);
+  $("amp").value = Math.round(invMap(0.005, 5, true, P.amp) * 100);
+}
+function bind() {
+  $("topo").addEventListener("change", function () { P.topo = this.value; update(); });
+  $("R1").addEventListener("input", function () { P.R1 = R_STEPS[+this.value]; update(); });
+  $("R2").addEventListener("input", function () { P.R2 = R_STEPS[+this.value]; update(); });
+  $("rail").addEventListener("input", function () { P.rail = MAP.rail(this.value / 100); update(); });
+  $("gbw").addEventListener("input", function () { P.gbw = MAP.gbw(this.value / 100) * 1e6; update(); });
+  $("sr").addEventListener("input", function () { P.sr = MAP.sr(this.value / 100); update(); });
+  $("freq").addEventListener("input", function () { P.freq = MAP.freq(this.value / 100) * 1000; update(); });
+  $("amp").addEventListener("input", function () { P.amp = MAP.amp(this.value / 100); update(); });
+  $("pIdeal").addEventListener("click", function () { applyPreset(PRESETS.ideal); });
+  $("pRail").addEventListener("click", function () { applyPreset(PRESETS.rail); });
+  $("pSR").addEventListener("click", function () { applyPreset(PRESETS.slew); });
+  $("pGBW").addEventListener("click", function () { applyPreset(PRESETS.gbwlow); });
+}
+
+syncSliders();
+bind();
+applyPreset(PRESETS.ideal);
+</script>
+</body>
+</html>

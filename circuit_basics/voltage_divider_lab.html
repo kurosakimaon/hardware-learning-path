@@ -1,0 +1,481 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<title>分压器实验室 · 第 1 关 · 筑基期</title>
+<style>
+:root{
+  --bg:#0f172a; --surface:#1e293b; --surface-2:#334155;
+  --ink:#f1f5f9; --ink-muted:#94a3b8; --ink-dim:#64748b;
+  --rule:#334155; --accent:#38bdf8; --accent-2:#818cf8;
+  --ok:#4ade80; --warn:#fbbf24; --bad:#f87171;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{
+  background:var(--bg); color:var(--ink);
+  font-family:-apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", "Microsoft YaHei", sans-serif;
+  font-size:14px; line-height:1.7; padding:24px 20px 60px;
+}
+.wrap{max-width:1180px;margin:0 auto}
+a.back{color:var(--accent);text-decoration:none;font-size:13px}
+a.back:hover{text-decoration:underline}
+.stage{
+  display:inline-block;padding:3px 12px;border:1px solid var(--accent);border-radius:999px;
+  color:var(--accent);font-size:12px;letter-spacing:1px;margin:14px 0 8px;
+}
+h1{font-size:24px;font-weight:600;letter-spacing:.5px}
+p.lead{color:var(--ink-muted);margin:6px 0 20px;max-width:820px}
+.grid{display:grid;grid-template-columns:minmax(0,1.15fr) minmax(0,1fr);gap:18px}
+@media (max-width:980px){.grid{grid-template-columns:1fr}}
+.panel{background:var(--surface);border:1px solid var(--rule);border-radius:10px;padding:16px 18px}
+.panel h2{font-size:15px;font-weight:600;margin-bottom:10px;color:var(--accent)}
+.panel h2 .sub{color:var(--ink-dim);font-weight:400;font-size:12px;margin-left:6px}
+label.row{display:block;margin:14px 0}
+label.row .top{display:flex;justify-content:space-between;align-items:baseline;font-size:13px}
+label.row .name{color:var(--ink-muted)}
+label.row .val{font-family:Consolas,monospace;color:var(--ink);font-size:14px}
+input[type=range]{width:100%;margin-top:6px;accent-color:var(--accent);height:20px}
+.hint{color:var(--ink-dim);font-size:12px;margin-top:2px}
+table{width:100%;border-collapse:collapse;font-family:Consolas,monospace;font-size:13px}
+th{text-align:left;color:var(--ink-dim);font-weight:400;font-size:12px;border-bottom:1px solid var(--rule);padding:6px 4px}
+td{padding:6px 4px;border-bottom:1px solid rgba(51,65,85,.45)}
+td.k{color:var(--ink-muted);font-family:inherit}
+.big{font-family:Consolas,monospace;font-size:30px;line-height:1.2}
+.ok{color:var(--ok)} .warn{color:var(--warn)} .bad{color:var(--bad)}
+.muted{color:var(--ink-muted)} .dim{color:var(--ink-dim)}
+.note{
+  background:rgba(56,189,248,.07);border-left:3px solid var(--accent);
+  padding:10px 12px;border-radius:0 6px 6px 0;margin-top:12px;font-size:13px;color:var(--ink-muted);
+}
+.note.warn{background:rgba(251,191,36,.08);border-left-color:var(--warn)}
+.note.bad{background:rgba(248,113,113,.09);border-left-color:var(--bad)}
+.note b{color:var(--ink)}
+button{
+  background:var(--surface-2);color:var(--ink);border:1px solid var(--rule);
+  padding:8px 14px;border-radius:6px;font-size:13px;cursor:pointer;font-family:inherit;margin:4px 6px 4px 0;
+}
+button:hover{border-color:var(--accent);color:var(--accent)}
+svg{width:100%;height:auto;display:block;background:#0b1220;border:1px solid var(--rule);border-radius:8px}
+.flow{stroke:var(--warn);stroke-width:2;fill:none;stroke-dasharray:5 9;animation:flow 1s linear infinite}
+@keyframes flow{to{stroke-dashoffset:-28}}
+.tag{font-family:Consolas,monospace;font-size:11px;fill:var(--ink-dim)}
+.rlab{font-family:Consolas,monospace;font-size:13px;fill:var(--ink)}
+.vlab{font-family:Consolas,monospace;font-size:13px;fill:var(--accent)}
+.chk{display:flex;align-items:center;gap:8px;margin-top:10px;font-size:13px;color:var(--ink-muted)}
+.chk input{accent-color:var(--accent);width:15px;height:15px}
+.two{display:grid;grid-template-columns:1fr 1fr;gap:0 18px}
+footer{margin-top:26px;color:var(--ink-dim);font-size:12px;text-align:center}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <a class="back" href="../硬件学习路线图.html">← 返回总路线图</a>
+  <div class="stage">第 1 关 · 筑基期</div>
+  <h1>分压器实验室：把 5V 变成 3.3V，然后看它在你手上崩掉</h1>
+  <p class="lead">
+    纸面上 Vout = Vin × R2/(R1+R2)，谁都会算。可一旦你接上 ADC、接上 LED、接上一颗 IC，
+    这个数就开始撒谎。拖动下面四根滑杆，尤其是<b>负载 RL</b> 那根——
+    当它降到和 R2 同一个数量级，误差会变红，那就是你以后在板子上调试一整天的元凶。
+  </p>
+
+  <div class="grid">
+    <!-- ============ 左：滑杆 + 电路图 ============ -->
+    <div>
+      <div class="panel">
+        <h2>参数 <span class="sub">全部对数滑杆，覆盖真实取值范围</span></h2>
+
+        <label class="row">
+          <div class="top"><span class="name">Vin 输入电压</span><span class="val" id="vinV">5.00 V</span></div>
+          <input type="range" id="vin" min="900" max="24000" value="5000" step="10">
+          <div class="hint">从一节锂电 3.7V 到工业 24V 都能试</div>
+        </label>
+
+        <label class="row">
+          <div class="top"><span class="name">R1 上电阻（接 Vin）</span><span class="val" id="r1V">10.00 kΩ</span></div>
+          <input type="range" id="r1" min="0" max="1000" value="600">
+          <div class="hint">它决定分压器的源阻抗，也决定功耗</div>
+        </label>
+
+        <label class="row">
+          <div class="top"><span class="name">R2 下电阻（接 GND）</span><span class="val" id="r2V">10.00 kΩ</span></div>
+          <input type="range" id="r2" min="0" max="1000" value="600">
+          <div class="hint">和 R1 一起定比例：Vout = Vin × R2/(R1+R2)</div>
+        </label>
+
+        <label class="row">
+          <div class="top"><span class="name">RL 后级负载</span><span class="val" id="rlV">空载</span></div>
+          <input type="range" id="rl" min="0" max="1000" value="1000">
+          <div class="hint">10MΩ ≈ 万用表表笔；1MΩ ≈ Arduino ADC；10kΩ ≈ 又一颗分压器</div>
+          <div class="chk"><input type="checkbox" id="noload" checked><span>视为空载（不接后级，RL 无穷大）</span></div>
+        </label>
+
+        <div>
+          <button id="btn10k">一键推荐「10k 分压」</button>
+          <button id="btnHalf">复位到 5V→2.5V</button>
+          <button id="btnBad">给我看灾难现场</button>
+        </div>
+      </div>
+
+      <div class="panel" style="margin-top:18px">
+        <h2>实时电路 <span class="sub">黄色流动虚线 = 电流，流得越快说明电流越大</span></h2>
+        <svg id="sch" viewBox="0 0 640 380" role="img" aria-label="分压器电路示意图">
+          <g id="wires" stroke="#94a3b8" stroke-width="2" fill="none"></g>
+          <g id="flows" ></g>
+          <g id="res" stroke="#38bdf8" stroke-width="2.2" fill="none"></g>
+          <g id="labels"></g>
+        </svg>
+      </div>
+    </div>
+
+    <!-- ============ 右：读数 ============ -->
+    <div>
+      <div class="panel">
+        <h2>输出到底是多少伏</h2>
+        <div class="two">
+          <div>
+            <div class="dim">纸面值（空载，你算出来的）</div>
+            <div class="big" id="ideal">2.500 V</div>
+          </div>
+          <div>
+            <div class="dim">带载真值（板上量到的）</div>
+            <div class="big" id="real">2.500 V</div>
+          </div>
+        </div>
+        <table style="margin-top:10px">
+          <tr><td class="k">误差</td><td id="err">0.000 V（0.00 %）</td></tr>
+          <tr><td class="k">分压比 K</td><td id="kRatio">0.5000</td></tr>
+          <tr><td class="k">戴维南等效阻 Rth = R1∥R2</td><td id="rth">5.000 kΩ</td></tr>
+          <tr><td class="k">RL / Rth</td><td id="ratio">—</td></tr>
+          <tr><td class="k">分压器自身电流（空载时）</td><td id="iDiv">500.00 µA</td></tr>
+        </table>
+        <div id="verdict" class="note">接上空载，输出就是纸面值。这时候你的分压器是干净的。</div>
+      </div>
+
+      <div class="panel" style="margin-top:18px">
+        <h2>功耗与封装 <span class="sub">0402=1/16W · 0603=1/10W · 0805=1/8W · 1206=1/4W</span></h2>
+        <table>
+          <thead><tr><th>元件</th><th>压降</th><th>电流</th><th>耗散</th><th>推荐封装</th></tr></thead>
+          <tbody>
+            <tr><td class="k">R1</td><td id="v1">—</td><td id="c1">—</td><td id="p1">—</td><td id="f1">—</td></tr>
+            <tr><td class="k">R2</td><td id="v2">—</td><td id="c2">—</td><td id="p2">—</td><td id="f2">—</td></tr>
+            <tr><td class="k">RL 负载</td><td id="vL">—</td><td id="cL">—</td><td id="pL">—</td><td class="dim">后级自己的事</td></tr>
+          </tbody>
+        </table>
+        <div class="note" id="pwrNote"><b>总功耗 2.50 mW。</b>这电流级别，0402 都嫌浪费。</div>
+      </div>
+
+      <div class="panel" style="margin-top:18px">
+        <h2>为什么师傅让你用 10k</h2>
+        <div class="note" id="sizeNote">
+          分压器取值是三件事的折中：<b>电阻越小</b>→ 源阻抗低、抗噪声、带得动后级，
+          但<b>电流大、白烧电</b>；<b>电阻越大</b>→ 省电，
+          但节点变"高阻"，手指一碰、走线一绕，噪声就把电压抬上去了。
+          10k 附近是那个"两者都不吃亏"的交点。
+        </div>
+        <table style="margin-top:12px">
+          <thead><tr><th>阻值档位</th><th>空载电流</th><th>Rth</th><th>评价</th></tr></thead>
+          <tbody id="tierBody"></tbody>
+        </table>
+        <div class="note warn" style="margin-top:12px">
+          <b>ADC 输入阻抗这个坑：</b>MCU 的 ADC 不是 1MΩ 电压表，它内部是一个采样保持电容
+          （典型 5~15pF）加上一个开关。数据手册常写着"输入阻抗 ≥ 10kΩ 才保证精度"，
+          意思是：<b>驱动源阻抗超过 10k，采样窗口内电容充不满，读数偏低且抖</b>。
+          所以拿 100k+100k 分压直连 12 位 ADC，纸面误差 0%，实测能差几十个字。
+          解法：分压电阻整体缩小（功耗换精度），或者在 ADC 前挂一颗 10nF 电荷桶 + 跟随器。
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <footer>第 1 关 · 电路基础 · 纯离线单文件，双击即开 · 配套代码：01_node_solver.c / 02_rc_transient.c</footer>
+</div>
+
+<script>
+"use strict";
+
+/* ---------- 工具 ---------- */
+const $ = (id) => document.getElementById(id);
+
+function fmtR(ohm){
+  if(!isFinite(ohm)) return "∞";
+  if(ohm >= 1e6) return (ohm/1e6).toFixed(ohm>=1e7?1:2) + " MΩ";
+  if(ohm >= 1e3) return (ohm/1e3).toFixed(ohm>=1e5?1:2) + " kΩ";
+  if(ohm >= 1)   return ohm.toFixed(ohm>=100?0:2) + " Ω";
+  return (ohm*1e3).toFixed(0) + " mΩ";
+}
+function fmtV(v){
+  if(Math.abs(v) < 1) return (v*1000).toFixed(1) + " mV";
+  return v.toFixed(3) + " V";
+}
+function fmtI(i){
+  const a = Math.abs(i);
+  if(a >= 1)    return i.toFixed(3) + " A";
+  if(a >= 1e-3) return (i*1e3).toFixed(2) + " mA";
+  if(a >= 1e-6) return (i*1e6).toFixed(1) + " µA";
+  return (i*1e9).toFixed(0) + " nA";
+}
+function fmtW(w){
+  const a = Math.abs(w);
+  if(a >= 1)    return w.toFixed(3) + " W";
+  if(a >= 1e-3) return (w*1e3).toFixed(2) + " mW";
+  if(a >= 1e-6) return (w*1e6).toFixed(1) + " µW";
+  return (w*1e9).toFixed(1) + " nW";
+}
+
+/* 对数滑杆：0~1000 → min~max */
+function logMap(t, min, max){ return min * Math.pow(max/min, t/1000); }
+
+/* 封装推荐：按 50% 降额（工程师不会让电阻跑在额定功率上限） */
+const PACKAGES = [
+  {name:"0402", rating:1/16},
+  {name:"0603", rating:1/10},
+  {name:"0805", rating:1/8},
+  {name:"1206", rating:1/4}
+];
+function pkgFor(w){
+  for(const p of PACKAGES){
+    if(w <= p.rating * 0.5) return p.name;
+  }
+  if(w <= 1) return "2512 / 1W 贴片";
+  return "绕线或铝壳，别用贴片了";
+}
+
+/* ---------- 电路求解（就是并联 + 分压，但一行行写清楚） ---------- */
+function solve(vin, r1, r2, rl){
+  const ideal = vin * r2 / (r1 + r2);
+
+  // 带载：R2 与 RL 并联，再和 R1 分压
+  const rPar = (rl === Infinity) ? r2 : (r2 * rl) / (r2 + rl);
+  const real = vin * rPar / (r1 + rPar);
+
+  const rth = (r1 * r2) / (r1 + r2);       // 从输出端往里看的等效电阻
+  const iR1 = (vin - real) / r1;           // 流过 R1 的总电流
+  const iR2 = real / r2;                   // 流过 R2
+  const iRL = (rl === Infinity) ? 0 : real / rl;
+
+  return {
+    ideal: ideal, real: real, err: real - ideal,
+    errPct: ideal === 0 ? 0 : (real - ideal) / ideal * 100,
+    rth: rth, iR1: iR1, iR2: iR2, iRL: iRL,
+    pR1: (vin - real) * iR1, pR2: real * iR2, pRL: real * iRL,
+    vR1: vin - real, vR2: real,
+    iIdle: vin / (r1 + r2)                // 空载时一路的电流
+  };
+}
+
+/* ---------- SVG 绘制 ---------- */
+function vResPath(x, y0, y1){
+  const lead = 16, amp = 13, n = 6;
+  const a = y0 + lead, b = y1 - lead, span = (b - a) / n;
+  let d = `M${x} ${y0} L${x} ${a}`;
+  for(let i = 0; i < n; i++){
+    const dir = (i % 2 === 0) ? 1 : -1;
+    d += ` L${x + dir * amp} ${(a + span * (i + 0.5)).toFixed(1)}`;
+  }
+  d += ` L${x} ${b} L${x} ${y1}`;
+  return d;
+}
+function gnd(x, y){
+  return `<path d="M${x} ${y} L${x} ${y+14} M${x-14} ${y+14} L${x+14} ${y+14}
+          M${x-9} ${y+20} L${x+9} ${y+20} M${x-4} ${y+26} L${x+4} ${y+26}"/>`;
+}
+
+function draw(s){
+  const xS = 90, xN = 300, xL = 500;
+  const yTop = 50, yR1B = 170, yN = 230, yBot = 330;   // yN = 输出节点 A
+
+  // 导线
+  $("wires").innerHTML =
+    `<path d="M${xS} ${yTop} L${xN} ${yTop}"/>` +                       // 正电源轨
+    `<path d="M${xN} ${yR1B} L${xN} ${yN}"/>` +                         // R1 下端 → 节点 A
+    `<path d="M${xN} ${yN} L${xL} ${yN}"/>` +                           // 输出线
+    `<path d="M${xS} ${yBot} L${xL} ${yBot}"/>` +                       // 地轨
+    gnd(xS, yBot) + gnd(xN, yBot) + gnd(xL, yBot);
+
+  // 电流流动（速度跟着实际电流走，一眼看出"电流变大了"）
+  const dur = Math.max(0.3, Math.min(6, 2.4 / Math.max(0.12, Math.log10(1 + s.iR1 * 1e6))));
+  $("flows").innerHTML =
+    `<path class="flow" style="animation-duration:${dur.toFixed(2)}s" d="M${xS} ${yTop} L${xN} ${yTop}"/>` +
+    `<path class="flow" style="animation-duration:${dur.toFixed(2)}s" d="M${xN} ${yTop+8} L${xN} ${yN-8}"/>` +
+    (s.iRL > 0
+      ? `<path class="flow" style="animation-duration:${(dur*1.15).toFixed(2)}s" d="M${xN+6} ${yN} L${xL-4} ${yN}"/>` +
+        `<path class="flow" style="animation-duration:${(dur*1.15).toFixed(2)}s" d="M${xL} ${yN+8} L${xL} ${yBot-8}"/>`
+      : ``);
+
+  // 电阻符号 + 电源符号
+  $("res").innerHTML =
+    `<path d="${vResPath(xN, yTop, yR1B)}"/>` +                                     // R1
+    `<path d="${vResPath(xN, yN, yBot)}"/>` +                                       // R2
+    `<path d="${vResPath(xL, yN, yBot)}" stroke="${s.iRL>0?'#fbbf24':'#64748b'}"/>` + // RL
+    `<circle cx="${xS}" cy="190" r="30"/>` +
+    `<path d="M${xS} 160 L${xS} ${yTop} M${xS} 220 L${xS} ${yBot}"/>` +
+    `<path d="M${xS-12} 181 L${xS+12} 181 M${xS-6} 199 L${xS+6} 199"/>`;
+
+  // 文字标注
+  $("labels").innerHTML =
+    `<text class="rlab" x="${xN+24}" y="115">R1 ${fmtR(R1)}</text>` +
+    `<text class="tag"  x="${xN+24}" y="133">耗 ${fmtW(s.pR1)}</text>` +
+    `<text class="rlab" x="${xN+24}" y="290">R2 ${fmtR(R2)}</text>` +
+    `<text class="rlab" x="${xL+24}" y="290" fill="${s.iRL>0?'#fbbf24':'#64748b'}">RL ${RL===Infinity?'开路':fmtR(RL)}</text>` +
+    `<text class="vlab" x="${xS-52}" y="195">${VIN.toFixed(2)}V</text>` +
+    `<text class="tag" x="${xS-14}" y="${yTop-10}">+</text>` +
+    `<circle cx="${xN}" cy="${yN}" r="4.5" fill="#4ade80"/>` +
+    `<text class="vlab" x="${xN+16}" y="${yN-14}">Vout = ${s.real.toFixed(3)} V</text>` +
+    `<text class="tag"  x="${xN+16}" y="${yN+22}">节点 A（分压输出）</text>` +
+    `<text class="tag"  x="${xN-186}" y="${yTop-10}">I = ${fmtI(s.iR1)}　←　电流只有一条路：Vin → R1 → R2 → 回电源</text>` +
+    (s.iRL > 0 ? `<text class="tag" x="${xL+24}" y="${yN+40}" fill="#fbbf24">I_L = ${fmtI(s.iRL)} 分流走了</text>` : ``) +
+    `<text class="tag" x="${xN-30}" y="${yBot+40}">GND = 0V 参考点（是"起点"，不是"没有电压"）</text>`;
+}
+
+/* ---------- 主更新 ---------- */
+let VIN = 5, R1 = 10000, R2 = 10000, RL = Infinity;
+
+function read(){
+  VIN = $("vin").value / 1000;
+  R1  = logMap(+$("r1").value, 10, 1e6);
+  R2  = logMap(+$("r2").value, 10, 1e6);
+  RL  = $("noload").checked ? Infinity : logMap(+$("rl").value, 100, 1e7);
+}
+
+function update(){
+  read();
+  const s = solve(VIN, R1, R2, RL);
+
+  $("vinV").textContent = VIN.toFixed(2) + " V";
+  $("r1V").textContent  = fmtR(R1);
+  $("r2V").textContent  = fmtR(R2);
+  $("rlV").textContent  = RL === Infinity ? "空载" : fmtR(RL);
+
+  $("ideal").textContent = s.ideal.toFixed(3) + " V";
+  $("real").textContent  = s.real.toFixed(3) + " V";
+  $("ideal").className = "big muted";
+  $("real").className  = "big " + (Math.abs(s.errPct) < 0.5 ? "ok" : Math.abs(s.errPct) < 5 ? "warn" : "bad");
+
+  $("err").innerHTML = `<span class="${Math.abs(s.errPct) < 0.5 ? 'ok' : Math.abs(s.errPct) < 5 ? 'warn' : 'bad'}">`
+    + (s.err >= 0 ? "+" : "") + fmtV(s.err) + `（${s.errPct >= 0 ? "+" : ""}${s.errPct.toFixed(2)} %）</span>`;
+  $("kRatio").textContent = (s.ideal / VIN).toFixed(4);
+  $("rth").textContent = fmtR(s.rth);
+  $("iDiv").textContent = fmtI(s.iIdle);
+
+  // 判据：RL ≥ 100×Rth 才算"后级不拖累前级"
+  let verdict, cls = "note";
+  if(RL === Infinity){
+    $("ratio").textContent = "—（空载）";
+    verdict = `<b>空载，纸上谈兵最准的时刻。</b>记住这一屏的 Vout：等你把后级接上去，它就回不来了。`;
+  } else {
+    const r = RL / s.rth;
+    $("ratio").innerHTML = `<span class="${r >= 100 ? 'ok' : r >= 10 ? 'warn' : 'bad'}">${r.toFixed(r >= 100 ? 0 : 1)} ×</span>`
+      + `<span class="dim">　判据：≥100× 才不拖累</span>`;
+    if(r >= 100){
+      verdict = `<b>Rth = ${fmtR(s.rth)}，负载 ${fmtR(RL)}，比值 ${r.toFixed(0)}。</b>`
+        + `后级阻抗是源阻抗的 100 倍以上，误差 ${s.errPct.toFixed(2)}% —— 这是设计想要的状态。`
+        + `任何"分压 + 后级"的组合，都按 <b>RL ≥ 100×Rth</b> 这条线卡。`;
+    } else if(r >= 10){
+      cls = "note warn";
+      verdict = `<b>负载效应已经露头：</b>R2 和 RL 并联后阻值变成 ${fmtR(R2*RL/(R2+RL))}，比 R2 自己小了。`
+        + `输出掉了 ${Math.abs(s.errPct).toFixed(2)}%。要么把 R1/R2 整体缩小，要么在中间加一级跟随器（运放 / MOS）。`;
+    } else {
+      cls = "note bad";
+      verdict = `<b>负载效应主导：</b>R2 ∥ RL = ${fmtR(R2*RL/(R2+RL))}，你的分压器已经不是在分压了，`
+        + `是在给负载当限流电阻。误差 ${s.errPct.toFixed(1)}%。`
+        + `现场症状：空载调好、一插就飘；温度上来电阻一变，读数继续漂。`
+        + `这不是玄学，就是一条并联公式。`;
+    }
+  }
+  $("verdict").className = cls;
+  $("verdict").innerHTML = verdict;
+
+  // 功耗表
+  $("v1").textContent = fmtV(s.vR1); $("c1").textContent = fmtI(s.iR1);
+  $("p1").textContent = fmtW(s.pR1); $("f1").textContent = pkgFor(s.pR1);
+  $("v2").textContent = fmtV(s.vR2); $("c2").textContent = fmtI(s.iR2);
+  $("p2").textContent = fmtW(s.pR2); $("f2").textContent = pkgFor(s.pR2);
+  $("vL").textContent = RL === Infinity ? "—" : fmtV(s.real);
+  $("cL").textContent = RL === Infinity ? "0 A" : fmtI(s.iRL);
+  $("pL").textContent = RL === Infinity ? "0 W" : fmtW(s.pRL);
+
+  const pTotal = s.pR1 + s.pR2 + s.pRL;
+  const worst = Math.max(s.pR1, s.pR2);
+  $("pwrNote").className = worst > 1/16 ? "note warn" : "note";
+  $("pwrNote").innerHTML = `<b>总功耗 ${fmtW(pTotal)}</b>，其中 R1 吃 ${fmtW(s.pR1)}、R2 吃 ${fmtW(s.pR2)}。`
+    + `两个电阻取相同封装最省事，按大的那个（${pkgFor(worst)}）选。`
+    + (worst > 1/16
+        ? ` 超过 0402 的 1/16W 了——注意贴片电阻封装越小越怕长时间满载，选大一号不要钱。`
+        : ` 这个级别随便一颗 0402 都够。`)
+    + ` 记住：电池设备上，分压器是常年 24 小时漏电的负载，10k 和 1k 差 10 倍待机时间。`;
+
+  // 阻值档位对照（同一分压比，整体缩放）
+  const k = R2 / (R1 + R2);
+  const tiers = [100, 1000, 10000, 100000, 1000000];
+  $("tierBody").innerHTML = tiers.map(t => {
+    const a = t, b = t * (k / (1 - k));
+    const i = VIN / (a + b);
+    const rthHere = (a * b) / (a + b);
+    let tagTxt, clsT;
+    if(t <= 100){ tagTxt = "电流太大，纯烧电"; clsT = "bad"; }
+    else if(t <= 1000){ tagTxt = "带载强，但功耗别嫌高"; clsT = "warn"; }
+    else if(t <= 15000){ tagTxt = "甜点区：功耗 / 抗噪 / 带载都过"; clsT = "ok"; }
+    else if(t <= 200000){ tagTxt = "省电，但 ADC 采样要当心"; clsT = "warn"; }
+    else { tagTxt = "高阻节点，噪声和漏电流吃掉精度"; clsT = "bad"; }
+    return `<tr><td>${fmtR(a)} / ${fmtR(b)}</td><td>${fmtI(i)}</td><td>${fmtR(rthHere)}</td>`
+      + `<td class="${clsT}">${tagTxt}</td></tr>`;
+  }).join("");
+
+  draw(s);
+}
+
+["vin","r1","r2","rl"].forEach(id => $(id).addEventListener("input", update));
+$("noload").addEventListener("change", update);
+
+/* 三个快捷按钮 */
+const sliderSet = (id, v) => { $(id).value = v; };
+const invLog = (v, min, max) => Math.round(1000 * Math.log(v/min) / Math.log(max/min));
+
+$("btn10k").onclick = () => {
+  // 目标：以当前分压比，落在 10k 量级（R2 = 10k 定标）
+  const k = R2 / (R1 + R2);
+  const r2 = 10000;
+  const r1 = r2 * (1 - k) / k;
+  sliderSet("r1", Math.min(1000, Math.max(0, invLog(r1, 10, 1e6))));
+  sliderSet("r2", invLog(r2, 10, 1e6));
+  $("noload").checked = false;
+  sliderSet("rl", invLog(1e6, 100, 1e7));   // 模拟 1MΩ 的 ADC 输入
+  update();
+  $("verdict").className = "note";
+  $("verdict").innerHTML = `<b>10k 分压 + 1MΩ 后级。</b>为什么是 10k 而不是 1k 或 100k：`
+    + `<br>① <b>1k</b>：5V 时一路 ${fmtI(VIN/2000)}，电池设备 24 小时不睡觉地烧电，`
+    + `而且电阻自热（贴片 100mW 级别自热能让阻值飘 0.1% 以上，精度全丢）。`
+    + `<br>② <b>100k</b>：电流只有 ${fmtI(VIN/200000)}，看着漂亮，但 Rth 变成 50k ——`
+    + `MCU 的 ADC 采样窗口内充不满采样电容，12 位读数直接偏低；`
+    + `板上一点助焊剂残留、一点湿气（表面漏电相当于并了个几 MΩ）就能把电压拉下来。`
+    + `<br>③ <b>10k</b>：Rth = 5k，ADC 能充得满；5V 时 ${fmtI(VIN/20000)}（250µA），电池也扛得住；`
+    + `噪声敏感度还在可控范围。<b>所以 10k 是"三个方向都不吃亏"的交点</b>，不是祖传咒语。`;
+};
+
+$("btnHalf").onclick = () => {
+  sliderSet("vin", 5000);
+  sliderSet("r1", invLog(10000, 10, 1e6));
+  sliderSet("r2", invLog(10000, 10, 1e6));
+  $("noload").checked = true;
+  update();
+};
+
+$("btnBad").onclick = () => {
+  // 灾难现场：100k+100k 分压，直接接 10k 的负载
+  sliderSet("vin", 5000);
+  sliderSet("r1", invLog(100000, 10, 1e6));
+  sliderSet("r2", invLog(100000, 10, 1e6));
+  $("noload").checked = false;
+  sliderSet("rl", invLog(10000, 100, 1e7));
+  update();
+  $("verdict").className = "note bad";
+  $("verdict").innerHTML = `<b>这就是最常见的翻车姿势：</b>100k+100k 分压拿 2.5V 去做基准，`
+    + `后级随手接了个 10k 输入阻抗的东西。纸面 2.500V，实际 ${solve(5,100000,100000,10000).real.toFixed(3)}V，`
+    + `差了将近 1V。更难受的是这种错误<b>空载测试完全发现不了</b>——`
+    + `你调好的那天，负载还没焊上去。`;
+};
+
+update();
+</script>
+</body>
+</html>

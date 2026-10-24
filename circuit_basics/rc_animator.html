@@ -1,0 +1,543 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<title>RC 暂态动画 · 第 1 关 · 筑基期</title>
+<style>
+:root{
+  --bg:#0f172a; --surface:#1e293b; --surface-2:#334155;
+  --ink:#f1f5f9; --ink-muted:#94a3b8; --ink-dim:#64748b;
+  --rule:#334155; --accent:#38bdf8; --accent-2:#818cf8;
+  --ok:#4ade80; --warn:#fbbf24; --bad:#f87171;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{
+  background:var(--bg); color:var(--ink);
+  font-family:-apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", "Microsoft YaHei", sans-serif;
+  font-size:14px; line-height:1.7; padding:24px 20px 60px;
+}
+.wrap{max-width:1220px;margin:0 auto}
+a.back{color:var(--accent);text-decoration:none;font-size:13px}
+a.back:hover{text-decoration:underline}
+.stage{
+  display:inline-block;padding:3px 12px;border:1px solid var(--accent);border-radius:999px;
+  color:var(--accent);font-size:12px;letter-spacing:1px;margin:14px 0 8px;
+}
+h1{font-size:24px;font-weight:600;letter-spacing:.5px}
+p.lead{color:var(--ink-muted);margin:6px 0 18px;max-width:880px}
+.grid{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,320px);gap:18px}
+@media (max-width:1020px){.grid{grid-template-columns:1fr}}
+.panel{background:var(--surface);border:1px solid var(--rule);border-radius:10px;padding:16px 18px}
+.panel h2{font-size:15px;font-weight:600;margin-bottom:10px;color:var(--accent)}
+.panel h2 .sub{color:var(--ink-dim);font-weight:400;font-size:12px;margin-left:6px}
+label.row{display:block;margin:13px 0}
+label.row .top{display:flex;justify-content:space-between;align-items:baseline;font-size:13px}
+label.row .name{color:var(--ink-muted)}
+label.row .val{font-family:Consolas,monospace;font-size:14px}
+input[type=range]{width:100%;margin-top:6px;accent-color:var(--accent);height:20px}
+.hint{color:var(--ink-dim);font-size:12px;margin-top:2px}
+button{
+  background:var(--surface-2);color:var(--ink);border:1px solid var(--rule);
+  padding:8px 14px;border-radius:6px;font-size:13px;cursor:pointer;font-family:inherit;margin:4px 6px 4px 0;
+}
+button:hover{border-color:var(--accent);color:var(--accent)}
+button.primary{border-color:var(--accent);color:var(--accent)}
+button.on{border-color:var(--ok);color:var(--ok)}
+.presets{display:flex;flex-wrap:wrap;gap:6px;margin:4px 0 2px}
+svg{width:100%;height:auto;display:block;background:#0b1220;border:1px solid var(--rule);border-radius:8px}
+.axis{stroke:var(--rule);stroke-width:1}
+.grid-l{stroke:#1e293b;stroke-width:1}
+.tau-l{stroke:var(--accent-2);stroke-width:1.4;stroke-dasharray:4 4}
+.vth{stroke:var(--warn);stroke-width:1;stroke-dasharray:3 5}
+.vcurve{stroke:var(--accent);stroke-width:2.4;fill:none}
+.icurve{stroke:var(--warn);stroke-width:2;fill:none;stroke-dasharray:7 4}
+.lead-l{stroke:var(--ok);stroke-width:1.6}
+.tau-t{font-family:Consolas,monospace;font-size:11px;fill:var(--accent-2)}
+.ax-t{font-family:Consolas,monospace;font-size:11px;fill:var(--ink-dim)}
+.rd-t{font-family:Consolas,monospace;font-size:13px;fill:var(--ink)}
+.readout{display:grid;grid-template-columns:repeat(2,1fr);gap:10px 14px;margin-top:12px}
+.cell{background:var(--surface-2);border-radius:6px;padding:8px 10px}
+.cell .k{color:var(--ink-dim);font-size:11px;letter-spacing:.4px}
+.cell .v{font-family:Consolas,monospace;font-size:19px}
+.ok{color:var(--ok)} .warn{color:var(--warn)} .bad{color:var(--bad)} .muted{color:var(--ink-muted)}
+.dim{color:var(--ink-dim)}
+.note{
+  background:rgba(56,189,248,.07);border-left:3px solid var(--accent);
+  padding:10px 12px;border-radius:0 6px 6px 0;margin-top:12px;font-size:13px;color:var(--ink-muted);
+}
+.note.warn{background:rgba(251,191,36,.08);border-left-color:var(--warn)}
+.note.bad{background:rgba(248,113,113,.09);border-left-color:var(--bad)}
+.note b{color:var(--ink)}
+.tabs{display:flex;gap:0;margin-bottom:12px;border-bottom:1px solid var(--rule)}
+.tabs div{padding:6px 14px;font-size:13px;cursor:pointer;color:var(--ink-dim);border-bottom:2px solid transparent}
+.tabs div.sel{color:var(--accent);border-bottom-color:var(--accent)}
+footer{margin-top:26px;color:var(--ink-dim);font-size:12px;text-align:center}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <a class="back" href="../硬件学习路线图.html">← 返回总路线图</a>
+  <div class="stage">第 1 关 · 筑基期</div>
+  <h1>RC 暂态动画：τ 不是"充满的时间"，是"还差 36.8%"</h1>
+  <p class="lead">
+    同一颗电容，接 1k 是脉冲，接 1M 是慢动作。拖动 R、C、V0，按下<b>播放</b>或<b>单步</b>，
+    盯着两件事：<b>电压曲线</b>怎么爬，<b>电流表指针</b>怎么从最大一路回到零。
+    指针归零的那一刻，电容才真的"满了"——在此之前它一直在抽水。
+  </p>
+
+  <div class="presets">
+    <button data-p="led">preset ① LED 上电延时</button>
+    <button data-p="debounce">preset ② 按键消抖（τ=1ms）</button>
+    <button data-p="pwm">preset ③ PWM 变 DAC</button>
+    <button data-p="decouple">preset ④ 电源去耦</button>
+    <button id="reset" class="dim">复位</button>
+  </div>
+
+  <div class="grid">
+    <!-- 左：曲线 -->
+    <div>
+      <div class="panel">
+        <div class="tabs">
+          <div id="tabC" class="sel">充电（0 → V0）</div>
+          <div id="tabD">放电（V0 → 0）</div>
+        </div>
+        <h2>v(t) 与 i(t) <span class="sub">实线 = 电容电压（蓝），虚线 = 回路电流（黄）</span></h2>
+        <svg id="chart" viewBox="0 0 760 360" role="img" aria-label="RC 充放电曲线">
+          <g id="grid"></g>
+          <path id="curve" class="vcurve"></path>
+          <path id="icurve" class="icurve"></path>
+          <g id="mark"></g>
+          <line id="lead" class="lead-l" x1="0" y1="0" x2="0" y2="0"></line>
+          <g id="axis"></g>
+        </svg>
+
+        <div style="margin-top:12px">
+          <button id="play" class="primary">▶ 播放</button>
+          <button id="step">单步 +0.25τ</button>
+          <button id="back1">退回 −0.25τ</button>
+          <button id="zero">回到 t = 0</button>
+          <span class="dim" id="tLabel" style="font-family:Consolas,monospace;margin-left:8px">t = 0.000 τ</span>
+        </div>
+
+        <div class="readout">
+          <div class="cell"><div class="k">τ = RC</div><div class="v" id="oTau">1.000 ms</div></div>
+          <div class="cell"><div class="k">当前 v<sub>C</sub></div><div class="v ok" id="oV">0.000 V</div></div>
+          <div class="cell"><div class="k">当前 i（流入电容）</div><div class="v warn" id="oI">1.100 mA</div></div>
+          <div class="cell"><div class="k">完成度</div><div class="v" id="oPct">0.0 %</div></div>
+          <div class="cell"><div class="k">t = 1τ 时到达</div><div class="v muted">63.2 %</div></div>
+          <div class="cell"><div class="k">t = 5τ 时到达</div><div class="v muted">99.3 %</div></div>
+        </div>
+      </div>
+
+      <div class="panel" style="margin-top:18px">
+        <h2>关键刻度 <span class="sub">全部由当前 τ 换算，这一张表以后靠心算</span></h2>
+        <table style="width:100%;border-collapse:collapse;font-family:Consolas,monospace;font-size:13px">
+          <thead>
+            <tr style="color:var(--ink-dim);font-size:12px">
+              <th style="text-align:left;padding:5px 4px;border-bottom:1px solid var(--rule)">时刻</th>
+              <th style="text-align:left;padding:5px 4px;border-bottom:1px solid var(--rule)">绝对时间</th>
+              <th style="text-align:left;padding:5px 4px;border-bottom:1px solid var(--rule)">到达比例</th>
+              <th style="text-align:left;padding:5px 4px;border-bottom:1px solid var(--rule)">剩余电流</th>
+              <th style="text-align:left;padding:5px 4px;border-bottom:1px solid var(--rule)">工程上意味着什么</th>
+            </tr>
+          </thead>
+          <tbody id="scaleBody"></tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- 右：控制 + 电流表 + 讲解 -->
+    <div>
+      <div class="panel">
+        <h2>参数</h2>
+        <label class="row">
+          <div class="top"><span class="name">R 电阻</span><span class="val" id="rV">3.00 kΩ</span></div>
+          <input type="range" id="r" min="0" max="1000" value="562">
+          <div class="hint">下限 10Ω，上限 10MΩ</div>
+        </label>
+        <label class="row">
+          <div class="top"><span class="name">C 电容</span><span class="val" id="cV">330.00 nF</span></div>
+          <input type="range" id="c" min="0" max="1000" value="536">
+          <div class="hint">下限 10pF（走线寄生），上限 10mF（大电解）</div>
+        </label>
+        <label class="row">
+          <div class="top"><span class="name">V0 目标电压</span><span class="val" id="vV">3.30 V</span></div>
+          <input type="range" id="v0" min="900" max="12000" value="3300" step="10">
+          <div class="hint">1.8 / 3.3 / 5 / 12 V 都试一遍</div>
+        </label>
+        <div class="note" id="tauNote"><b>τ = 1.000 ms</b>　5τ = 5.000 ms</div>
+      </div>
+
+      <div class="panel" style="margin-top:18px">
+        <h2>回路电流表 <span class="sub">满偏 = V0/R，即 t=0 那一刻</span></h2>
+        <svg id="meter" viewBox="0 0 300 190" role="img" aria-label="指针式电流表">
+          <path d="M30 155 A120 120 0 0 1 270 155" fill="none" stroke="#334155" stroke-width="14"/>
+          <path id="arcFill" d="" fill="none" stroke="#fbbf24" stroke-width="14"/>
+          <g id="ticks"></g>
+          <line id="needle" x1="150" y1="155" x2="150" y2="52" stroke="#f87171" stroke-width="3" stroke-linecap="round"/>
+          <circle cx="150" cy="155" r="8" fill="#f1f5f9"/>
+          <text x="150" y="185" text-anchor="middle" class="ax-t" id="mLabel">0.0 µA</text>
+          <text x="26" y="172" class="ax-t">0</text>
+          <text x="258" y="172" class="ax-t">满偏</text>
+        </svg>
+        <div class="note" id="meterNote">
+          <b>指针顶到满偏 = 电容此刻是短路。</b>上电打嗝、烧触点、跳 UVLO，全发生在这格。
+        </div>
+      </div>
+
+      <div class="panel" style="margin-top:18px">
+        <h2>这一屏在说什么</h2>
+        <div class="note" id="sceneNote"></div>
+        <div class="note warn" style="margin-top:12px">
+          <b>三个最常见的误算：</b>
+          <br>① 把 τ 当"充满时间"。5τ 才是工程意义上的稳定（99.3%），3τ 只有 95%——
+          12 位 ADC 要的是 0.5 LSB，等于 0.012%，至少要 <b>9τ</b>，工程上留余量按 10~11τ。
+          <br>② 用 <b>ΔV = I·Δt/C</b> 时把 Δt 当 τ 用。去耦电容能顶多久是这条线性式算的，不是指数式。
+          <br>③ 只算 RC 忘了 <b>ESL 和走线电感</b>。同一颗 100nF 拉 30cm 排线，
+          就是一座 ~900kHz 的谐振塔，加了电容反而更吵。
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <footer>第 1 关 · 电路基础 · 纯离线单文件，双击即开 · 配套代码：02_rc_transient.c（欧拉 vs 解析解误差验证）</footer>
+</div>
+
+<script>
+"use strict";
+const $ = (id) => document.getElementById(id);
+const kPi = Math.PI;
+
+/* ---------- 单位格式化 ---------- */
+function fmtR(o){
+  if(o >= 1e6) return (o/1e6).toFixed(2) + " MΩ";
+  if(o >= 1e3) return (o/1e3).toFixed(o >= 1e5 ? 1 : 2) + " kΩ";
+  return o.toFixed(o >= 100 ? 0 : 2) + " Ω";
+}
+function fmtC(f){
+  if(f >= 1e-3) return (f*1e3).toFixed(2) + " mF";
+  if(f >= 1e-6) return (f*1e6).toFixed(f >= 1e-5 ? 1 : 2) + " µF";
+  if(f >= 1e-9) return (f*1e9).toFixed(1) + " nF";
+  return (f*1e12).toFixed(0) + " pF";
+}
+function fmtT(s){
+  if(s >= 1) return s.toFixed(3) + " s";
+  if(s >= 1e-3) return (s*1e3).toFixed(3) + " ms";
+  if(s >= 1e-6) return (s*1e6).toFixed(3) + " µs";
+  if(s >= 1e-9) return (s*1e9).toFixed(1) + " ns";
+  return (s*1e12).toFixed(0) + " ps";
+}
+function fmtI(i){
+  const a = Math.abs(i);
+  if(a >= 1) return i.toFixed(3) + " A";
+  if(a >= 1e-3) return (i*1e3).toFixed(3) + " mA";
+  if(a >= 1e-6) return (i*1e6).toFixed(2) + " µA";
+  return (i*1e9).toFixed(2) + " nA";
+}
+const logMap = (t, a, b) => a * Math.pow(b/a, t/1000);
+const invLog = (v, a, b) => Math.round(1000 * Math.log(v/a) / Math.log(b/a));
+
+/* ---------- 状态 ---------- */
+let R = 3000, C = 330e-9, V0 = 3.3;
+let mode = "charge";              // charge | discharge
+let tn = 0;                       // 归一化时间 t/τ，0 ~ 6
+let playing = false, rafId = 0, lastTs = 0;
+
+const TAU_MAX = 6;                // 横轴画到 6τ
+
+/* ---------- 解析解 ---------- */
+function vOf(tn){
+  return mode === "charge"
+    ? V0 * (1 - Math.exp(-tn))
+    : V0 * Math.exp(-tn);
+}
+/* 充电时电流流入电容（正），放电时从电容流出、经 R 回到地（这里取大小并标方向） */
+function iOf(tn){
+  const mag = (V0 / R) * Math.exp(-tn);
+  return mode === "charge" ? mag : -mag;
+}
+
+/* ---------- 画坐标网格与曲线 ---------- */
+const PAD = {l:62, r:16, t:18, b:44};
+const W = 760, H = 360;
+const plotW = W - PAD.l - PAD.r, plotH = H - PAD.t - PAD.b;
+const X = (tn) => PAD.l + (tn / TAU_MAX) * plotW;
+const Yv = (v) => PAD.t + (1 - v / Math.max(V0, 1e-9)) * plotH;
+
+function drawStatic(){
+  let grid = "", axis = "";
+  // 水平网格（电压刻度）
+  for(let i = 0; i <= 5; i++){
+    const frac = i / 5, y = Yv(V0 * frac);
+    grid += `<line class="grid-l" x1="${PAD.l}" y1="${y.toFixed(1)}" x2="${W-PAD.r}" y2="${y.toFixed(1)}"/>`;
+    axis += `<text class="ax-t" x="${PAD.l-8}" y="${(y+4).toFixed(1)}" text-anchor="end">${(V0*frac).toFixed(2)}V</text>`;
+  }
+  // 垂直网格（τ 刻度）
+  for(let i = 0; i <= TAU_MAX; i++){
+    const x = X(i);
+    grid += `<line class="grid-l" x1="${x.toFixed(1)}" y1="${PAD.t}" x2="${x.toFixed(1)}" y2="${PAD.t+plotH}"/>`;
+    axis += `<text class="ax-t" x="${x.toFixed(1)}" y="${PAD.t+plotH+16}" text-anchor="middle">${i}τ</text>`;
+  }
+  // 1/3VCC、2/3VCC 参考线（施密特/555 的阈值）
+  [1/3, 2/3].forEach(f => {
+    const y = Yv(V0 * f);
+    grid += `<line class="vth" x1="${PAD.l}" y1="${y.toFixed(1)}" x2="${W-PAD.r}" y2="${y.toFixed(1)}"/>`;
+    axis += `<text class="ax-t" x="${W-PAD.r-2}" y="${(y-4).toFixed(1)}" text-anchor="end" fill="#fbbf24">${(f*3).toFixed(0)}/3 VCC</text>`;
+  });
+  grid += `<line class="axis" x1="${PAD.l}" y1="${PAD.t+plotH}" x2="${W-PAD.r}" y2="${PAD.t+plotH}"/>`;
+  grid += `<line class="axis" x1="${PAD.l}" y1="${PAD.t}" x2="${PAD.l}" y2="${PAD.t+plotH}"/>`;
+  axis += `<text class="ax-t" x="${W/2}" y="${H-6}" text-anchor="middle">横轴：t / τ（τ = ${fmtT(R*C)}）　纵轴：电容电压</text>`;
+  $("grid").innerHTML = grid;
+  $("axis").innerHTML = axis;
+
+  // 曲线（解析解，60 个点足够平滑）
+  let d = "", di = "";
+  for(let i = 0; i <= 120; i++){
+    const t = TAU_MAX * i / 120;
+    d += (i === 0 ? "M" : "L") + X(t).toFixed(1) + " " + Yv(vOf(t)).toFixed(1);
+    // 电流曲线：满偏映射到 plotH 底部，方便同屏看
+    const frac = Math.abs(iOf(t)) / (V0 / R);
+    const yi = PAD.t + plotH - frac * plotH * 0.92;
+    di += (i === 0 ? "M" : "L") + X(t).toFixed(1) + " " + yi.toFixed(1);
+  }
+  $("curve").setAttribute("d", d);
+  $("icurve").setAttribute("d", di);
+
+  // τ / 3τ / 5τ 竖线与标注
+  const marks = [
+    {n:1, txt:"1τ · 63.2%"},
+    {n:3, txt:"3τ · 95.0%"},
+    {n:5, txt:"5τ · 99.3% 稳定"}
+  ];
+  $("mark").innerHTML = marks.map(m =>
+    `<line class="tau-l" x1="${X(m.n)}" y1="${PAD.t}" x2="${X(m.n)}" y2="${PAD.t+plotH}"/>` +
+    `<text class="tau-t" x="${X(m.n)+4}" y="${PAD.t+13}">${m.txt}</text>`
+  ).join("");
+}
+
+/* ---------- 电流表 ---------- */
+function drawMeter(){
+  const cx = 150, cy = 155, r = 120;
+  const frac = Math.min(1, Math.abs(iOf(tn)) / (V0 / R));   // 0~1
+  const ang = (-90 + frac * 180) * kPi / 180;
+  const nx = cx + 103 * Math.sin(ang), ny = cy - 103 * Math.cos(ang);
+  $("needle").setAttribute("x2", nx.toFixed(1));
+  $("needle").setAttribute("y2", ny.toFixed(1));
+
+  // 弧
+  const a0 = -90 * kPi / 180, a1 = ang;
+  const x0 = cx + r * Math.sin(a0), y0 = cy - r * Math.cos(a0);
+  const x1 = cx + r * Math.sin(a1), y1 = cy - r * Math.cos(a1);
+  $("arcFill").setAttribute("d",
+    frac < 0.002 ? "" : `M${x0.toFixed(1)} ${y0.toFixed(1)} A${r} ${r} 0 0 1 ${x1.toFixed(1)} ${y1.toFixed(1)}`);
+  $("arcFill").setAttribute("stroke", frac > 0.7 ? "#f87171" : frac > 0.25 ? "#fbbf24" : "#4ade80");
+
+  // 刻度
+  let ticks = "";
+  for(let i = 0; i <= 10; i++){
+    const a = (-90 + i * 18) * kPi / 180;
+    const sx = cx + (r - 12) * Math.sin(a), sy = cy - (r - 12) * Math.cos(a);
+    const ex = cx + (r + 12) * Math.sin(a), ey = cy - (r + 12) * Math.cos(a);
+    ticks += `<line x1="${sx.toFixed(1)}" y1="${sy.toFixed(1)}" x2="${ex.toFixed(1)}" y2="${ey.toFixed(1)}"
+              stroke="${i >= 8 ? '#f87171' : '#64748b'}" stroke-width="${i % 5 === 0 ? 2 : 1}"/>`;
+  }
+  $("ticks").innerHTML = ticks;
+
+  const i = iOf(tn);
+  $("mLabel").textContent = (mode === "discharge" ? "反向 " : "") + fmtI(Math.abs(i));
+  $("meterNote").innerHTML = frac > 0.9
+    ? `<b>指针几乎顶格 = 电容此刻近似短路。</b>上电打嗝、烧开关触点、USB 限流跳闸，全发生在这一格。`
+    : frac > 0.3
+    ? `电流已经掉到峰值的 ${(frac*100).toFixed(0)}%。电阻上的压降在缩小，电容上的电压在长大——两者之和恒等于 V0（KVL）。`
+    : frac > 0.02
+    ? `电流只剩 ${(frac*100).toFixed(1)}%。这时候电容上的电压已经接近 V0，电阻两端几乎没压差了。`
+    : `<b>指针归零 = 电容充满了。</b>此时 v<sub>C</sub> = V0，电阻上 0V，回路里没有电流——注意"充满"永远是渐近的，5τ 只是 99.3%。`;
+}
+
+/* ---------- 刻度表 ---------- */
+function drawScale(){
+  const tau = R * C;
+  const rows = [
+    {n:0.405, tag:"过 1/3·V0", use:"施密特触发器翻转下界 / 555 下阈值"},
+    {n:0.693, tag:"半程（ln2）", use:"555 公式里那个 0.693 的来历"},
+    {n:1,     tag:"1τ", use:"走完 63.2%，还剩 1/3 的路——很多人以为这就叫【充满】"},
+    {n:2,     tag:"2τ", use:"86.5%，数字电路认为快到了，模拟电路认为还早"},
+    {n:1.099, tag:"过 2/3·V0", use:"555 上阈值 / 施密特翻转上界"},
+    {n:2.197, tag:"tr(10~90)", use:"上升时间 = ln9·τ，芯片手册上那个 tr 就是这么定义的"},
+    {n:3,     tag:"3τ", use:"95.0%。8 位 ADC 够用，12 位远远不够"},
+    {n:5,     tag:"5τ", use:"99.3%。工程上的【稳定了】，消抖/延时最常用的窗口"},
+  ];
+  $("scaleBody").innerHTML = rows.map(r => {
+    const pct = mode === "charge" ? (1 - Math.exp(-r.n)) * 100 : Math.exp(-r.n) * 100;
+    const iLeft = Math.exp(-r.n) * 100;
+    return `<tr>
+      <td style="padding:5px 4px;border-bottom:1px solid rgba(51,65,85,.45)">${r.tag}</td>
+      <td style="padding:5px 4px;border-bottom:1px solid rgba(51,65,85,.45)">${fmtT(r.n * tau)}</td>
+      <td style="padding:5px 4px;border-bottom:1px solid rgba(51,65,85,.45)" class="${pct>99?'ok':pct>90?'warn':'muted'}">${pct.toFixed(1)} %</td>
+      <td style="padding:5px 4px;border-bottom:1px solid rgba(51,65,85,.45)">${iLeft.toFixed(1)} %</td>
+      <td style="padding:5px 4px;border-bottom:1px solid rgba(51,65,85,.45);font-family:inherit;color:var(--ink-muted)">${r.use}</td>
+    </tr>`;
+  }).join("");
+}
+
+/* ---------- 场景讲解（跟着 preset 走） ---------- */
+let sceneKey = "free";
+const SCENES = {
+  led: {
+    cls: "note",
+    txt: `<b>preset ①：LED 上电延时。</b>10k + 100nF，τ = 1ms。灯不是"啪"地亮，而是在约 2.2ms（tr）内肉眼看不出地爬亮。`
+      + `<br>关键点在这里：<b>LED 必须限流。</b>没有这颗 R，上电瞬间电容是短路，
+      你的电源直接看见一颗正向导通的二极管——电流由 LED 自己的伏安曲线决定，
+      而那条曲线在 2.3V 已经是几百 mA 量级，灯会在几百毫秒内变黑。`
+      + `<br>正确算法：R = (V源 − V<sub>LED</sub>) / I<sub>目标</sub>。5V 驱 20mA 红 LED → (5−2.1)/0.02 = 145Ω，取 150Ω。`
+      + `取 330Ω 就是 8.8mA，白天照样看得见，功耗还少一半——师傅们默认 330Ω 就是这个原因。`
+  },
+  debounce: {
+    cls: "note",
+    txt: `<b>preset ②：按键消抖。</b>10k 上拉 + 100nF 到地，τ = 1ms，5τ = 5ms。`
+      + `<br>机械触点闭合时会弹跳 3~10 次、每次 0.1~1ms，全程 1~5ms。RC 把这段抖动"抹平"：`
+      + `触点稳定后约 0.4ms 爬过 1/3·VCC，5ms 后基本到顶；抖动期间电容反复充放，尖刺被吃掉。`
+      + `<br>为什么是 10k 不是 1k：按键按住时 1k 从 3.3V 到地白烧 3.3mA，10k 只有 330µA；`
+      + `100Ω 就是 33mA，按住时白耗电，触点也要多扛这份电流。`
+      + `<br>为什么不是 1M：源阻抗太高，手指靠近、走线绕个圈，感应噪声就能把节点抬过 1/3·VCC 误触发。`
+      + `<b>10k + 100nF 是"够用 + 不烧 + 不吵"的交点。</b>`
+  },
+  pwm: {
+    cls: "note warn",
+    txt: `<b>preset ③：PWM 变 DAC。</b>把上面的 R、C 调到 τ ≥ 5ms（比如 10k + 1µF），
+      这条曲线的小台阶就是 PWM 每个周期灌进去的电荷。`
+      + `<br>纹波近似：<b>ΔV ≈ V0 · T<sub>pwm</sub> / (2τ)</b>。3.3V / 20kHz / τ=10ms → ΔV ≈ 8.3mV，
+      约 8.6 位有效。想要 8 位（纹波 ≤ 3.3/256 = 12.9mV）需要 τ ≥ 6.4ms。`
+      + `<br>代价写在右边刻度表上：τ = 10ms 意味着 5τ = 50ms 才走到位。`
+      + `<b>带宽 = 1/(2πτ)，精度 ∝ τ</b>——这两个要求在 RC 上天生互斥。
+      要快又要平，只能上运放跟随器或者真 DAC，RC 换不来精度。`
+  },
+  decouple: {
+    cls: "note bad",
+    txt: `<b>preset ④：电源去耦。</b>把 R 拖到 10Ω 以下、C 拖到 100nF：τ = 1µs。`
+      + `<br>看起来很快很美好，但去耦真正的敌人<b>不是电阻，是电感</b>。
+      去耦电容要供的是芯片在几 ns 内突然抽走的电流，公式换成线性的：<b>Δt = C·ΔV / I</b>。`
+      + `<br>100nF、允许跌落 50mV、负载突变 50mA → 只顶 <b>100ns</b>。
+      160MHz 的 MCU 一个时钟 6.25ns，也就是说这颗电容只够喂十几个周期。`
+      + `<br>所以去耦必须<b>每个电源脚一颗、紧挨着放</b>，靠"短回路"把 ESL/走线电感压下去。
+      同一颗 100nF，紧贴是滤波，拉 30cm 排线（≈300nH）就是一座 919kHz 的谐振塔——
+      加了电容反而辐射超标，挪近一点立刻好。<b>L 是敌人，不是 C。</b>`
+  },
+  free: {
+    cls: "note",
+    txt: `<b>自由模式。</b>τ = RC，代进去算一遍，再和右边刻度表对一下——`
+      + `对得上说明你对这个式子有手感了。`
+      + `<br>三个动作建议：① 把 C 拉到最小（10pF，这就是一段走线的寄生）看 τ 有多小；
+      ② 把 R 拉到 10Ω 看指针几乎一直顶格（上电冲击）；
+      ③ 按<b>单步</b>，一格一格看电压涨多少、电流掉多少，加起来恒等于 V0。`
+  }
+};
+
+/* ---------- 更新 ---------- */
+function update(keepT){
+  R = logMap(+$("r").value, 10, 1e7);
+  C = logMap(+$("c").value, 10e-12, 10e-3);
+  V0 = $("v0").value / 1000;
+  if(!keepT) tn = Math.min(tn, TAU_MAX);
+
+  $("rV").textContent = fmtR(R);
+  $("cV").textContent = fmtC(C);
+  $("vV").textContent = V0.toFixed(2) + " V";
+
+  const tau = R * C;
+  $("oTau").textContent = fmtT(tau);
+  $("tauNote").innerHTML = `<b>τ = ${fmtT(tau)}</b>　5τ = ${fmtT(5*tau)}　截止频率 fc = 1/(2πτ) = `
+    + (tau >= 1e-3 ? ((1/(2*kPi*tau))).toFixed(1) + " Hz" : ((1/(2*kPi*tau))/1e3).toFixed(1) + " kHz");
+
+  drawStatic();
+  drawScale();
+  drawDynamic();
+  $("sceneNote").className = "note " + (SCENES[sceneKey].cls.replace("note","").trim());
+  $("sceneNote").innerHTML = SCENES[sceneKey].txt;
+}
+
+function drawDynamic(){
+  const v = vOf(tn), i = iOf(tn);
+  const x = X(tn);
+  $("lead").setAttribute("x1", x.toFixed(1));
+  $("lead").setAttribute("x2", x.toFixed(1));
+  $("lead").setAttribute("y1", PAD.t);
+  $("lead").setAttribute("y2", PAD.t + plotH);
+
+  const pct = mode === "charge" ? v / V0 * 100 : v / V0 * 100;
+  $("oV").textContent = v.toFixed(3) + " V";
+  $("oI").textContent = fmtI(i);
+  $("oPct").textContent = pct.toFixed(1) + " %";
+  $("oPct").className = "v " + (pct >= 99 ? "ok" : pct >= 90 ? "warn" : pct >= 50 ? "" : "muted");
+  $("tLabel").textContent = `t = ${tn.toFixed(3)} τ = ${fmtT(tn * R * C)}`
+    + `（${mode === "charge" ? "充电" : "放电"}）`;
+  drawMeter();
+}
+
+/* ---------- 播放 ---------- */
+function tick(ts){
+  if(!playing) return;
+  if(!lastTs) lastTs = ts;
+  const dt = (ts - lastTs) / 1000;
+  lastTs = ts;
+  tn += dt * 1.1;                       // 每秒走 1.1 个 τ
+  if(tn >= TAU_MAX){ tn = TAU_MAX; stop(); }
+  drawDynamic();
+  if(playing) rafId = requestAnimationFrame(tick);
+}
+function play(){
+  playing = true; lastTs = 0;
+  $("play").textContent = "⏸ 暂停";
+  $("play").classList.add("on");
+  rafId = requestAnimationFrame(tick);
+}
+function stop(){
+  playing = false; cancelAnimationFrame(rafId);
+  $("play").textContent = "▶ 播放";
+  $("play").classList.remove("on");
+}
+
+$("play").onclick = () => { if(playing) stop(); else { if(tn >= TAU_MAX) tn = 0; play(); } };
+$("step").onclick = () => { stop(); tn = Math.min(TAU_MAX, tn + 0.25); drawDynamic(); };
+$("back1").onclick = () => { stop(); tn = Math.max(0, tn - 0.25); drawDynamic(); };
+$("zero").onclick = () => { stop(); tn = 0; drawDynamic(); };
+
+$("tabC").onclick = () => { mode = "charge"; $("tabC").className = "sel"; $("tabD").className = ""; update(); };
+$("tabD").onclick = () => { mode = "discharge"; $("tabD").className = "sel"; $("tabC").className = ""; update(); };
+
+["r","c","v0"].forEach(id => $(id).addEventListener("input", () => { sceneKey = "free"; update(true); }));
+
+/* ---------- presets ---------- */
+const PRESETS = {
+  led:      {r:10000,  c:100e-9, v:3.3, mode:"charge",    t:0},
+  debounce: {r:10000,  c:100e-9, v:3.3, mode:"charge",    t:0},
+  pwm:      {r:10000,  c:1e-6,   v:3.3, mode:"charge",    t:0},
+  decouple: {r:10,     c:100e-9, v:3.3, mode:"charge",    t:0}
+};
+document.querySelectorAll("[data-p]").forEach(b => {
+  b.onclick = () => {
+    const p = PRESETS[b.dataset.p];
+    sceneKey = b.dataset.p;
+    $("r").value = invLog(p.r, 10, 1e7);
+    $("c").value = invLog(p.c, 10e-12, 10e-3);
+    $("v0").value = Math.round(p.v * 1000);
+    mode = p.mode;
+    tn = p.t;
+    $("tabC").className = "sel"; $("tabD").className = "";
+    update();
+  };
+});
+$("reset").onclick = () => {
+  sceneKey = "free";
+  $("r").value = invLog(3000, 10, 1e7);
+  $("c").value = invLog(330e-9, 10e-12, 10e-3);
+  $("v0").value = 3300;
+  mode = "charge"; tn = 0;
+  $("tabC").className = "sel"; $("tabD").className = "";
+  update();
+};
+
+update();
+</script>
+</body>
+</html>

@@ -1,0 +1,214 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>混叠动画实验室 · 第 6 关 · 望闻问切</title>
+<style>
+:root {
+  --bg: #0f172a; --surface: #1e293b; --surface-2: #334155;
+  --ink: #f1f5f9; --ink-muted: #94a3b8; --ink-dim: #64748b;
+  --rule: #334155; --accent: #38bdf8; --accent-2: #818cf8;
+  --ok: #4ade80; --warn: #fbbf24; --bad: #f87171;
+}
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body {
+  background: var(--bg); color: var(--ink);
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", "Microsoft YaHei", sans-serif;
+  font-size: 14px; line-height: 1.7; padding: 24px;
+}
+.mono { font-family: Consolas, "Courier New", monospace; }
+.header { max-width: 1080px; margin: 0 auto 18px; }
+.stage {
+  display: inline-block; background: var(--surface-2); color: var(--accent);
+  border: 1px solid var(--accent); border-radius: 999px;
+  padding: 2px 14px; font-size: 12px; margin-bottom: 10px;
+}
+h1 { font-size: 22px; margin-bottom: 6px; }
+.sub { color: var(--ink-muted); }
+.wrap { max-width: 1080px; margin: 0 auto; display: grid; gap: 16px; }
+.panel {
+  background: var(--surface); border: 1px solid var(--rule);
+  border-radius: 10px; padding: 18px;
+}
+.panel h2 { font-size: 15px; color: var(--accent); margin-bottom: 10px; }
+.ctrls { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+.ctrl label { display: flex; justify-content: space-between; color: var(--ink-muted); margin-bottom: 4px; }
+.ctrl label b { color: var(--ink); font-family: Consolas, monospace; }
+input[type=range] { width: 100%; accent-color: var(--accent); }
+.presets { display: flex; gap: 10px; flex-wrap: wrap; margin-top: 12px; }
+.presets button {
+  background: var(--surface-2); color: var(--ink); border: 1px solid var(--rule);
+  border-radius: 8px; padding: 7px 14px; cursor: pointer; font-size: 13px;
+  font-family: inherit;
+}
+.presets button:hover { border-color: var(--accent); color: var(--accent); }
+.verdict { border-radius: 8px; padding: 10px 14px; margin-top: 12px; border: 1px solid var(--rule); }
+.verdict.ok  { border-color: var(--ok);  color: var(--ok); }
+.verdict.warn{ border-color: var(--warn); color: var(--warn); }
+.verdict.bad { border-color: var(--bad); color: var(--bad); }
+.legend { display: flex; gap: 18px; margin-top: 8px; color: var(--ink-muted); font-size: 12px; flex-wrap: wrap; }
+.legend i { display: inline-block; width: 22px; height: 3px; vertical-align: middle; margin-right: 5px; }
+svg { width: 100%; height: auto; display: block; background: var(--bg); border-radius: 8px; border: 1px solid var(--rule); }
+.note {
+  border-left: 3px solid var(--accent-2); background: var(--surface-2);
+  padding: 10px 14px; border-radius: 0 8px 8px 0; color: var(--ink-muted); margin-top: 12px;
+}
+.note b { color: var(--ink); }
+.formula { font-family: Consolas, monospace; color: var(--warn); }
+a { color: var(--accent); }
+</style>
+</head>
+<body>
+<div class="header">
+  <span class="stage">第 6 关 · 望闻问切</span>
+  <h1>混叠动画实验室：你看到的正弦，可能根本不是它</h1>
+  <p class="sub">拖动滑块调信号频率 f 和采样率 fs，看仪器"画给你的波形"是怎么骗你的。返回：<a href="index.html">本关目录</a> · <a href="../硬件学习路线图.html">总路线图</a></p>
+</div>
+
+<div class="wrap">
+  <div class="panel">
+    <h2>① 控制台</h2>
+    <div class="ctrls">
+      <div class="ctrl">
+        <label>信号真实频率 f <b><span id="fVal">1.00</span> MHz</b></label>
+        <input type="range" id="fSlider" min="0.1" max="10" step="0.1" value="1">
+      </div>
+      <div class="ctrl">
+        <label>示波器采样率 fs <b><span id="fsVal">10.0</span> MSPS</b></label>
+        <input type="range" id="fsSlider" min="0.2" max="25" step="0.1" value="10">
+      </div>
+    </div>
+    <div class="presets">
+      <button data-f="1" data-fs="10">Preset 1：正常采样（fs/f = 10）</button>
+      <button data-f="1" data-fs="1.1">Preset 2：欠采样混叠（fs/f = 1.1 → 100kHz 假波形）</button>
+      <button data-f="1" data-fs="2">Preset 3：刚好 2 倍（相位撞车，幅值随初相在 0~100% 间跳）</button>
+    </div>
+    <div id="verdict" class="verdict ok"></div>
+  </div>
+
+  <div class="panel">
+    <h2>② 屏幕上看什么</h2>
+    <svg id="scope" viewBox="0 0 960 320"></svg>
+    <div class="legend">
+      <span><i style="background:var(--ink-dim)"></i>真实信号（上帝视角）</span>
+      <span><i style="background:var(--accent)"></i>仪器采样点 'O' 与连线（你看到的）</span>
+      <span><i style="background:var(--bad)"></i>混叠假象频率（数学上必然出现）</span>
+    </div>
+  </div>
+
+  <div class="panel">
+    <h2>③ 老师傅点拨</h2>
+    <p>混叠产物频率不是玄学，是个确定数：<span class="formula">f_alias = | f − round(f/fs) · fs |</span>。因为是确定值，所以假波形<b>稳定、触发良好、还能存图</b>——这才是最坑的地方。看到"新冒出来且异常老实"的正弦，先抬采样率（打开示波器的欠采样警告），再怀疑电路。</p>
+    <div class="note"><b>现场心法：</b>怀疑混叠时不用换示波器——把时基拉长看几个"假周期"，再微调采样率看假波形频率是否按公式移动。移动了，就是仪器在撒谎；不动，才是板子在撒谎。</div>
+  </div>
+</div>
+
+<script>
+"use strict";
+var fS = document.getElementById("fSlider"),
+    fsS = document.getElementById("fsSlider"),
+    svg = document.getElementById("scope"),
+    NS = "http://www.w3.org/2000/svg";
+
+function el(name, attrs, text) {
+  var e = document.createElementNS(NS, name);
+  for (var k in attrs) e.setAttribute(k, attrs[k]);
+  if (text !== undefined) e.textContent = text;
+  return e;
+}
+
+function aliasFreq(f, fs) { return Math.abs(f - Math.round(f / fs) * fs); }
+
+function render() {
+  var f = parseFloat(fS.value), fs = parseFloat(fsS.value);
+  document.getElementById("fVal").textContent = f.toFixed(2);
+  document.getElementById("fsVal").textContent = fs.toFixed(1);
+  var ratio = fs / f;
+  var fa = aliasFreq(f, fs);
+  var v = document.getElementById("verdict");
+
+  // 判定与文案
+  if (ratio < 2) {
+    v.className = "verdict bad";
+    v.innerHTML = "⚠ 混叠！fs &lt; 2f。屏幕上会重现一个 <b>" + (fa * 1000).toFixed(0) +
+      " kHz</b> 的\"稳定假正弦\"（周期 " + (1 / fa).toFixed(2) + " µs）——它一点破绽都没有，" +
+      "因为它就是采样运算的必然产物。";
+  } else if (ratio < 2.5) {
+    v.className = "verdict warn";
+    v.innerHTML = "≈ 危险区：fs ≈ 2f。采样点每周期落在几乎相同的相位上，重建幅值由初相决定" +
+      "（本例 45°，约 71%；初相不同可能在 0~100% 间跳）。相位再漂一点，读数就大变。";
+  } else if (ratio < 5) {
+    v.className = "verdict warn";
+    v.innerHTML = "△ 勉强能用：fs/f = " + ratio.toFixed(1) + "。不混叠，但每个周期点数太少，" +
+      "峰峰值、上升时间都会系统性偏小（点没落在拐点上）。看形状可以，量参数不行。";
+  } else {
+    v.className = "verdict ok";
+    v.innerHTML = "✔ 安全区：fs/f = " + ratio.toFixed(1) + "（≥5 起步，量边沿建议 ≥10）。" +
+      "采样点贴住真实波形，屏幕上画的就是它本人。";
+  }
+
+  // 画布：窗口取 6 个真实周期
+  while (svg.firstChild) svg.removeChild(svg.firstChild);
+  var W = 960, H = 320, mid = H / 2, amp = 100;
+  var tEnd = 6 / f;                       // µs 单位下 = 6 个周期
+  var xOf = function (t) { return 40 + (t / tEnd) * (W - 60); };
+  var yOf = function (v) { return mid - v * amp; };
+
+  // 网格
+  for (var gx = 0; gx <= 10; gx++)
+    svg.appendChild(el("line", { x1: 40 + gx * (W - 60) / 10, y1: 10, x2: 40 + gx * (W - 60) / 10, y2: H - 26, stroke: "#1e293b", "stroke-width": 1 }));
+  svg.appendChild(el("line", { x1: 40, y1: mid, x2: W - 20, y2: mid, stroke: "#334155", "stroke-width": 1 }));
+
+  // 真实波形（细虚线）。初相取 45°：让"刚好 2 倍采样"演示相位撞车
+  var ph = Math.PI / 4;
+  var wave = function (freq, t) { return Math.sin(2 * Math.PI * freq * t + ph); };
+  var dTrue = "";
+  for (var i = 0; i <= 600; i++) {
+    var t = tEnd * i / 600;
+    dTrue += (i ? "L" : "M") + xOf(t).toFixed(1) + "," + yOf(wave(f, t)).toFixed(1);
+  }
+  svg.appendChild(el("path", { d: dTrue, fill: "none", stroke: "#64748b", "stroke-width": 1.5, "stroke-dasharray": "4 4" }));
+
+  // 若混叠：画出假象频率（红色半透明）
+  if (fa > 1e-6 && ratio < 2) {
+    var dAlias = "";
+    for (var j = 0; j <= 600; j++) {
+      var t2 = tEnd * j / 600;
+      dAlias += (j ? "L" : "M") + xOf(t2).toFixed(1) + "," + yOf(wave(fa, t2)).toFixed(1);
+    }
+    svg.appendChild(el("path", { d: dAlias, fill: "none", stroke: "#f87171", "stroke-width": 2.5, opacity: 0.85 }));
+  }
+
+  // 采样点与连线（仪器画给你的）
+  var n = Math.max(2, Math.round(tEnd * fs)); // fs 单位: MHz = 点/µs
+  n = Math.min(n, 400);
+  var pts = [];
+  for (var k = 0; k <= n; k++) {
+    var tk = Math.min(k / fs, tEnd);
+    pts.push([xOf(tk), yOf(wave(f, tk)), tk]);
+  }
+  var dAcq = pts.map(function (p, i2) { return (i2 ? "L" : "M") + p[0].toFixed(1) + "," + p[1].toFixed(1); }).join("");
+  svg.appendChild(el("path", { d: dAcq, fill: "none", stroke: "#38bdf8", "stroke-width": 2 }));
+  pts.forEach(function (p) {
+    svg.appendChild(el("circle", { cx: p[0], cy: p[1], r: 3.4, fill: "#0f172a", stroke: "#38bdf8", "stroke-width": 2 }));
+  });
+
+  // 轴标注
+  svg.appendChild(el("text", { x: 40, y: H - 8, fill: "#64748b", "font-size": 12 }, "窗口 = 6 个真实周期（" + tEnd.toFixed(2) + " µs）"));
+  svg.appendChild(el("text", { x: W - 20, y: H - 8, fill: "#64748b", "font-size": 12, "text-anchor": "end" }, "fs/f = " + ratio.toFixed(2)));
+}
+
+fS.addEventListener("input", render);
+fsS.addEventListener("input", render);
+Array.prototype.forEach.call(document.querySelectorAll(".presets button"), function (b) {
+  b.addEventListener("click", function () {
+    fS.value = b.getAttribute("data-f");
+    fsS.value = b.getAttribute("data-fs");
+    render();
+  });
+});
+render();
+</script>
+</body>
+</html>

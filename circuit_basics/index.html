@@ -1,0 +1,495 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>第 1 关 · 筑基期：电路基础 — 硬件学习路线</title>
+<style>
+  :root {
+    --bg: #0f172a;
+    --surface: #1e293b;
+    --surface-2: #334155;
+    --ink: #f1f5f9;
+    --ink-muted: #94a3b8;
+    --ink-dim: #64748b;
+    --rule: #334155;
+    --accent: #38bdf8;
+    --accent-2: #818cf8;
+    --ok: #4ade80;
+    --warn: #fbbf24;
+    --bad: #f87171;
+    --mono: "Consolas", "Cascadia Mono", "Courier New", ui-monospace, monospace;
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC",
+                 "Microsoft YaHei", sans-serif;
+    background: var(--bg);
+    color: var(--ink);
+    line-height: 1.7;
+    font-size: 14px;
+    padding: 34px 20px 70px;
+  }
+  .container { max-width: 1120px; margin: 0 auto; }
+
+  .topbar { margin-bottom: 8px; }
+  .topbar a { color: var(--accent); text-decoration: none; font-size: 13px; }
+  .topbar a:hover { text-decoration: underline; }
+
+  .header { text-align: center; margin-bottom: 30px; }
+  .header .stage {
+    display: inline-block;
+    font-size: 12px;
+    letter-spacing: .12em;
+    color: var(--accent);
+    border: 1px solid var(--accent);
+    border-radius: 999px;
+    padding: 3px 14px;
+    margin-bottom: 14px;
+  }
+  .header h1 {
+    font-size: 2rem;
+    background: linear-gradient(135deg, var(--accent), var(--accent-2));
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
+    margin-bottom: 10px;
+  }
+  .header p { color: var(--ink-muted); font-size: 14px; max-width: 760px; margin: 0 auto; }
+
+  .panel {
+    background: var(--surface);
+    border: 1px solid var(--rule);
+    border-radius: 14px;
+    padding: 22px 26px;
+    margin-bottom: 22px;
+  }
+  .panel h2 {
+    font-size: 16px;
+    color: var(--accent);
+    margin-bottom: 12px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .panel > p { color: var(--ink-muted); font-size: 13.5px; }
+
+  .cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(330px, 1fr)); gap: 16px; margin: 18px 0 8px; }
+  .card {
+    background: var(--surface);
+    border: 1px solid var(--rule);
+    border-radius: 14px;
+    padding: 20px;
+    text-decoration: none;
+    color: inherit;
+    display: block;
+    position: relative;
+    overflow: hidden;
+    transition: transform .18s, border-color .18s, box-shadow .18s;
+  }
+  .card::before {
+    content: '';
+    position: absolute; top: 0; left: 0; right: 0; height: 3px;
+    background: linear-gradient(90deg, var(--accent), var(--accent-2));
+  }
+  .card:hover {
+    transform: translateY(-4px);
+    border-color: var(--accent);
+    box-shadow: 0 12px 32px rgba(2, 6, 23, .6);
+  }
+  .card .no { font-family: var(--mono); font-size: 11px; color: var(--ink-dim); margin-bottom: 6px; }
+  .card .title { font-size: 16px; font-weight: 700; margin-bottom: 6px; }
+  .card .title code { font-family: var(--mono); color: var(--accent); font-size: 15px; }
+  .card .kind {
+    display: inline-block; font-size: 10.5px; padding: 1px 8px; border-radius: 999px;
+    background: var(--surface-2); color: var(--ink-muted); margin-left: 6px; vertical-align: middle;
+  }
+  .card .desc { font-size: 12.5px; color: var(--ink-muted); line-height: 1.65; }
+  .card .focus {
+    margin-top: 10px; padding-top: 10px; border-top: 1px dashed var(--rule);
+    font-size: 12.5px; color: var(--ink);
+  }
+  .card .focus b { color: var(--accent-2); font-weight: 600; }
+
+  .order { counter-reset: step; list-style: none; margin-top: 10px; }
+  .order li {
+    counter-increment: step;
+    position: relative;
+    padding: 10px 14px 10px 46px;
+    margin-bottom: 8px;
+    background: rgba(56,189,248,.05);
+    border: 1px solid var(--rule);
+    border-left: 3px solid var(--accent-2);
+    border-radius: 9px;
+    font-size: 13px;
+    color: var(--ink-muted);
+  }
+  .order li::before {
+    content: counter(step);
+    position: absolute; left: 14px; top: 11px;
+    width: 20px; height: 20px; line-height: 20px; text-align: center;
+    border-radius: 50%; background: var(--surface-2); color: var(--accent);
+    font-family: var(--mono); font-size: 11px;
+  }
+  .order li b { color: var(--ink); }
+  .order li code { font-family: var(--mono); color: var(--accent); }
+  .order.cont { counter-reset: step 3; }
+
+  pre.cmd {
+    background: #0b1220;
+    border: 1px solid var(--rule);
+    border-radius: 8px;
+    padding: 12px 14px;
+    font-family: var(--mono);
+    font-size: 12.5px;
+    color: var(--ink);
+    overflow-x: auto;
+    margin: 10px 0 4px;
+    white-space: pre;
+    line-height: 1.6;
+  }
+  pre.cmd .c { color: var(--ink-dim); }
+
+  .pits { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 12px; margin-top: 12px; }
+  .pit {
+    background: rgba(248,113,113,.05);
+    border: 1px solid var(--rule);
+    border-left: 3px solid var(--bad);
+    border-radius: 9px;
+    padding: 12px 14px;
+    font-size: 12.5px;
+    color: var(--ink-muted);
+  }
+  .pit.mid { background: rgba(251,191,36,.05); border-left-color: var(--warn); }
+  .pit b { display: block; color: var(--ink); margin-bottom: 4px; font-size: 13px; }
+  .pit code { font-family: var(--mono); color: var(--warn); }
+
+  .grid2 { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 14px; margin-top: 12px; }
+  .box {
+    background: rgba(56,189,248,.06);
+    border: 1px solid var(--rule);
+    border-left: 3px solid var(--accent);
+    border-radius: 9px;
+    padding: 12px 14px;
+    font-size: 13px;
+    color: var(--ink-muted);
+  }
+  .box b { display: block; color: var(--ink); margin-bottom: 4px; }
+  .box code { font-family: var(--mono); color: var(--accent); }
+
+  table.chk { width: 100%; border-collapse: collapse; font-size: 13px; margin-top: 10px; }
+  table.chk th {
+    text-align: left; color: var(--ink-dim); font-weight: 400; font-size: 12px;
+    border-bottom: 1px solid var(--rule); padding: 7px 6px;
+  }
+  table.chk td { padding: 7px 6px; border-bottom: 1px solid rgba(51,65,85,.5); color: var(--ink-muted); }
+  table.chk td code { font-family: var(--mono); color: var(--accent); }
+  table.chk td.ok { color: var(--ok); font-family: var(--mono); }
+
+  .footer { text-align: center; color: var(--ink-dim); font-size: 12px; margin-top: 28px; }
+</style>
+</head>
+<body>
+<div class="container">
+
+  <div class="topbar"><a href="../硬件学习路线图.html">← 返回总路线图</a></div>
+
+  <div class="header">
+    <div class="stage">第 1 关 · 筑基期</div>
+    <h1>电路基础：电压是两点之差，电流是一个回路</h1>
+    <p>
+      这一关不讲玄学。你只需要把四件事刻进骨头里：
+      <b>电压永远是两点之间的</b>、<b>电流必须有回路才存在</b>、
+      <b>任何电源都有内阻</b>、<b>你算出的理想值，接上负载之后一律作废</b>。
+      后面五关——模电、MCU、PCB、仪器、做板子——全部建立在这四句上。
+    </p>
+  </div>
+
+  <div class="panel">
+    <h2>本关文件清单</h2>
+    <p>六个文件，两个 C 程序是师傅算给你看的，两个 HTML 是你自己上手拖的。全部离线，双击即开。</p>
+    <div class="cards">
+
+      <a class="card" href="tutorial.md">
+        <div class="no">FILE 01 · 主课本</div>
+        <div class="title"><code>tutorial.md</code><span class="kind">读物</span></div>
+        <div class="desc">
+          师傅嘴正文：为什么先让你焊 LED、电流直觉五条、十条真实翻车现场、
+          五道家庭作业（含拿手机充电器量空载电压）、通关标准清单、公式速查。
+        </div>
+        <div class="focus"><b>学习重点：</b>先通读一遍再碰代码；每条坑都要能说出"电流从哪流到哪"。</div>
+      </a>
+
+      <a class="card" href="01_node_solver.c">
+        <div class="no">FILE 02 · C17 · ★ 主菜</div>
+        <div class="title"><code>01_node_solver.c</code><span class="kind">可编译</span></div>
+        <div class="desc">
+          手写的节点电压法 / MNA 求解器 + 高斯-约当消元（带部分主元）。
+          给它一张网表，它自己列方程、自己解。演示 LED 限流、分压带负载、
+          惠斯通电桥平衡与不平衡、电源内阻的杀伤力。
+        </div>
+        <div class="focus"><b>学习重点：</b>看懂"节点电压法 = KCL + 欧姆定律"那三行注释；
+          盯住带载误差表（挂 10k 负载时误差 <code>−33.3%</code>）。</div>
+      </a>
+
+      <a class="card" href="02_rc_transient.c">
+        <div class="no">FILE 03 · C17 · ★ 主菜</div>
+        <div class="title"><code>02_rc_transient.c</code><span class="kind">可编译</span></div>
+        <div class="desc">
+          RC 暂态数值仿真：前向欧拉 vs 解析解误差对照、ASCII 波形、R/C 组合扫描、
+          1/3·VCC 与 2/3·VCC 时刻、10~90% 上升时间、上电冲击电流、
+          长走线 + 100nF 的二阶谐振（顺手解一遍 RLC）。
+        </div>
+        <div class="focus"><b>学习重点：</b>dt 缩 10 倍误差缩 10 倍（一阶方法的指纹）；
+          峰值 <code>6.052V ≈ 1.83×VCC</code> 那个振铃波形。</div>
+      </a>
+
+      <a class="card" href="voltage_divider_lab.html">
+        <div class="no">FILE 04 · 交互动画</div>
+        <div class="title"><code>voltage_divider_lab.html</code><span class="kind">离线 HTML</span></div>
+        <div class="desc">
+          分压器实验室：Vin / R1 / R2 / RL 四根滑杆 + 实时 SVG 电路图（电流会流动）。
+          纸面值 vs 带载真值、误差百分比、Rth = R1∥R2、功耗与封装推荐、
+          阻值档位对照表、"一键推荐 10k 分压"。
+        </div>
+        <div class="focus"><b>学习重点：</b>把 RL 拉到和 R2 同数量级，看误差变红；
+          记住判据 <b>RL ≥ 100 × Rth</b>。</div>
+      </a>
+
+      <a class="card" href="rc_animator.html">
+        <div class="no">FILE 05 · 交互动画</div>
+        <div class="title"><code>rc_animator.html</code><span class="kind">离线 HTML</span></div>
+        <div class="desc">
+          RC 暂态动画：R / C / V0 滑杆、充放电曲线、τ / 3τ / 5τ 竖线、
+          播放与单步、指针式电流表（充电时满偏、充满归零）、四个 preset
+          （LED 延时、按键消抖、PWM 变 DAC、电源去耦）。
+        </div>
+        <div class="focus"><b>学习重点：</b>τ 是"还差 36.8%"不是"充满"；
+          指针归零才叫满，5τ 也只有 <code>99.3%</code>。</div>
+      </a>
+
+      <div class="card" style="cursor:default">
+        <div class="no">FILE 06 · 导航页</div>
+        <div class="title"><code>index.html</code><span class="kind">你在这里</span></div>
+        <div class="desc">
+          本关地图：文件清单、学习顺序、常见坑速查、通关自检表。
+          每关都有这一页，进任何一个目录先看它，养成习惯。
+        </div>
+        <div class="focus"><b>学习重点：</b>照着下面的"学习顺序建议"走，
+          不要一上来就啃 <code>tutorial.md</code> 后半部分。</div>
+      </div>
+
+    </div>
+  </div>
+
+  <div class="panel">
+    <h2>学习顺序建议</h2>
+    <p>总共约 4~6 小时。别跳步，每一步都依赖上一步建立的感觉。</p>
+    <ol class="order">
+      <li><b>读 <code>tutorial.md</code> 第一、二章</b>（约 20 分钟）。只看"师傅为什么先让你焊 LED"和
+        "电流直觉五条"。目标是在脑子里建立一个画面：<b>电荷在回路里跑，跑多快由总电阻决定，
+        而不是由某一点决定。</b></li>
+
+      <li><b>打开 <code>voltage_divider_lab.html</code>，先什么都不动</b>。
+        看空载那一屏：纸面值 = 带载真值，误差 0.00%。
+        然后取消勾选"视为空载"，把 <code>RL</code> 从 10MΩ 一路往左拖。
+        你会看到误差从 0.005% 一路涨到 98%。<b>在这个页面上待够 15 分钟</b>，
+        直到你能不看数字就预判"现在大概是 1.1V 左右"。</li>
+
+      <li><b>编译 <code>01_node_solver.c</code></b>，对照输出读代码。
+        先在 <code>main()</code> 里找到四个演示函数，跑一遍看结果；
+        再回头读 <code>buildStamp()</code> 旁边的注释，
+        理解"每个节点写一条 KCL，每条支路用电流 = 电压差 / 电阻"是怎么变成矩阵的。
+        编译命令（PowerShell，在本目录下）：</li>
+    </ol>
+    <pre class="cmd"><span class="c"># 需要 MSYS2 / MinGW 的 gcc（本项目在 gcc 16.2 + Windows 下验证，零警告）</span>
+chcp 65001   <span class="c"># 运行/编译前先把终端切到 UTF-8，否则中文输出会乱码</span>
+gcc -std=c17 -O2 -Wall -Wextra 01_node_solver.c -o 01_node_solver.exe
+.\01_node_solver.exe
+
+<span class="c"># 同理</span>
+gcc -std=c17 -O2 -Wall -Wextra 02_rc_transient.c -o 02_rc_transient.exe
+.\02_rc_transient.exe</pre>
+    <ol class="order cont">
+      <li><b>自己改网表。</b>把 LED 那组的 330Ω 改成 100Ω，看电阻功耗从
+        <code>24.5 mW</code> 涨到多少，再对照封装表（0402 = 1/16W）判断它会不会烤。
+        把电桥的一个 10k 改成 10.1k，看输出从 <code>0 A</code> 变成毫伏级——
+        这一刻你就懂"为什么需要仪表放大器"。</li>
+
+      <li><b>打开 <code>rc_animator.html</code>，按 preset ②（按键消抖）。</b>
+        按"单步"，一格一格看：电压涨多少、电流掉多少、两者之和恒等于 V0（这就是 KVL）。
+        然后把 R 拖到 10Ω 看电流表指针死死顶住——那就是上电冲击。</li>
+
+      <li><b>编译 <code>02_rc_transient.c</code></b>，重点看三张表：
+        欧拉误差表（<code>dt=τ/10</code> 误差 1.92%、<code>dt=τ/100</code> 误差 0.185%）、
+        R/C 扫描表（10k+100nF → τ=1ms、tr=2.197ms、fc=159.2Hz）、
+        冲击电流表（5mΩ 回路 → 理论 1000A）。</li>
+
+      <li><b>做 <code>tutorial.md</code> 第六章的五道家庭作业</b>，全部要动手：
+        万用表量手机充电器空载电压、算自己板子的待机电流、
+        给一个 12V→3.3V 场景选分压电阻并说明为什么不这么干。</li>
+
+      <li><b>对着"通关标准"逐条打勾</b>（见下方自检表）。有一条打不上勾就回去补，
+        不要带着缺口进第 2 关——模电会把这里的每个漏洞放大十倍。</li>
+    </ol>
+  </div>
+
+  <div class="panel">
+    <h2>常见坑（本关最高频的十条，完整十条在 <code>tutorial.md</code> 第五章）</h2>
+    <p>下面每条都是真实发生过的返工，不是编出来吓人的。红色是"会烧东西或量错一整天"的，黄色是"精度和余量上的暗亏"。</p>
+    <div class="pits">
+      <div class="pit">
+        <b>① LED 不限流直接接电源</b>
+        LED 是电流器件，它的伏安曲线在导通后陡得像根线。<code>5V → LED</code> 不上电阻，
+        电流由曲线自己决定，几百 mA 起步，几百毫秒内灯珠发黑。
+        永远用 <code>R = (V源 − V_LED) / I目标</code>。
+      </div>
+      <div class="pit">
+        <b>② 分压输出直接接 ADC / 下一级</b>
+        10k+10k 空载 1.650V，挂上 10k 负载只剩 <code>1.100V</code>。
+        纸面公式忽略了一个事实：<b>R2 和负载是并联的</b>。
+        卡死判据：后级阻抗 ≥ <code>100 × Rth</code>（Rth = R1∥R2）。
+      </div>
+      <div class="pit">
+        <b>③ 拿万用表当理想电压表</b>
+        表笔内阻典型 10MΩ。量 1M/1M 分压点（Rth=500kΩ），表笔直接把电压拉低 <code>~4.8%</code>；
+        量 10MΩ 以上的节点，读数基本是表笔决定的。高阻节点要用跟随器或 x10 探头的正确设置。
+      </div>
+      <div class="pit">
+        <b>④ 以为 GND 是"绝对 0V"</b>
+        GND 只是你选的参考点。电流流过地线阻抗就产生压降，
+        数字地回流路径上的 <code>50mA × 0.1Ω = 5mV</code> 看起来不大，
+        但你的 1mV 级传感器信号就泡在这片泥里。
+      </div>
+      <div class="pit">
+        <b>⑤ 把 τ = RC 当"充满时间"</b>
+        1τ 只有 63.2%，3τ 只有 95.0%，5τ 才是 99.3%。
+        12 位 ADC 要 0.5LSB（0.012%）至少要 <code>9τ</code>，工程上留余量按 10~11τ。
+        延时电路按 5τ 设计，采样保持按精度反推。
+      </div>
+      <div class="pit mid">
+        <b>⑥ 上电忽略冲击电流</b>
+        <code>I(0) = VCC / 回路总电阻</code>。板子上并了一堆电解，回路只有几十毫欧时，
+        理论峰值上百安。真实波形是窄尖峰，但它足够让电源打嗝、USB 跳闸、开关触点烧蚀。
+        大电容输入必须上 NTC 或 MOS 缓启动。
+      </div>
+      <div class="pit mid">
+        <b>⑦ 去耦电容离芯片 10cm</b>
+        去耦的敌人是<b>电感</b>不是电容。走线约 <code>1nH/mm</code>，
+        30cm 排线 ≈ 300nH，和 100nF 谐振在 <code>919kHz</code>——
+        加电容反而辐射超标。必须每脚一颗、紧挨着放、回路面积最小。
+      </div>
+      <div class="pit mid">
+        <b>⑧ 用电流源当电压源用</b>
+        理想电流源两端电压由负载决定，开路时会飞到天上去。
+        反过来把电压源当电流源（比如"12V 直接接 20mA LED"，靠内阻限流）也一样翻车。
+      </div>
+      <div class="pit mid">
+        <b>⑨ 0Ω 电阻和磁珠当成"没用"</b>
+        0Ω 电阻用来跳线、单点接地、预留调试点、焊盘兼容不同封装；
+        磁珠在高频呈现阻抗，用来吸收高频纹波——
+        <b>它不是小电阻，别拿它当大电流电源线</b>，几 A 的直流路径上放磁珠会自己烧掉。
+      </div>
+      <div class="pit">
+        <b>⑩ 电阻只看阻值不看功率和封装</b>
+        0402 是 <code>1/16W</code>，0603 是 <code>1/10W</code>，0805 是 <code>1/8W</code>，1206 是 <code>1/4W</code>。
+        分压算出 150mW 还选 0402，板子跑两小时焊点就虚了。
+        <b>按最大那颗选封装，并留 50% 降额。</b>
+      </div>
+    </div>
+  </div>
+
+  <div class="panel">
+    <h2>通关自检表</h2>
+    <p>每一条都必须能<b>不看资料</b>说出来。答不上来的，回到对应文件补。</p>
+    <table class="chk">
+      <thead><tr><th style="width:52%">能做到的事</th><th>对应验收数字（本关代码实测）</th><th style="width:10%">达成</th></tr></thead>
+      <tbody>
+        <tr>
+          <td>口算 5V 驱 20mA 红 LED 的限流电阻，并说出为什么工程上常用 330Ω</td>
+          <td>(5−2.1)/0.02 = 145Ω → 取 150Ω；330Ω 时电流 <code>8.788 mA</code>、功耗 <code>25.48 mW</code></td>
+          <td class="ok">□</td>
+        </tr>
+        <tr>
+          <td>说出为什么节点电压法就是 KCL + 欧姆定律</td>
+          <td>每节点一条"流出电流和 = 0"，支路电流写成 <code>(V本 − V邻)/R</code>，未知量只剩节点电压</td>
+          <td class="ok">□</td>
+        </tr>
+        <tr>
+          <td>用 Rth 判据判断"分压能不能直连后级"</td>
+          <td>10k/10k → <code>Rth = 5.000 kΩ</code>；后级 1M 时误差 <code>−0.5%</code>，10k 时 <code>−33.3%</code></td>
+          <td class="ok">□</td>
+        </tr>
+        <tr>
+          <td>解释"10k 是万能值"到底是哪三方折中</td>
+          <td>功耗（3.3V 时 <code>330 µA</code>）· 抗噪（源阻抗别超几十 k）· 响应速度（配 100nF 得 τ=1ms）</td>
+          <td class="ok">□</td>
+        </tr>
+        <tr>
+          <td>给出 1τ / 3τ / 5τ 的到达比例，并说清 5τ 不是"充满"</td>
+          <td><code>63.2% / 95.0% / 99.3%</code>；指数永远是渐近的</td>
+          <td class="ok">□</td>
+        </tr>
+        <tr>
+          <td>解释为什么 10k + 100nF 做消抖"刚好"</td>
+          <td>τ = 1ms，5τ = 5ms 盖住 1~5ms 的机械弹跳；330µA 省电、10k 不引噪声</td>
+          <td class="ok">□</td>
+        </tr>
+        <tr>
+          <td>背出四个系数</td>
+          <td>过 1/3·VCC = <code>0.405τ</code>，过 2/3 = <code>1.099τ</code>，tr(10~90) = <code>2.197τ</code>，fc = <code>1/(2πτ)</code></td>
+          <td class="ok">□</td>
+        </tr>
+        <tr>
+          <td>算出上电冲击电流并说出两种抑制办法</td>
+          <td><code>I(0) = VCC/(Rlim+ESR)</code>；单次能耗 <code>½CV²</code> 与 R 无关 → NTC / MOS 缓启动</td>
+          <td class="ok">□</td>
+        </tr>
+        <tr>
+          <td>说明去耦电容为什么必须紧贴芯片</td>
+          <td>100nF + 300nH 谐振 <code>918.9 kHz</code>、Q = <code>8.66</code>，数值积分峰值 <code>6.052 V = 1.83×VCC</code></td>
+          <td class="ok">□</td>
+        </tr>
+        <tr>
+          <td>用 <code>ΔV = I·Δt/C</code> 口算去耦能顶多久</td>
+          <td>100nF / 50mV / 50mA → 只顶 <code>100 ns</code>，160MHz 下只够十几个时钟</td>
+          <td class="ok">□</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="panel">
+    <h2>过关之后</h2>
+    <div class="grid2">
+      <div class="box">
+        <b>第 2 关 · 模电（<code>analog_electronics/</code>）</b>
+        二极管、整流、运放。本关的"负载效应"和"内阻"会升级成
+        "增益由反馈决定，而不是由晶体管决定"。
+      </div>
+      <div class="box">
+        <b>第 3 关 · MCU 与嵌入式（<code>mcu_embedded/</code>）</b>
+        寄存器、GPIO、UART。你会在这里第一次撞见本关讲的
+        <b>上拉电阻选 10k 还是 1k</b> 到底影响什么（I²C 上升时间）。
+      </div>
+      <div class="box">
+        <b>第 4 关 · PCB 设计（<code>pcb_design/</code>）</b>
+        走线阻抗、回流路径、去耦网络。本关最后那条
+        "<b>L 是敌人不是 C</b>"会成为整关的主线。
+      </div>
+      <div class="box">
+        <b>第 5 关 · 仪器与调试（<code>instruments_debug/</code>）</b>
+        示波器模型、测量误差。本关"表笔 10MΩ 把电压拉低"会扩展成
+        探头容性负载、带宽与采样率、混叠。
+      </div>
+    </div>
+  </div>
+
+  <div class="footer">
+    第 1 关 · 筑基期 · 电路基础　|　全部资源离线，无任何外部依赖　|
+    <a href="../硬件学习路线图.html" style="color:var(--accent);text-decoration:none">← 返回总路线图</a>
+  </div>
+
+</div>
+</body>
+</html>

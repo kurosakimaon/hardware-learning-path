@@ -1,0 +1,622 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>第 3 关 · 结丹期：数字电路 — 硬件学习路线</title>
+<style>
+  :root {
+    --bg: #0f172a;
+    --surface: #1e293b;
+    --surface-2: #334155;
+    --ink: #f1f5f9;
+    --ink-muted: #94a3b8;
+    --ink-dim: #64748b;
+    --rule: #334155;
+    --accent: #38bdf8;
+    --accent-2: #818cf8;
+    --ok: #4ade80;
+    --warn: #fbbf24;
+    --bad: #f87171;
+    --mono: "Consolas", "Cascadia Mono", "Courier New", ui-monospace, monospace;
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC",
+                 "Microsoft YaHei", sans-serif;
+    background: var(--bg);
+    color: var(--ink);
+    line-height: 1.7;
+    font-size: 14px;
+    padding: 34px 20px 70px;
+  }
+  .container { max-width: 1120px; margin: 0 auto; }
+
+  .topbar { margin-bottom: 8px; }
+  .topbar a { color: var(--accent); text-decoration: none; font-size: 13px; }
+  .topbar a:hover { text-decoration: underline; }
+
+  .header { text-align: center; margin-bottom: 30px; }
+  .header .stage {
+    display: inline-block;
+    font-size: 12px;
+    letter-spacing: .12em;
+    color: var(--accent);
+    border: 1px solid var(--accent);
+    border-radius: 999px;
+    padding: 3px 14px;
+    margin-bottom: 14px;
+  }
+  .header h1 {
+    font-size: 2rem;
+    background: linear-gradient(135deg, var(--accent), var(--accent-2));
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
+    margin-bottom: 10px;
+  }
+  .header p { color: var(--ink-muted); font-size: 14px; max-width: 780px; margin: 0 auto; }
+
+  .panel {
+    background: var(--surface);
+    border: 1px solid var(--rule);
+    border-radius: 14px;
+    padding: 22px 26px;
+    margin-bottom: 22px;
+  }
+  .panel h2 {
+    font-size: 16px;
+    color: var(--accent);
+    margin-bottom: 12px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .panel > p { color: var(--ink-muted); font-size: 13.5px; }
+
+  .cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(330px, 1fr)); gap: 16px; margin: 18px 0 8px; }
+  .card {
+    background: var(--surface);
+    border: 1px solid var(--rule);
+    border-radius: 14px;
+    padding: 20px;
+    text-decoration: none;
+    color: inherit;
+    display: block;
+    position: relative;
+    overflow: hidden;
+    transition: transform .18s, border-color .18s, box-shadow .18s;
+  }
+  .card::before {
+    content: '';
+    position: absolute; top: 0; left: 0; right: 0; height: 3px;
+    background: linear-gradient(90deg, var(--accent), var(--accent-2));
+  }
+  .card:hover {
+    transform: translateY(-4px);
+    border-color: var(--accent);
+    box-shadow: 0 12px 32px rgba(2, 6, 23, .6);
+  }
+  .card .no { font-family: var(--mono); font-size: 11px; color: var(--ink-dim); margin-bottom: 6px; }
+  .card .title { font-size: 16px; font-weight: 700; margin-bottom: 6px; }
+  .card .title code { font-family: var(--mono); color: var(--accent); font-size: 15px; }
+  .card .kind {
+    display: inline-block; font-size: 10.5px; padding: 1px 8px; border-radius: 999px;
+    background: var(--surface-2); color: var(--ink-muted); margin-left: 6px; vertical-align: middle;
+  }
+  .card .desc { font-size: 12.5px; color: var(--ink-muted); line-height: 1.65; }
+  .card .focus {
+    margin-top: 10px; padding-top: 10px; border-top: 1px dashed var(--rule);
+    font-size: 12.5px; color: var(--ink);
+  }
+  .card .focus b { color: var(--accent-2); font-weight: 600; }
+  .card .desc code, .card .focus code, .box code, .pit code, table.chk td code {
+    font-family: var(--mono); color: var(--accent); font-size: 12px;
+  }
+
+  .order { counter-reset: step; list-style: none; margin-top: 10px; }
+  .order li {
+    counter-increment: step;
+    position: relative;
+    padding: 10px 14px 10px 46px;
+    margin-bottom: 8px;
+    background: rgba(56,189,248,.05);
+    border: 1px solid var(--rule);
+    border-left: 3px solid var(--accent-2);
+    border-radius: 9px;
+    font-size: 13px;
+    color: var(--ink-muted);
+  }
+  .order li::before {
+    content: counter(step);
+    position: absolute; left: 14px; top: 11px;
+    width: 20px; height: 20px; line-height: 20px; text-align: center;
+    border-radius: 50%; background: var(--surface-2); color: var(--accent);
+    font-family: var(--mono); font-size: 11px;
+  }
+  .order li b { color: var(--ink); }
+  .order li code { font-family: var(--mono); color: var(--accent); }
+
+  pre.cmd {
+    background: #0b1220;
+    border: 1px solid var(--rule);
+    border-radius: 8px;
+    padding: 12px 14px;
+    font-family: var(--mono);
+    font-size: 12.5px;
+    color: var(--ink);
+    overflow-x: auto;
+    margin: 10px 0 4px;
+    white-space: pre;
+    line-height: 1.6;
+  }
+  pre.cmd .c { color: var(--ink-dim); }
+
+  .pits { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 12px; margin-top: 12px; }
+  .pit {
+    background: rgba(248,113,113,.05);
+    border: 1px solid var(--rule);
+    border-left: 3px solid var(--bad);
+    border-radius: 9px;
+    padding: 12px 14px;
+    font-size: 12.5px;
+    color: var(--ink-muted);
+  }
+  .pit.mid { background: rgba(251,191,36,.05); border-left-color: var(--warn); }
+  .pit b { display: block; color: var(--ink); margin-bottom: 4px; font-size: 13px; }
+  .pit code { color: var(--warn); }
+
+  .grid2 { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 14px; margin-top: 12px; }
+  .box {
+    background: rgba(56,189,248,.06);
+    border: 1px solid var(--rule);
+    border-left: 3px solid var(--accent);
+    border-radius: 9px;
+    padding: 12px 14px;
+    font-size: 13px;
+    color: var(--ink-muted);
+  }
+  .box b { display: block; color: var(--ink); margin-bottom: 4px; }
+
+  table.chk { width: 100%; border-collapse: collapse; font-size: 13px; margin-top: 10px; }
+  table.chk th {
+    text-align: left; color: var(--ink-dim); font-weight: 400; font-size: 12px;
+    border-bottom: 1px solid var(--rule); padding: 7px 6px;
+  }
+  table.chk td { padding: 7px 6px; border-bottom: 1px solid rgba(51,65,85,.5); color: var(--ink-muted); }
+  table.chk td.ok { color: var(--ok); font-family: var(--mono); }
+
+  .nav3 { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 14px; }
+  .nav3 a {
+    display: block; text-decoration: none; color: inherit;
+    background: rgba(129,140,248,.06);
+    border: 1px solid var(--rule); border-radius: 11px;
+    padding: 14px 16px; transition: border-color .18s, transform .18s;
+  }
+  .nav3 a:hover { border-color: var(--accent-2); transform: translateY(-3px); }
+  .nav3 .lab { font-size: 11px; color: var(--ink-dim); font-family: var(--mono); }
+  .nav3 .nm { font-size: 14px; font-weight: 700; color: var(--ink); margin-top: 3px; }
+  .nav3 .sub { font-size: 12px; color: var(--ink-muted); margin-top: 2px; }
+  .nav3 a.cur { border-color: var(--accent); background: rgba(56,189,248,.12); }
+
+  .footer { text-align: center; color: var(--ink-dim); font-size: 12px; margin-top: 28px; }
+</style>
+</head>
+<body>
+<div class="container">
+
+  <div class="topbar"><a href="../硬件学习路线图.html">← 返回总路线图</a></div>
+
+  <div class="header">
+    <div class="stage">第 3 关 · 结丹期</div>
+    <h1>数字电路：0 和 1 之间，藏着你必须算的每一个纳秒</h1>
+    <p>
+      你以为数字电路把连续的复杂度关进了笼子里。这一关师傅要告诉你：
+      <b>它只是被藏起来了，没有被消灭</b>。
+      电平是电压区间不是电压值、混合电压会倒灌烧脚、开漏不接上拉就是根天线、
+      计数器进位打穿四位会吐出一根 13ns 的毛刺、保持裕量为负时降频一点用都没有。
+      这一关的四件事：<b>电平家族</b>、<b>组合逻辑化简</b>、<b>时序与毛刺</b>、
+      <b>建立/保持时间与亚稳态</b>，最后用<b>表驱动状态机</b>把它们组织成能交付的东西。
+    </p>
+  </div>
+
+  <div class="panel">
+    <h2>本关文件清单</h2>
+    <p>
+      八个文件：一份主课本、四个 C17 程序（全部软件层面的逻辑仿真器 / 周期精确模型，
+      不联网、不读文件、<b>不依赖任何真实硬件</b>）、两个交互动画。
+      纯 C（C17），MSYS2 gcc 16.2 下 <code>-std=c17 -O2 -Wall -Wextra</code> 零警告。
+      HTML 全部离线单文件，断网双击即开。
+    </p>
+    <div class="cards">
+
+      <a class="card" href="tutorial.md">
+        <div class="no">FILE 01 · 主课本</div>
+        <div class="title"><code>tutorial.md</code><span class="kind">读物</span></div>
+        <div class="desc">
+          师傅嘴正文：为什么入门仪式是拿 74HC00 搭环形振荡器、
+          电平四参数与噪声容限、3.3V/5V 混接为什么会烧、open-drain 的取值妥协、
+          7 条可检验学习目标、逐文件的学习重点与预期数字、
+          <b>11 条真实坑</b>、5 道动手作业、通关清单、公式速查。
+        </div>
+        <div class="focus"><b>学习重点：</b>先通读第一、二节再碰任何代码。
+          核心一句：<b>0 和 1 是电压区间，不是电压值</b>。</div>
+      </a>
+
+      <a class="card" href="01_logic_gates.c">
+        <div class="no">FILE 02 · C17 · ★ 组合逻辑</div>
+        <div class="title"><code>01_logic_gates.c</code><span class="kind">可编译</span></div>
+        <div class="desc">
+          4 变量 <b>Quine-McCluskey 化简器</b>：最小项 + 无关项 → 最简与或式，
+          打印 16 项真值表、卡诺图、化简前后的门数 / 门输入脚数 / 延迟级数对照，
+          并验证两级与非（NAND-NAND）等价性。附带 74HC00 环形振荡器频率估算。
+        </div>
+        <div class="focus"><b>学习重点：</b>多数器必须化简成 <code>AB+AC+BC</code>（自查答案）；
+          g 段用了无关项是 <code>A+B'C+BC'+CD'</code>（<b>9 门</b>），
+          不敢用 X 就退化成 <code>A'B'C+A'BC'+AB'C'+A'CD'</code>（<b>15 门</b>）；
+          振荡器 N=3/5/7/9 → <code>20.83 / 12.50 / 8.93 / 6.94 MHz</code>。</div>
+      </a>
+
+      <a class="card" href="02_sequential_lab.c">
+        <div class="no">FILE 03 · C17 · ★ 时序逻辑</div>
+        <div class="title"><code>02_sequential_lab.c</code><span class="kind">可编译</span></div>
+        <div class="desc">
+          <b>周期精确</b>的边沿触发 D 触发器模型（<code>CLK→Q = 13ns</code>、门 <code>8ns</code>），
+          每个时钟沿打印"这个信号在沿后多少 ns 才翻"。
+          对比异步纹波 / 同步串行使能 / 同步并行进位三种计数器，
+          外加移位寄存器、异步清空竞争、锁存器 vs 触发器。
+        </div>
+        <div class="focus"><b>学习重点：</b><code>0111→1000</code> 跳变在
+          <code>+13/+26/+39/+52 ns</code>，途中冒出 <b>3 个假状态</b>
+          <code>6 / 4 / 0</code> 各持续 <code>13.0 ns</code>；
+          并行超前进位是 <code>0</code> 个；16 位纹波 fmax 只剩 <code>4.81 MHz</code>。</div>
+      </a>
+
+      <a class="card" href="03_setup_hold.c">
+        <div class="no">FILE 04 · C17 · ★★ 本关最重要</div>
+        <div class="title"><code>03_setup_hold.c</code><span class="kind">可编译</span></div>
+        <div class="desc">
+          建立/保持时间实验台：扫描频率打印"能跑 / 临界 / 失败"；
+          MTBF 公式并<b>折算成年、天、毫秒</b>；格雷码转换 + 异步 FIFO 空满自测；
+          固定种子（<code>srand(20260315)</code>）一百万次蒙特卡洛，
+          对比 0 / 1 / 2 / 3 级同步器的错误率。
+        </div>
+        <div class="focus"><b>学习重点：</b>场景 A <code>fmax = 89.29 MHz</code>；
+          场景 C 表面 <code>192.31 MHz</code> 但保持裕量恒为 <code>−0.50 ns</code>，
+          <b>9 行全废 —— 降频救不了保持违例</b>；
+          MTBF（τ=0.5 / 100MHz）1 级<b>不足 1 ns</b>、2 级 <code>431 ms</code>、3 级 <code>6.63 年</code>。</div>
+      </a>
+
+      <a class="card" href="04_fsm_traffic.c">
+        <div class="no">FILE 05 · C17 · ★ 工程落地</div>
+        <div class="title"><code>04_fsm_traffic.c</code><span class="kind">可编译</span></div>
+        <div class="desc">
+          通用<b>表驱动 FSM 引擎</b>（状态枚举 + 事件枚举 + <code>const Rule table[]</code> + default），
+          套两个真实场景：十字路口交通灯（行人请求 / 车流传感 / 故障安全态）
+          与按键消抖（10ms 采样、短按 / 长按 / 连发）。
+          外加<b>对照组</b>：把 default 删掉，看状态变量怎么跑飞并永久卡死。
+        </div>
+        <div class="focus"><b>学习重点：</b>转移表 <code>23</code> 条（FAULT 显式占 6 条）；
+          40 拍里 default 命中 <code>1</code> 次、非法状态 <code>0</code> 次 = PASS；
+          对照组非法状态 <code>4</code> 次 = 永久卡死；
+          消抖汇总：毛刺作废 1 / 按下 2 / 短按 1 / 长按 1 / 连发 1。</div>
+      </a>
+
+      <a class="card" href="karnaugh_lab.html">
+        <div class="no">FILE 06 · 交互动画</div>
+        <div class="title"><code>karnaugh_lab.html</code><span class="kind">离线 HTML</span></div>
+        <div class="desc">
+          4 变量（AB 行 × CD 列）卡诺图，点击在 <code>0 → 1 → X</code> 三态循环，
+          实时高亮最优圈组（可显示 / 隐藏），下方中文列出最简与或式、
+          门数量、与门输入数。内置 4 个 preset：
+          <b>多数投票器 / BCD 七段 g 段 / 奇偶校验 / 格雷码→二进制</b>。
+        </div>
+        <div class="focus"><b>学习重点：</b>先自己在图上圈，再打开高亮对答案。
+          旁边那句话要真懂：<b>圈越大 = 消掉的变量越多 = 与门输入脚越少</b>。</div>
+      </a>
+
+      <a class="card" href="setup_hold_animator.html">
+        <div class="no">FILE 07 · 交互动画</div>
+        <div class="title"><code>setup_hold_animator.html</code><span class="kind">离线 HTML</span></div>
+        <div class="desc">
+          SVG 画发端 FF → 走线 → 收端 FF 与时钟，下方画时序波形。
+          7 根滑杆（<code>Tclk / Tco / 走线延迟 / Tsu / Th / skew / jitter</code>）
+          实时算裕量，<b>裕量为负直接标红"亚稳态风险"</b>。有"逐周期步进"按钮。
+          4 个 preset：舒服的低速 / 刚好临界 / 超频翻车 / 偏 skew 破坏保持时间。
+        </div>
+        <div class="focus"><b>学习重点：</b>拖 preset 4 的 Tclk——
+          建立裕量一路变绿，保持裕量<b>死红不动</b>。
+          那一刻你就真懂 <code>03</code> 里场景 C 那张表了。</div>
+      </a>
+
+      <a class="card" href="../硬件学习路线图.html">
+        <div class="no">FILE 08 · 全局</div>
+        <div class="title"><code>硬件学习路线图.html</code><span class="kind">总入口</span></div>
+        <div class="desc">
+          七关全图与进度总览。每一关的 <code>index.html</code> 都能跳回来，
+          也能横向跳到上一关 / 下一关。
+        </div>
+        <div class="focus"><b>用法：</b>本关打完勾，回总路线图核对进度再进第 4 关。</div>
+      </a>
+
+    </div>
+  </div>
+
+  <div class="panel">
+    <h2>学习顺序建议</h2>
+    <p>
+      顺序不能乱。这一关的门槛不在"逻辑对不对"，在<b>"时间对不对"</b>——
+      前两个文件建立"逻辑最简"的直觉，中间两个把"时间"这把刀递到你手里，
+      最后一个才谈工程组织。跳过 01/02 直接看 03，公式你会背但不会怕。
+    </p>
+    <ol class="order">
+      <li><b>先读 <code>tutorial.md</code> 第一、二节。</b>
+        把"电平是区间不是值"这根弦绷上，再看后面所有东西才不会当成理论课。</li>
+      <li><b>玩 <code>karnaugh_lab.html</code>。</b>
+        手点 16 格，先在纸上自己圈，再开高亮对答案。这一步建立的是<b>直觉</b>，别跳。</li>
+      <li><b>跑 <code>01_logic_gates.c</code>。</b>
+        用算法验证你的直觉。重点看"代价对照"两行：门数、<b>门输入脚总数</b>、<b>延迟级数</b>。</li>
+      <li><b>跑 <code>02_sequential_lab.c</code>。</b>
+        从"逻辑对"跨到"时间对"。盯死 <code>0111→1000</code> 那一拍的 <code>13/26/39/52 ns</code>
+        和 <b>3 个假状态</b>——这是毛刺第一次以数字的形式出现在你面前。</li>
+      <li><b>拖 <code>setup_hold_animator.html</code>。</b>
+        先建立画面感：数据在路上跑、时钟在门口等。preset 逐个切，看裕量条怎么变色。</li>
+      <li><b>跑 <code>03_setup_hold.c</code>。</b>
+        把画面感变成能算的数。<b>场景 C 是本关最重要的一张表</b>，
+        看懂它你就理解了为什么"全绿的 STA 报告"能骗人。</li>
+      <li><b>跑 <code>04_fsm_traffic.c</code>。</b>
+        前面所有东西最终要落到"能交付的代码"。这张 <code>const</code> 表 + 一个引擎 + 一个 default，
+        就是你以后写任何协议栈、任何控制器的骨架。</li>
+      <li><b>回到 <code>tutorial.md</code> 第五、六、七节。</b>
+        11 条坑逐条对照自己的板子；做完 5 道作业；对着通关清单逐条打勾。
+        <b>最后拿白纸把五件事从空白重做一遍</b>，才算过。</li>
+    </ol>
+  </div>
+
+  <div class="panel">
+    <h2>编译命令速查</h2>
+    <p>
+      <b>Windows 用户务必先执行 <code>chcp 65001</code></b>，
+      否则控制台代码页不是 UTF-8，程序输出的中文全是乱码——
+      这不是程序的 bug，是 Windows 控制台的历史包袱。
+      四个程序统一用同一条命令，<b>纯 C17、不用 C++、不用任何第三方库</b>，
+      在 MSYS2 / MinGW-w64 gcc 16.2 下零警告零错误。
+    </p>
+    <pre class="cmd"><span class="c"># 0. 先切 UTF-8（Windows 必做，每个新开的控制台都要做一次）</span>
+chcp 65001
+
+<span class="c"># 1. 组合逻辑：卡诺图 / Quine-McCluskey 化简器</span>
+gcc -std=c17 -O2 -Wall -Wextra 01_logic_gates.c -o 01_logic_gates.exe
+.\01_logic_gates.exe
+
+<span class="c"># 2. 时序逻辑：周期精确仿真（跳变时刻，单位 ns）</span>
+gcc -std=c17 -O2 -Wall -Wextra 02_sequential_lab.c -o 02_sequential_lab.exe
+.\02_sequential_lab.exe
+
+<span class="c"># 3. 建立/保持时间 + 亚稳态 MTBF + 同步器蒙特卡洛（固定种子，可复现）</span>
+gcc -std=c17 -O2 -Wall -Wextra 03_setup_hold.c -o 03_setup_hold.exe
+.\03_setup_hold.exe
+
+<span class="c"># 4. 表驱动状态机：交通灯 + 按键消抖（纯确定性，无随机数）</span>
+gcc -std=c17 -O2 -Wall -Wextra 04_fsm_traffic.c -o 04_fsm_traffic.exe
+.\04_fsm_traffic.exe
+
+<span class="c"># 输出很长？重定向到文件再看，或者分页看：</span>
+.\03_setup_hold.exe > 说明.txt    <span class="c">（看完记得删，别留编译产物）</span>
+
+<span class="c"># 交互动画：不用编译，双击 HTML 文件即可（完全离线，无 CDN / 无外部字体 / 无 js 依赖）</span></pre>
+    <p style="margin-top:12px">
+      两个 C 语言细节值得记：<b>①</b> 严格 <code>-std=c17</code> 下 MSYS2 不暴露 <code>M_PI</code>，
+      要用 π 就自己 <code>#define</code>；
+      <b>②</b> <code>03_setup_hold.c</code> 的蒙特卡洛用 <code>srand(20260315)</code> 固定种子——
+      换机器、换编译器，只要种子不变，那四个错误率数字一个都不会变。
+      <b>做实验不固定种子，你对不上账，也骗不了自己。</b>
+    </p>
+  </div>
+
+  <div class="panel">
+    <h2>常见坑速览（课本第五节有全文）</h2>
+    <p>每一条都有人中过招，包括师傅本人。红框 = 会烧东西或量产翻车；黄框 = 会浪费你几天。</p>
+    <div class="pits">
+      <div class="pit">
+        <b>CMOS 输入悬空 → 误导通 + 功耗暴涨</b>
+        74HC 没用到的输入脚留空，内部上下管同时半导通，
+        静态电流从 <code>200µA</code> 变成 <code>20mA</code>，片子摸着是温的，
+        电平还随机——盖上机壳一个值、打开机壳另一个值。
+        <b>所有未用输入必须经 10kΩ 明确接地或接 Vcc。</b>
+      </div>
+      <div class="pit">
+        <b>5V 直连 3.3V MCU → 复位 / latch-up</b>
+        绝对最大 <code>VDD + 0.3V = 3.6V</code>。5V 从引脚保护二极管倒灌进 3.3V 轨，
+        把整条轨往上顶。"板子跑着跑着复位"十有八九是这个。
+        <b>5V-tolerant 要在 datasheet 那一栏查到原话才算，"看着像"不算。</b>
+      </div>
+      <div class="pit">
+        <b>上拉选 100Ω 把驱动门灌爆</b>
+        <code>(5 − 0.44) / 100 = 45.6 mA</code>，超出 <code>IOL</code> 规范，
+        <code>VOL</code> 被抬高到 1V 以上——判 0 门限是 <code>0.8V</code>，
+        <b>直接把 0 误判成 1</b>，片子发烫。想提速应该减小总线电容，不是硬压电阻。
+      </div>
+      <div class="pit">
+        <b>open-drain / I²C 忘接上拉</b>
+        现象最迷惑：读出来全是 1，或者飘忽不定；
+        有时看着能通（寄生电容存了点电荷），动一下排线就不通。
+        <b>上电先量 SCL/SDA 是不是高电平——30 秒省你两小时。</b>
+      </div>
+      <div class="pit mid">
+        <b>只加 100nF 消抖，结果抖 15ms 打穿</b>
+        RC 算出来 τ = 1ms "绰绰有余"，
+        但按键 datasheet 写的抖动时间是<b>典型值不是上限</b>。
+        电容刚放完电，触点又弹回去，MCU 读到第二个边沿。
+        <b>硬件 RC 取 10~20ms + 74HC14 施密特，软件再做 20~30ms 稳定判定。</b>
+      </div>
+      <div class="pit mid">
+        <b>把 latch 当 flop 用</b>
+        74HC373 当 74HC74 用，CP 高电平那半周期数据<b>透明直通</b>，
+        毛刺原样搬到输出。FPGA 里更惨：综合器默默推断出 latch，
+        warning 你没看，板子中概率出错。<b>RTL 里 if 没有 else 触发的 latch warning 要当 error。</b>
+      </div>
+      <div class="pit">
+        <b>状态机漏 default → 跑飞且爬不回来</b>
+        <code>04</code> 的对照组演示得很清楚：状态一旦进入未编码组合，
+        <b>后面喂正常输入也一条规则都匹配不上，永久卡死</b>（非法状态 4 次）。
+        <code>default</code> 必须指向<b>安全态</b>，不是指向"什么都不做"。
+      </div>
+      <div class="pit mid">
+        <b>两级同步器被综合器优化掉</b>
+        代码里写了两级，综合器觉得"这就是根线"，
+        合并或者 retiming 把两个 FF 拆到十万八千里——
+        <b>亚稳态传播的红利用直接归零</b>。
+        必须加 <code>ASYNC_REG</code> / <code>dont_touch</code> 约束，并在布局报告里核对它们真的挨着。
+      </div>
+      <div class="pit">
+        <b>保持裕量为负还猛降频</b>
+        保持裕量 <code>= Tco + Tpd(min) − Th − skew</code>，
+        <b>公式里根本没有 Tclk</b>。数据来得太早就赖在收端门口，
+        你把时钟放慢它只会来得更早。<b>这是布局问题，不是频率问题。</b>
+      </div>
+      <div class="pit mid">
+        <b>复位一释放就狂发初始化</b>
+        电源轨还在爬坡、外设半上电把 SDA 拉住，初始化全部 NACK，
+        失败状态还被写进标志位，之后再也不重试。
+        <b>复位后延时 10~50ms，或用 power-good 做硬件门控，并且必须有重试与降级。</b>
+      </div>
+      <div class="pit mid">
+        <b>按 datasheet 典型值算裕量</b>
+        典型值 = <b>一半的片子比它慢，你没算那一半</b>。
+        74HC 的 tpd 随温度 / 电压 / 负载在 6~15ns 之间漂，同一片不同门也不同。
+        <b>裕量至少留 20%~30%，并且按 worst case 那一栏算。</b>
+      </div>
+      <div class="pit">
+        <b>化简出"最简"就上，不管毛刺</b>
+        最简 SOP 是<b>面积</b>最优，不是<b>时序</b>最优。
+        输入切换瞬间可能出现"两个与门同时为 0"的空窗，输出打一个反毛刺。
+        <b>关键路径打一拍寄存器同步化，或加冗余项（consensus term）。</b>
+      </div>
+    </div>
+  </div>
+
+  <div class="panel">
+    <h2>通关自检表（挑 10 条，全部来自本关代码的实测数字）</h2>
+    <p>每一条都必须能<b>不看资料</b>说出来。答不上来的，回到对应文件补。</p>
+    <table class="chk">
+      <thead><tr><th style="width:46%">能做到的事</th><th>对应验收数字（本关代码实测）</th><th style="width:8%">达成</th></tr></thead>
+      <tbody>
+        <tr>
+          <td>算出 3.3V HC 的高低两侧噪声容限，并说出哪一侧先出问题</td>
+          <td><code>VOH≥2.84 VOL≤0.44 VIH≥2.10 VIL≤0.80</code> → 高侧 <code>0.74V</code>、低侧 <code>0.36V</code>，<b>低侧先穿</b></td>
+          <td class="ok">□</td>
+        </tr>
+        <tr>
+          <td>给 3.3V / 总线电容 150pF / 上升沿 ≤1µs，报出上拉电阻区间</td>
+          <td>上限 <code>R ≈ tr/(0.847·C) ≈ 7.9k</code>；下限受 <code>IOL</code> 限制 → 实取 <code>2.2k ~ 4.7k</code></td>
+          <td class="ok">□</td>
+        </tr>
+        <tr>
+          <td>手推三人投票多数器的最简与或式</td>
+          <td><code>F = AB+AC+BC</code>；代价 <b>35 门 → 5 门</b>、输入脚 <code>66 → 10</code>、延迟 <code>7 → 3</code> 级</td>
+          <td class="ok">□</td>
+        </tr>
+        <tr>
+          <td>说清"无关项到底值多少钱"</td>
+          <td>g 段用满 X：<code>A+B'C+BC'+CD'</code> = <b>9 门 / 延迟 4 级</b>；不敢用 X：<b>15 门 / 延迟 5 级</b></td>
+          <td class="ok">□</td>
+        </tr>
+        <tr>
+          <td>解释偶数个反相器接成圈为什么不振荡</td>
+          <td>奇数 = <code>f = 1/(2·N·tpd)</code>（N=3/5/7/9 → <code>20.83 / 12.50 / 8.93 / 6.94 MHz</code>）；
+            偶数 = <b>双稳态 = 锁存器</b></td>
+          <td class="ok">□</td>
+        </tr>
+        <tr>
+          <td>报出纹波计数器 <code>0111→1000</code> 的跳变时刻与假状态</td>
+          <td><code>+13/+26/+39/+52 ns</code>；假状态 <code>6 / 4 / 0</code> 各持续 <code>13.0 ns</code>；并行进位 = <code>0</code> 个</td>
+          <td class="ok">□</td>
+        </tr>
+        <tr>
+          <td>说明位宽怎么吃掉 fmax</td>
+          <td>纹波 2/4/8/16 位 → <code>38.46 / 19.23 / 9.62 / 4.81 MHz</code>；同步并行恒 <code>76.92 MHz</code></td>
+          <td class="ok">□</td>
+        </tr>
+        <tr>
+          <td>背出两个裕量公式，并解释"降频为什么救不了保持违例"</td>
+          <td><code>fmax = 1/(Tco+Tpd+Tsu−skew−jitter)</code>、<code>M_hd = Tco+Tpd(min)−Th−skew</code>，
+            <b>后者没有 Tclk</b>；场景 C：<code>fmax=192.31 MHz</code> 但保持裕量恒 <code>−0.50 ns</code>，<b>9 行全废</b></td>
+          <td class="ok">□</td>
+        </tr>
+        <tr>
+          <td>算一次亚稳态 MTBF 并折算成时间</td>
+          <td><code>MTBF = exp(t_settle/τ)/(f_clk·f_data)</code>；τ=0.5、100MHz：1 级<b>不足 1 ns</b>、
+            2 级 <code>431.123 ms</code>、3 级 <code>6.63 年</code></td>
+          <td class="ok">□</td>
+        </tr>
+        <tr>
+          <td>说清异步 FIFO 为什么必须多留 1 位指针</td>
+          <td>空 <code>= (wptr == rptr)</code>；满 <code>= ((wptr^rptr) &amp; MASK) == 1&lt;&lt;(PTR_BITS−1)</code>；
+            <b>少一位就永远区分不了空和满</b>（本关 46 次操作误判 <code>0</code> 次）</td>
+          <td class="ok">□</td>
+        </tr>
+      </tbody>
+    </table>
+    <p style="margin-top:12px">
+      完整清单（22 条）在 <code>tutorial.md</code> 第七节。
+      <b>最后那个动作别偷懒</b>：关掉所有文件，拿一张白纸，
+      把"噪声容限示意图 / 4 变量化简 / 0111→1000 延迟累积时序 / fmax 与保持裕量 / 交通灯转移表"
+      五件事从空白重做一遍。五张纸都写出来，这一关才算真过。
+    </p>
+  </div>
+
+  <div class="panel">
+    <h2>上一关 · 本关 · 下一关</h2>
+    <div class="nav3">
+      <a href="../analog_electronics/">
+        <div class="lab">← 第 2 关</div>
+        <div class="nm">炼气期 · 模拟电路</div>
+        <div class="sub">二极管、三极管、运放。
+          本关的"输入悬空误导通"就是 MOS 管半导通的直接后果。</div>
+      </a>
+      <a class="cur" href="./">
+        <div class="lab">你在这里</div>
+        <div class="nm">结丹期 · 数字电路</div>
+        <div class="sub">电平家族、卡诺图、时序与毛刺、建立/保持与亚稳态、状态机。</div>
+      </a>
+      <a href="../mcu_embedded/">
+        <div class="lab">第 4 关 →</div>
+        <div class="nm">兵器期 · MCU 与嵌入式</div>
+        <div class="sub">寄存器、GPIO、UART。
+          本关的建立/保持会升级成 GPIO 配置与 SPI 速率上限，
+          两级同步器变成外部中断与跨时钟域 FIFO。</div>
+      </a>
+    </div>
+    <div class="grid2" style="margin-top:16px">
+      <div class="box">
+        <b>第 1 关 · 筑基期 电路基础（<code>../circuit_basics/</code>）</b>
+        RC 时间常数、上拉下拉取值、功耗与封装。
+        本关的 <code>tr ≈ 0.847·R·C</code>（开漏上升沿，I²C 规范 0.3→0.7Vdd 口径）就是那一关的 RC 充电。
+      </div>
+      <div class="box">
+        <b>第 5 关 · 阵法期 PCB 与 EMC（<code>../pcb_design/</code>）</b>
+        本关"保持违例是布局问题"会成为整关主线：
+        时钟树偏差、等长、回流路径，全是为了让 skew 落在你算过的那个数上。
+      </div>
+      <div class="box">
+        <b>第 6 关 · 望闻问切 仪器与排障（<code>../instruments_debug/</code>）</b>
+        本关打印出来的 <code>13 ns 毛刺</code>，
+        在那一关变成"示波器带宽 / 采样率 / 触发设置"——抓不到不等于不存在。
+      </div>
+      <div class="box">
+        <b>第 7 关 · 手搓期 MiniBoard 项目（<code>../miniboard/</code>）</b>
+        真正焊一块板。混合电压接口、按键消抖、I²C 上拉、状态机，
+        本关算过的每一个数都要在实物上对一遍账。
+      </div>
+    </div>
+  </div>
+
+  <div class="footer">
+    第 3 关 · 结丹期 · 数字电路　|　全部资源离线，无任何外部依赖，双击即开　|
+    <a href="../硬件学习路线图.html" style="color:var(--accent);text-decoration:none">← 返回总路线图</a>
+  </div>
+
+</div>
+</body>
+</html>

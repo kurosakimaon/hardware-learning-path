@@ -1,0 +1,663 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>GPIO 寄存器沙盒 · 第 4 关 兵器期</title>
+<style>
+:root{
+  --bg:#0f172a; --surface:#1e293b; --surface-2:#334155; --ink:#f1f5f9;
+  --ink-muted:#94a3b8; --ink-dim:#64748b; --rule:#334155;
+  --accent:#38bdf8; --accent-2:#818cf8; --ok:#4ade80; --warn:#fbbf24; --bad:#f87171;
+}
+*{box-sizing:border-box}
+body{
+  margin:0; background:var(--bg); color:var(--ink);
+  font-family:-apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", "Microsoft YaHei", sans-serif;
+  font-size:14px; line-height:1.7;
+}
+code,.mono{font-family:Consolas,"Courier New",monospace}
+header{padding:22px 26px 14px; border-bottom:1px solid var(--rule); background:var(--surface)}
+.back{color:var(--accent); text-decoration:none; font-size:13px}
+.back:hover{text-decoration:underline}
+.title{margin:8px 0 2px; font-size:24px; font-weight:700; display:flex; align-items:center; gap:12px; flex-wrap:wrap}
+.stage{font-size:12px; font-weight:600; color:var(--bg); background:var(--accent); padding:3px 10px; border-radius:999px}
+.sub{margin:2px 0 0; color:var(--ink-muted); font-size:13px}
+.layout{
+  display:grid; grid-template-columns:330px minmax(430px,1fr) 380px;
+  gap:16px; padding:16px 26px 26px; align-items:start;
+}
+@media (max-width:1180px){ .layout{grid-template-columns:1fr} }
+.panel{background:var(--surface); border:1px solid var(--rule); border-radius:10px; padding:14px 16px}
+.panel h2{margin:0 0 10px; font-size:15px; color:var(--accent); letter-spacing:.5px}
+.panel h2 small{color:var(--ink-dim); font-weight:400; font-size:12px; margin-left:6px}
+.field{margin:0 0 12px}
+.field label{display:block; color:var(--ink-muted); font-size:12px; margin-bottom:4px}
+select,input[type=text]{
+  width:100%; padding:6px 8px; background:var(--bg); color:var(--ink);
+  border:1px solid var(--rule); border-radius:6px; font-family:Consolas,monospace; font-size:13px;
+}
+.row{display:flex; gap:8px; flex-wrap:wrap}
+button{
+  cursor:pointer; padding:6px 11px; border-radius:6px; border:1px solid var(--rule);
+  background:var(--surface-2); color:var(--ink); font-size:13px;
+  font-family:inherit; line-height:1.5;
+}
+button:hover{border-color:var(--accent); color:var(--accent)}
+button.bad{border-color:#7f1d1d; background:#450a0a; color:#fecaca}
+button.bad:hover{border-color:var(--bad); color:var(--bad)}
+button.ok{border-color:#14532d; background:#052e16; color:#bbf7d0}
+button.ok:hover{border-color:var(--ok); color:var(--ok)}
+button.small{padding:3px 8px; font-size:12px}
+.pinrow{display:flex; flex-wrap:wrap; gap:4px; margin-top:4px}
+.pin{
+  width:26px; padding:3px 0; text-align:center; font-family:Consolas,monospace; font-size:12px;
+  border:1px solid var(--rule); border-radius:4px; background:var(--bg); color:var(--ink-muted);
+}
+.pin.sel{border-color:var(--accent); color:var(--accent); background:#0c4a6e}
+.pin.out{color:var(--ok)}
+.reg{margin:0 0 14px}
+.reghd{display:flex; align-items:baseline; gap:8px; font-size:13px}
+.reghd b{font-family:Consolas,monospace; color:var(--accent-2); font-size:13px}
+.reghd .hex{font-family:Consolas,monospace; color:var(--warn)}
+.reghd .tip{color:var(--ink-dim); font-size:12px}
+.bits{display:flex; gap:1px; margin-top:4px; flex-wrap:wrap}
+.bit{
+  width:20px; height:24px; line-height:22px; text-align:center; font-family:Consolas,monospace;
+  font-size:12px; background:var(--surface-2); color:var(--ink-dim); border-radius:2px; cursor:default;
+}
+.bit.one{background:#0c4a6e; color:var(--accent)}
+.bit.hl{outline:1px solid var(--warn)}
+.bit.ro{background:#3f3f46; color:var(--ink-muted)}
+.bitlabel{display:flex; gap:1px; font-family:Consolas,monospace; font-size:9px; color:var(--ink-dim); flex-wrap:wrap}
+.bitlabel span{width:20px; text-align:center}
+#inspector{
+  margin-top:8px; padding:8px 10px; background:var(--bg); border:1px solid var(--rule);
+  border-left:3px solid var(--accent); border-radius:6px; font-family:Consolas,monospace;
+  font-size:12px; color:var(--ink-muted); min-height:44px;
+}
+#log{
+  margin-top:10px; padding:8px 10px; background:var(--bg); border:1px solid var(--rule);
+  border-radius:6px; font-family:Consolas,monospace; font-size:12px; height:150px; overflow:auto;
+  white-space:pre-wrap;
+}
+#log .err{color:var(--bad)}
+#log .good{color:var(--ok)}
+#log .dim{color:var(--ink-dim)}
+.note{
+  margin-top:10px; padding:8px 10px; border-left:3px solid var(--warn);
+  background:rgba(251,191,36,.08); color:var(--ink-muted); border-radius:0 6px 6px 0; font-size:12.5px;
+}
+.note.bad{border-left-color:var(--bad); background:rgba(248,113,113,.08)}
+.note.ok{border-left-color:var(--ok); background:rgba(74,222,128,.08)}
+svg{display:block; width:100%; height:auto; background:var(--bg); border-radius:8px}
+.wire{stroke:var(--surface-2); stroke-width:2; fill:none}
+.wire.on{stroke:var(--accent)}
+.box{fill:var(--surface); stroke:var(--surface-2); stroke-width:1.5}
+.box.on{fill:#0c4a6e; stroke:var(--accent)}
+.box.off{opacity:.28}
+.lbl{fill:var(--ink-muted); font-size:11px; font-family:Consolas,monospace}
+.lbl.on{fill:var(--accent)}
+.lbl.off{fill:var(--ink-dim); opacity:.5}
+.rail{stroke:var(--ink-dim); stroke-width:2}
+footer{padding:0 26px 30px; color:var(--ink-dim); font-size:12.5px}
+</style>
+</head>
+<body>
+<header>
+  <a class="back" href="../硬件学习路线图.html">← 返回总路线图</a>
+  <div class="title">GPIO 寄存器沙盒 <span class="stage">第 4 关 · 兵器期</span></div>
+  <p class="sub">STM32F4 GPIOA 软件模型：改一个位，看看引脚里面到底通的是哪条路。纯离线，双击即开。<br>
+  （F103 没有 MODER，用的是 CRL/CRH，4 位一格；别把两代的寄存器布局混着抄。）</p>
+</header>
+
+<div class="layout">
+
+  <!-- ───────────── 左：操作台 ───────────── -->
+  <section class="panel">
+    <h2>① 操作台 <small>先选引脚，再配模式</small></h2>
+
+    <div class="field">
+      <label>选择引脚（PA0 ~ PA15）</label>
+      <select id="pinSel"></select>
+      <div class="pinrow" id="pinRow"></div>
+    </div>
+
+    <div class="field">
+      <label>MODER[2n+1:2n] — 模式</label>
+      <select id="modeSel">
+        <option value="0">00 输入 Input</option>
+        <option value="1">01 通用输出 Output</option>
+        <option value="2">10 复用 Alternate（USART/SPI…）</option>
+        <option value="3">11 模拟 Analog（ADC）</option>
+      </select>
+    </div>
+
+    <div class="field">
+      <label>PUPDR[2n+1:2n] — 上下拉</label>
+      <select id="pullSel">
+        <option value="0">00 悬浮 Floating</option>
+        <option value="1">01 上拉 Pull-up（约 40 kΩ）</option>
+        <option value="2">10 下拉 Pull-down</option>
+        <option value="3">11 保留，别用</option>
+      </select>
+    </div>
+
+    <div class="field">
+      <label>OSPEEDR[2n+1:2n] — 驱动速度档</label>
+      <select id="speedSel">
+        <option value="0">00 2 MHz（低速，边沿最缓）</option>
+        <option value="1">01 25 MHz（中速）</option>
+        <option value="2">10 50 MHz（高速）</option>
+        <option value="3">11 100 MHz（最高，边沿最陡）</option>
+      </select>
+    </div>
+
+    <div class="field">
+      <label>OTYPER[n] — 输出类型</label>
+      <select id="otypeSel">
+        <option value="0">0 推挽 Push-Pull（PMOS + NMOS 全用）</option>
+        <option value="1">1 开漏 Open-Drain（PMOS 断开，只能拉低）</option>
+      </select>
+    </div>
+
+    <div class="field">
+      <label>外部世界对这个引脚做了什么</label>
+      <div class="row">
+        <button class="small" data-ext="z">外部悬空</button>
+        <button class="small" data-ext="1">外部拉高</button>
+        <button class="small" data-ext="0">外部拉低</button>
+      </div>
+    </div>
+
+    <div class="field">
+      <label>写输出：ODR 还是 BSRR？</label>
+      <div class="row">
+        <button class="ok" id="btnBsrrSet">BSRR = 1&lt;&lt;n（置位）</button>
+        <button class="ok" id="btnBsrrClr">BSRR = 1&lt;&lt;(n+16)（复位）</button>
+      </div>
+      <div class="row" style="margin-top:6px">
+        <button id="btnOdrToggle">ODR ^= 1&lt;&lt;n（读改写）</button>
+        <button id="btnOdrDirect">ODR = 1&lt;&lt;n（直接赋值）</button>
+      </div>
+    </div>
+
+    <div class="row">
+      <button class="bad" id="btnBad">错误示范：ODR = 1&lt;&lt;3</button>
+      <button id="btnReset">复位（全 0）</button>
+    </div>
+
+    <div class="note">
+      BSRR 是<strong>只写</strong>寄存器：低 16 位写 1 置位、高 16 位写 1 复位，
+      写 0 的位不动。一次写入是原子的，所以中断里改引脚不会踩到别人。
+    </div>
+  </section>
+
+  <!-- ───────────── 中：寄存器位图 ───────────── -->
+  <section class="panel">
+    <h2>② 寄存器位图 <small>悬停任意一位看含义；黄框 = 当前引脚</small></h2>
+    <div id="regs"></div>
+    <div id="inspector">把鼠标移到上面任意一位，这里告诉你它是谁、什么含义。</div>
+    <div id="log"></div>
+    <div class="note" id="verdict">
+      当前结论：<span id="verdictText">—</span>
+    </div>
+  </section>
+
+  <!-- ───────────── 右：内部等效电路 ───────────── -->
+  <section class="panel">
+    <h2>③ 引脚内部等效电路 <small id="ckPin">PA0</small></h2>
+    <svg viewBox="0 0 360 430" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="GPIO 引脚内部等效电路">
+      <!-- 电源 / 地 -->
+      <line class="rail" x1="20" y1="44" x2="340" y2="44"/>
+      <text class="lbl" x="20" y="36">VDD 3.3 V</text>
+      <line class="rail" x1="20" y1="352" x2="120" y2="352"/>
+      <text class="lbl" x="20" y="368">GND</text>
+
+      <!-- 上拉 -->
+      <line id="wUp1" class="wire" x1="60" y1="44" x2="60" y2="96"/>
+      <rect id="resUp" class="box off" x="44" y="96" width="32" height="60"/>
+      <text id="tUp" class="lbl off" x="82" y="130">上拉 40k</text>
+      <line id="wUp2" class="wire" x1="60" y1="156" x2="60" y2="266"/>
+
+      <!-- 下拉 -->
+      <rect id="resDn" class="box off" x="44" y="266" width="32" height="60"/>
+      <text id="tDn" class="lbl off" x="82" y="300">下拉 40k</text>
+      <line id="wDn" class="wire" x1="60" y1="326" x2="60" y2="352"/>
+
+      <!-- 引脚焊盘 -->
+      <circle id="pad" cx="180" cy="392" r="17" class="box"/>
+      <text class="lbl" x="180" y="396" text-anchor="middle" id="padLbl">PA0</text>
+      <text class="lbl" x="180" y="424" text-anchor="middle">← 外部引脚（焊盘）</text>
+
+      <!-- 焊盘向上主连线 -->
+      <line id="wPin" class="wire" x1="180" y1="375" x2="180" y2="196"/>
+      <line id="wCross" class="wire" x1="60" y1="266" x2="180" y2="266"/>
+
+      <!-- 推挽输出级 -->
+      <line id="wP1" class="wire" x1="300" y1="44" x2="300" y2="82"/>
+      <rect id="tPmos" class="box off" x="262" y="82" width="76" height="42"/>
+      <text id="tPmosL" class="lbl off" x="300" y="107" text-anchor="middle">PMOS</text>
+      <line id="wP2" class="wire" x1="300" y1="124" x2="300" y2="170"/>
+      <rect id="tNmos" class="box off" x="262" y="170" width="76" height="42"/>
+      <text id="tNmosL" class="lbl off" x="300" y="195" text-anchor="middle">NMOS</text>
+      <line id="wP3" class="wire" x1="300" y1="212" x2="300" y2="240"/>
+      <line class="rail" x1="262" y1="240" x2="338" y2="240"/>
+      <text class="lbl" x="300" y="256" text-anchor="middle">GND</text>
+      <line id="wDrv" class="wire" x1="180" y1="196" x2="300" y2="196"/>
+      <text id="tDrv" class="lbl off" x="205" y="188">驱动信号 = ODR[n]</text>
+
+      <!-- 输入缓冲（施密特触发器） -->
+      <path id="schmitt" class="box" d="M132 296 L214 296 L196 320 L214 344 L132 344 Z"/>
+      <text class="lbl" x="173" y="325" text-anchor="middle" id="tSch">施密特触发器</text>
+      <line id="wSch" class="wire" x1="214" y1="320" x2="252" y2="320"/>
+      <text id="tIdr" class="lbl" x="256" y="324">→ IDR[n] = <tspan id="idrVal">X</tspan></text>
+
+      <!-- 复用 / 模拟 支路 -->
+      <line id="wAf" class="wire" x1="252" y1="320" x2="252" y2="120"/>
+      <rect id="afBox" class="box off" x="252" y="86" width="88" height="34"/>
+      <text id="afLbl" class="lbl off" x="296" y="107" text-anchor="middle">片上外设</text>
+      <rect id="adcBox" class="box off" x="140" y="60" width="86" height="34"/>
+      <text id="adcLbl" class="lbl off" x="183" y="81" text-anchor="middle">ADC 通道</text>
+      <line id="wAdc" class="wire" x1="180" y1="196" x2="180" y2="94"/>
+
+      <text id="speedLbl" class="lbl" x="20" y="404">速度档：—</text>
+    </svg>
+    <div class="note" id="ckNote">—</div>
+  </section>
+</div>
+
+<footer>
+  <p>
+    模型说明：为了看清楚，本沙盒把每 2 bit / 1 bit 的字段做了忠实映射（MODER、OSPEEDR、PUPDR 各 2 bit/引脚，
+    OTYPER、ODR、IDR 各 1 bit/引脚），复位值取全 0（即全部为「输入模式」，简化自真实上电状态：
+    F4 多数引脚复位是 00 输入，GPIOA 的 PA13/14/15 复位是 10 复用，L0/L4 复位才是 11 模拟）。
+    BSRR 只写不读，所以位图里显示的是「上一次写入的值」。
+    真机 STM32F4 GPIOA 基地址 0x40020000，MODER 偏移 0x00、OTYPER 0x04、OSPEEDR 0x08、PUPDR 0x0C、IDR 0x10、ODR 0x14、BSRR 0x18。
+  </p>
+</footer>
+
+<script>
+"use strict";
+
+// ── 寄存器状态（32 位，用无符号数 + >>> 处理）────────────────────────────
+const S = {
+  MODER:0, OTYPER:0, OSPEEDR:0, PUPDR:0, ODR:0,
+  bsrrLog:0,            // 仅展示：上次写入 BSRR 的值
+  ext:new Array(16).fill("z")   // 外部世界：'z' 悬空 / '1' / '0'
+};
+let sel = 0;
+
+const REGS = [
+  {key:"MODER",   w:2, ro:false, name:"MODER",
+   desc:(n,v)=>["输入模式：输出关闭，Schmitt 触发器打开，读 IDR 有效",
+                "通用输出模式：由 ODR 驱动，速度看 OSPEEDR",
+                "复用功能模式：引脚交给片上外设（USART/SPI/I2C/TIM…）",
+                "模拟模式：输入输出缓冲全部断开，ADC 才能读准（想读 ADC 却忘了配这个，转换结果永远是垃圾）"][v],
+   short:["输入","输出","复用","模拟"]},
+  {key:"OTYPER",  w:1, ro:false, name:"OTYPER",
+   desc:(n,v)=>v===0?"推挽输出：PMOS + NMOS 都在，能拉高也能拉低":
+                    "开漏输出：PMOS 断开，只能拉低；要输出 1 必须外接上拉电阻（I2C 必须是它）",
+   short:["推挽","开漏"]},
+  {key:"OSPEEDR", w:2, ro:false, name:"OSPEEDR",
+   desc:(n,v)=>["2 MHz：压摆率最低，边沿最缓，EMI 最小——点灯、慢信号用它",
+                "25 MHz：中速，常规数字 IO",
+                "50 MHz：高速，注意走线与终端匹配",
+                "100 MHz：最陡边沿，振铃/过冲/辐射全来了；直推 LED 时电流冲击也最大"][v],
+   short:["2M","25M","50M","100M"]},
+  {key:"PUPDR",   w:2, ro:false, name:"PUPDR",
+   desc:(n,v)=>["悬浮：没上拉也没下拉。输入悬空时 IDR 会随机跳变，中断能被打到手软",
+                "内部上拉（约 40 kΩ）：按键对地接法用这个，不接外设时读到 1",
+                "内部下拉：按键对 3V3 接法用这个，不接外设时读到 0",
+                "保留状态：芯片厂商没定义行为，别写这里"][v],
+   short:["悬浮","上拉","下拉","保留"]},
+  {key:"ODR",     w:1, ro:false, name:"ODR",
+   desc:(n,v)=>v===0?"输出数据 0：推挽时引脚被 NMOS 拉到 GND":
+                     "输出数据 1：推挽时引脚被 PMOS 拉到 VDD；开漏时是「释放」引脚",
+   short:["0","1"]},
+  {key:"IDR",     w:1, ro:true, name:"IDR",
+   desc:(n,v)=>v==="X"?"输入悬空：读到的是不定态，真机上这里会随机跳，拿它当中断源等于自虐":
+     (v===1?"输入缓冲读到的 1":(v==="A"?"引脚在复用模式，电平由片上外设决定":"输入缓冲读到的 0")),
+   short:["0","1"]}
+];
+
+// ── 工具 ───────────────────────────────────────────────────────────────
+function hex(v){ return "0x" + (v >>> 0).toString(16).toUpperCase().padStart(8, "0"); }
+function get2(reg, n){ return (S[reg] >>> (2 * n)) & 3; }
+function get1(reg, n){ return (S[reg] >>> n) & 1; }
+function set2(reg, n, v){
+  S[reg] = (S[reg] & ~(3 << (2 * n))) | ((v & 3) << (2 * n));
+  S[reg] >>>= 0;
+}
+function set1(reg, n, v){
+  S[reg] = v ? (S[reg] | (1 << n)) : (S[reg] & ~(1 << n));
+  S[reg] >>>= 0;
+}
+
+// IDR 由电路模型算出来，不是软件可写的
+function readIDR(n){
+  const mode = get2("MODER", n), otype = get1("OTYPER", n), odr = get1("ODR", n),
+        pull = get2("PUPDR", n), ext = S.ext[n];
+  if (mode === 3) return 0;                       // 模拟模式：数字输入缓冲断开
+  if (mode === 1 && otype === 0) return odr;      // 推挽输出：读回自己驱动的电平
+  if (mode === 2) return "A";                     // 复用：由外设驱动
+  // 到这里 = 输入，或开漏释放
+  if (mode === 1 && otype === 1 && odr === 0) return 0;   // 开漏正在拉低
+  if (ext !== "z") return Number(ext);
+  if (pull === 1) return 1;
+  if (pull === 2) return 0;
+  return "X";                                     // 真的悬空
+}
+
+// ── 日志 ───────────────────────────────────────────────────────────────
+const logEl = document.getElementById("log");
+function log(msg, cls){
+  const line = document.createElement("div");
+  if (cls) line.className = cls;
+  line.textContent = msg;
+  logEl.appendChild(line);
+  logEl.scrollTop = logEl.scrollHeight;
+}
+
+// ── 构建位图 ────────────────────────────────────────────────────────────
+const regsEl = document.getElementById("regs");
+const insp = document.getElementById("inspector");
+const cells = {};   // key -> array of {el, n}
+
+function buildRegs(){
+  REGS.forEach(cfg => {
+    const wrap = document.createElement("div");
+    wrap.className = "reg";
+
+    const hd = document.createElement("div");
+    hd.className = "reghd";
+    hd.innerHTML = "<b>" + cfg.name + "</b>" +
+      "<span class='hex' id='hex_" + cfg.key + "'>0x00000000</span>" +
+      "<span class='tip'>" + (cfg.w === 2 ? "每引脚 2 bit" : "每引脚 1 bit") +
+      (cfg.ro ? " · 只读" : (cfg.key === "ODR" ? " · 可读写（读改写有竞争风险）" : "")) + "</span>";
+    wrap.appendChild(hd);
+
+    const lab = document.createElement("div");
+    lab.className = "bitlabel";
+    const bits = document.createElement("div");
+    bits.className = "bits";
+    cells[cfg.key] = [];
+
+    for (let b = 31; b >= 0; b--) {
+      const used = cfg.w === 2 ? Math.floor(b / 2) : b;
+      const usedFlag = used < 16;
+      const sp = document.createElement("span");
+      sp.textContent = usedFlag ? used : "·";
+      lab.appendChild(sp);
+
+      const c = document.createElement("div");
+      c.className = "bit" + (cfg.ro ? " ro" : "");
+      if (!usedFlag) { c.style.opacity = ".25"; }
+      c.dataset.reg = cfg.key; c.dataset.bit = b;
+      c.addEventListener("mouseenter", () => inspect(cfg, b));
+      bits.appendChild(c);
+      cells[cfg.key].push(c);
+
+      if (b % 8 === 0 && b > 0) {           // 每 8 位加一点间隔
+        const gap = document.createElement("span");
+        gap.style.width = "5px";
+        lab.appendChild(gap);
+        const g2 = document.createElement("div");
+        g2.style.width = "5px";
+        bits.appendChild(g2);
+      }
+    }
+    wrap.appendChild(lab);
+    wrap.appendChild(bits);
+    regsEl.appendChild(wrap);
+  });
+}
+
+function inspect(cfg, b){
+  const n = cfg.w === 2 ? Math.floor(b / 2) : b;
+  if (n >= 16) { insp.textContent = "PA 端口只用低 16 位，第 " + b + " 位属于更高端口，这里不建模。"; return; }
+  let v;
+  if (cfg.key === "IDR") v = readIDR(n);
+  else if (cfg.w === 2) v = get2(cfg.key, n);
+  else v = get1(cfg.key, n);
+  const pos = cfg.w === 2 ? ("[" + (2 * n + 1) + ":" + 2 * n + "]") : ("[" + n + "]");
+  const cur = (cfg.w === 2 && typeof v === "number") ? cfg.short[v] : v;
+  insp.innerHTML = "<span style='color:var(--accent)'>" + cfg.name + pos + "</span> = <span style='color:var(--warn)'>" +
+    cur + "</span> ｜ PA" + n + "<br>" + cfg.desc(n, v);
+}
+
+// ── 右侧电路渲染 ─────────────────────────────────────────────────────────
+function $(id){ return document.getElementById(id); }
+function mark(el, on, clsOn, clsOff){
+  el.classList.toggle(clsOn || "on", on);
+  el.classList.toggle(clsOff || "off", !on);
+}
+
+function renderCircuit(){
+  const n = sel;
+  const mode = get2("MODER", n), otype = get1("OTYPER", n), speed = get2("OSPEEDR", n),
+        pull = get2("PUPDR", n), odr = get1("ODR", n);
+  $("ckPin").textContent = "PA" + n;
+  $("padLbl").textContent = "PA" + n;
+
+  const isOut = mode === 1, isAF = mode === 2, isAna = mode === 3, isPP = otype === 0;
+
+  // 上拉 / 下拉
+  mark($("resUp"), pull === 1); mark($("tUp"), pull === 1, "on", "off");
+  mark($("wUp1"), pull === 1); mark($("wUp2"), pull === 1 || pull === 2);
+  mark($("resDn"), pull === 2); mark($("tDn"), pull === 2, "on", "off");
+  mark($("wDn"), pull === 2);
+
+  // 输出级
+  mark($("tNmos"), isOut); mark($("tNmosL"), isOut, "on", "off");
+  mark($("tPmos"), isOut && isPP); mark($("tPmosL"), isOut && isPP, "on", "off");
+  mark($("wP1"), isOut && isPP); mark($("wP2"), isOut); mark($("wP3"), isOut);
+  mark($("wDrv"), isOut); mark($("tDrv"), isOut, "on", "off");
+  $("tPmosL").textContent = (isOut && !isPP) ? "PMOS 断开" : "PMOS";
+
+  // 输入缓冲：模拟模式才断开
+  const schOn = !isAna;
+  mark($("schmitt"), schOn); mark($("tSch"), schOn, "on", "off");
+  mark($("wSch"), schOn);
+  const idr = readIDR(n);
+  $("idrVal").textContent = String(idr);
+  $("idrVal").setAttribute("fill", idr === "X" ? "#f87171" : (idr === "A" ? "#818cf8" : "#4ade80"));
+
+  // 复用 / 模拟
+  mark($("afBox"), isAF); mark($("afLbl"), isAF, "on", "off"); mark($("wAf"), isAF);
+  mark($("adcBox"), isAna); mark($("adcLbl"), isAna, "on", "off"); mark($("wAdc"), isAna);
+
+  $("speedLbl").textContent = "速度档：" + ["2 MHz", "25 MHz", "50 MHz", "100 MHz"][speed] +
+    (mode === 1 ? "（输出驱动能力/边沿陡度）" : "（输出关闭时基本无效）");
+
+  // 结论
+  const vt = $("verdictText"); const note = $("ckNote");
+  let cls = "";
+  if (mode === 0 && pull === 0 && S.ext[n] === "z") {
+    vt.textContent = "输入悬空 —— IDR = X，真机上这里电平乱跳，做中断源会中断风暴";
+    note.className = "note bad";
+    note.innerHTML = "<strong>危险：</strong>悬浮输入。要么开上/下拉，要么外部必须有确定电平。";
+  } else if (mode === 1 && !isPP) {
+    vt.textContent = "开漏输出 —— ODR=1 时其实是「释放」，没有外部上拉就永远输出不了 1";
+    note.className = "note";
+    note.innerHTML = "I2C 的 SDA/SCL、以及需要「线与」的总线必须开漏。想推 LED 请切回推挽。";
+  } else if (mode === 1 && isPP && speed === 3) {
+    vt.textContent = "推挽 + 100 MHz 档 —— 能跑，但边沿最陡，EMI 与振铃最难收拾";
+    note.className = "note";
+    note.innerHTML = "点灯、按键、慢速控制信号用 2 MHz 就够，别一上来拧到最大档。";
+  } else if (mode === 3) {
+    vt.textContent = "模拟模式 —— 数字输入缓冲断开，ADC 才能读准";
+    note.className = "note ok";
+    note.innerHTML = "要读 ADC 却把引脚配成输入模式：数字缓冲会在中间电平来回振荡，转换结果全是垃圾。";
+  } else if (mode === 2) {
+    vt.textContent = "复用模式 —— 引脚归片上外设，记得再去 AFR 里选对 AF 编号";
+    note.className = "note";
+    note.innerHTML = "F1 没有每脚 AFR，复用功能靠 AFIO 重映射；F4/H7 用 AFR[2]，每脚 4 bit，忘了配 AF 编号就是「接了线没信号」。";
+  } else {
+    vt.textContent = "推挽输出正常 —— ODR[" + n + "] = " + odr + "，IDR 读回 " + idr;
+    note.className = "note ok";
+    note.innerHTML = "推挽输出最常用。改电平请用 BSRR，别用 <code>ODR = ...</code> 直接赋值。";
+  }
+}
+
+// ── 主渲染 ──────────────────────────────────────────────────────────────
+function render(){
+  REGS.forEach(cfg => {
+    if (cfg.key === "IDR") {
+      for (let b = 0; b < 32; b++) {
+        const c = cells.IDR[b], n = b;
+        if (n >= 16) { c.textContent = ""; c.classList.remove("one"); continue; }
+        const v = readIDR(n);
+        c.textContent = v === "X" ? "x" : (v === "A" ? "a" : v);
+        c.classList.toggle("one", v === 1);
+        c.classList.toggle("hl", n === sel);
+      }
+      $("hex_IDR").textContent = hex(composeIDRWord());
+    } else {
+      for (let b = 0; b < 32; b++) {
+        const c = cells[cfg.key][b];
+        if (b >= 32) continue;
+        const v = (S[cfg.key] >>> b) & 1;
+        c.textContent = v;
+        c.classList.toggle("one", v === 1);
+        const pin = cfg.w === 2 ? Math.floor(b / 2) : b;
+        c.classList.toggle("hl", pin === sel && pin < 16);
+      }
+      $("hex_" + cfg.key).textContent = hex(S[cfg.key]);
+    }
+  });
+  $("modeSel").value = get2("MODER", sel);
+  $("pullSel").value = get2("PUPDR", sel);
+  $("speedSel").value = get2("OSPEEDR", sel);
+  $("otypeSel").value = get1("OTYPER", sel);
+  buildPinRow();
+  renderCircuit();
+}
+
+function composeIDRWord(){
+  let w = 0;
+  for (let n = 0; n < 16; n++) if (readIDR(n) === 1) w |= (1 << n);
+  return w >>> 0;
+}
+
+function buildPinRow(){
+  const row = $("pinRow");
+  row.innerHTML = "";
+  for (let n = 0; n < 16; n++) {
+    const b = document.createElement("div");
+    b.className = "pin" + (n === sel ? " sel" : "") + (get1("ODR", n) ? " out" : "");
+    b.textContent = n;
+    b.title = "PA" + n + "｜" + ["输入","输出","复用","模拟"][get2("MODER", n)] +
+              "｜ODR=" + get1("ODR", n) + "｜IDR=" + readIDR(n);
+    b.addEventListener("click", () => { sel = n; render(); });
+    row.appendChild(b);
+  }
+}
+
+// ── 操作 ────────────────────────────────────────────────────────────────
+function buildPinSel(){
+  const s = $("pinSel");
+  for (let n = 0; n < 16; n++) {
+    const o = document.createElement("option");
+    o.value = n; o.textContent = "PA" + n;
+    s.appendChild(o);
+  }
+  s.addEventListener("change", () => { sel = Number(s.value); render(); });
+}
+
+$("modeSel").addEventListener("change", e => {
+  set2("MODER", sel, Number(e.target.value));
+  log("MODER[" + (2 * sel + 1) + ":" + 2 * sel + "] = " + Number(e.target.value).toString(2).padStart(2, "0") + "  (PA" + sel + ")");
+  render();
+});
+$("pullSel").addEventListener("change", e => {
+  set2("PUPDR", sel, Number(e.target.value));
+  log("PUPDR[" + (2 * sel + 1) + ":" + 2 * sel + "] = " + Number(e.target.value).toString(2).padStart(2, "0") + "  (PA" + sel + ")");
+  render();
+});
+$("speedSel").addEventListener("change", e => {
+  set2("OSPEEDR", sel, Number(e.target.value));
+  log("OSPEEDR[" + (2 * sel + 1) + ":" + 2 * sel + "] = " + Number(e.target.value).toString(2).padStart(2, "0") + "  (PA" + sel + ")");
+  render();
+});
+$("otypeSel").addEventListener("change", e => {
+  set1("OTYPER", sel, Number(e.target.value));
+  log("OTYPER[" + sel + "] = " + e.target.value + "  (PA" + sel + ")");
+  render();
+});
+document.querySelectorAll("[data-ext]").forEach(b => {
+  b.addEventListener("click", () => {
+    S.ext[sel] = b.dataset.ext;
+    log("外部作用在 PA" + sel + " 上的信号 = " + (b.dataset.ext === "z" ? "悬空" : b.dataset.ext), "dim");
+    render();
+  });
+});
+
+$("btnBsrrSet").addEventListener("click", () => {
+  const v = 1 << sel;
+  S.bsrrLog = v; S.ODR = (S.ODR | v) >>> 0;
+  log("BSRR = " + hex(v) + "   → PA" + sel + " 置 1，其它引脚一位未动", "good");
+  render();
+});
+$("btnBsrrClr").addEventListener("click", () => {
+  const v = 1 << (sel + 16);
+  S.bsrrLog = v; S.ODR = (S.ODR & ~v) >>> 0;
+  log("BSRR = " + hex(v) + "   → PA" + sel + " 清 0（高 16 位是复位区），其它引脚未动", "good");
+  render();
+});
+$("btnOdrToggle").addEventListener("click", () => {
+  const before = S.ODR;
+  S.ODR = (S.ODR ^ (1 << sel)) >>> 0;
+  log("ODR ^= 1<<" + sel + "   " + hex(before) + " → " + hex(S.ODR) +
+      "  ← 读了再写，中间被插队就出事", "dim");
+  render();
+});
+$("btnOdrDirect").addEventListener("click", () => {
+  const before = S.ODR;
+  S.ODR = (1 << sel) >>> 0;
+  log("ODR = 1<<" + sel + "   " + hex(before) + " → " + hex(S.ODR));
+  const lost = [];
+  for (let n = 0; n < 16; n++) if (n !== sel && ((before >>> n) & 1) && !((S.ODR >>> n) & 1)) lost.push("PA" + n);
+  if (lost.length) log("  ✗ 顺带抹掉了：" + lost.join(", ") + " —— 它们本来也是 1", "err");
+  render();
+});
+
+$("btnBad").addEventListener("click", () => {
+  log("── 错误示范开始：PA5=绿灯 PA6=黄灯 PA7=红灯，现在只想点一下 PA3 ──", "dim");
+  // 准备：四个引脚设为推挽输出
+  [3, 5, 6, 7].forEach(n => { set2("MODER", n, 1); set2("OSPEEDR", n, 1); });
+  const base = (1 << 5) | (1 << 6) | (1 << 7);
+  S.ODR = (S.ODR & ~((1 << 3) | base)) >>> 0;
+  S.ODR = (S.ODR | base) >>> 0;
+  log("BSRR = " + hex(base) + "   三盏灯点亮，ODR = " + hex(S.ODR), "good");
+  render();
+
+  const before = S.ODR;
+  S.ODR = (1 << 3) >>> 0;
+  log("ODR = 1 << 3   " + hex(before) + " → " + hex(S.ODR), "err");
+  log("  ✗ 绿灯(PA5)、黄灯(PA6)、红灯(PA7) 全灭了，只有 PA3 亮", "err");
+  log("  原因：<code>ODR = 1&lt;&lt;3</code> 是整个 32 位赋值，没写到的位统统变成 0。", "err");
+
+  const good = ((1 << 3) | base) >>> 0;
+  S.ODR = good;
+  log("BSRR = " + hex((1 << 3)) + "   ODR = " + hex(good) + "   四盏灯全亮，一个都没掉", "good");
+  log("── 结论：改单个引脚永远用 BSRR，它天生原子、天生不误伤 ──", "dim");
+  sel = 3; $("pinSel").value = 3;
+  render();
+});
+
+$("btnReset").addEventListener("click", () => {
+  S.MODER = 0; S.OTYPER = 0; S.OSPEEDR = 0; S.PUPDR = 0; S.ODR = 0; S.bsrrLog = 0;
+  S.ext = new Array(16).fill("z");
+  log("── 复位：所有寄存器 = 0x00000000（全输入模式，简化后的上电状态）──", "dim");
+  render();
+});
+
+buildPinSel();
+buildRegs();
+log("沙盒就绪。复位值是 0x00000000 —— 16 个引脚全是「输入模式」（简化值）。真机 F4 的 GPIOA_MODER 复位是 0xA8000000：PA13/14/15 是复用（SWD），其余是输入；L0/L4 才是复位全模拟。", "dim");
+log("建议路线：① 选 PA5 配成推挽输出 → 用 BSRR 点灯；② 点「错误示范」；③ 配成开漏看 PMOS 怎么断开。", "dim");
+render();
+</script>
+</body>
+</html>

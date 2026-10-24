@@ -1,0 +1,350 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>硬件工程师修炼路线图 · 从点灯到交钥匙</title>
+<style>
+  :root{
+    --bg:#0f172a; --surface:#1e293b; --surface-2:#334155;
+    --ink:#f1f5f9; --ink-muted:#94a3b8; --ink-dim:#64748b;
+    --rule:#334155; --accent:#38bdf8; --accent-2:#818cf8;
+    --ok:#4ade80; --warn:#fbbf24; --bad:#f87171;
+  }
+  *{box-sizing:border-box}
+  body{
+    margin:0; background:var(--bg); color:var(--ink);
+    font-family:-apple-system,BlinkMacSystemFont,"Segoe UI","PingFang SC","Microsoft YaHei",sans-serif;
+    font-size:14px; line-height:1.7;
+  }
+  .wrap{max-width:1080px; margin:0 auto; padding:32px 20px 80px}
+
+  header.hero{border-bottom:1px solid var(--rule); padding-bottom:28px; margin-bottom:32px}
+  .badge{
+    display:inline-block; padding:4px 12px; border:1px solid var(--accent);
+    border-radius:999px; color:var(--accent); font-size:12px; letter-spacing:.12em;
+  }
+  h1{font-size:32px; margin:16px 0 8px; line-height:1.3}
+  h1 .thin{color:var(--ink-muted); font-weight:400}
+  .lede{color:var(--ink-muted); font-size:15px; max-width:760px; margin:0}
+  .lede b{color:var(--ink)}
+
+  .meta{display:flex; flex-wrap:wrap; gap:10px; margin-top:20px}
+  .meta span{
+    background:var(--surface); border:1px solid var(--rule); border-radius:6px;
+    padding:6px 12px; font-size:12px; color:var(--ink-muted);
+  }
+  .meta span code{color:var(--accent)}
+
+  h2{font-size:20px; margin:44px 0 6px}
+  h2 .num{color:var(--accent-2); font-family:Consolas,monospace; margin-right:8px}
+  .sub{color:var(--ink-dim); margin:0 0 20px; font-size:13px}
+
+  /* 关卡卡片 */
+  .stage{
+    display:grid; grid-template-columns:88px 1fr; gap:0;
+    background:var(--surface); border:1px solid var(--rule); border-radius:10px;
+    margin-bottom:14px; overflow:hidden; transition:border-color .15s, transform .15s;
+  }
+  .stage:hover{border-color:var(--accent); transform:translateY(-1px)}
+  .stage .rank{
+    display:flex; flex-direction:column; align-items:center; justify-content:center;
+    background:var(--surface-2); padding:18px 6px; border-right:1px solid var(--rule);
+  }
+  .stage .rank .n{font-family:Consolas,monospace; font-size:26px; color:var(--accent); font-weight:700}
+  .stage .rank .realm{font-size:11px; color:var(--ink-muted); letter-spacing:.08em; margin-top:2px}
+  .stage .body{padding:16px 18px}
+  .stage h3{margin:0 0 4px; font-size:17px}
+  .stage h3 a{color:var(--ink); text-decoration:none}
+  .stage h3 a:hover{color:var(--accent)}
+  .stage .desc{color:var(--ink-muted); margin:0 0 12px; font-size:13px}
+  .tags{display:flex; flex-wrap:wrap; gap:6px; margin-bottom:12px}
+  .tags i{
+    font-style:normal; font-size:11px; padding:2px 8px; border-radius:4px;
+    background:rgba(56,189,248,.1); color:var(--accent); border:1px solid rgba(56,189,248,.25);
+  }
+  .links{display:flex; flex-wrap:wrap; gap:8px}
+  .links a{
+    font-family:Consolas,"Courier New",monospace; font-size:11.5px;
+    color:var(--ink-muted); text-decoration:none; padding:3px 8px;
+    border:1px solid var(--rule); border-radius:4px; background:var(--bg);
+  }
+  .links a:hover{color:var(--accent); border-color:var(--accent)}
+  .links a.gate{color:var(--accent-2); border-color:rgba(129,140,248,.4)}
+  .links a.gate:hover{color:var(--ink); border-color:var(--accent-2)}
+  .exit{
+    margin:12px 0 0; padding:10px 12px; background:var(--bg);
+    border-left:3px solid var(--ok); border-radius:0 6px 6px 0;
+    font-size:12.5px; color:var(--ink-muted);
+  }
+  .exit b{color:var(--ok); font-weight:600}
+
+  /* 表格 */
+  table{width:100%; border-collapse:collapse; margin:8px 0 4px; font-size:13px}
+  th,td{padding:9px 12px; border-bottom:1px solid var(--rule); text-align:left; vertical-align:top}
+  th{color:var(--ink-muted); font-weight:600; font-size:12px; letter-spacing:.04em; background:var(--surface)}
+  td code, p code, li code{
+    font-family:Consolas,monospace; font-size:12.5px; color:var(--accent);
+    background:var(--surface); padding:1px 5px; border-radius:3px;
+  }
+
+  /* 提示块 */
+  .panel{
+    background:var(--surface); border:1px solid var(--rule); border-radius:10px;
+    padding:18px 20px; margin:14px 0;
+  }
+  .panel.warn{border-left:3px solid var(--warn)}
+  .panel.bad{border-left:3px solid var(--bad)}
+  .panel.ok{border-left:3px solid var(--ok)}
+  .panel h4{margin:0 0 8px; font-size:14px}
+  .panel ul{margin:0; padding-left:20px; color:var(--ink-muted)}
+  .panel li{margin:5px 0}
+  .panel li b{color:var(--ink)}
+
+  pre{
+    background:#020617; border:1px solid var(--rule); border-radius:8px;
+    padding:14px 16px; overflow-x:auto; font-family:Consolas,monospace;
+    font-size:12.5px; line-height:1.6; color:var(--ink); margin:10px 0;
+  }
+  pre .c{color:var(--ink-dim)}
+  pre .k{color:var(--accent)}
+
+  .flow{
+    display:flex; flex-wrap:wrap; align-items:center; gap:8px;
+    background:var(--surface); border:1px solid var(--rule); border-radius:10px; padding:16px;
+  }
+  .flow .node{
+    padding:8px 14px; border:1px solid var(--accent); border-radius:6px;
+    font-size:12.5px; color:var(--accent); background:rgba(56,189,248,.08); white-space:nowrap;
+  }
+  .flow .arrow{color:var(--ink-dim); font-family:Consolas,monospace}
+
+  footer{
+    margin-top:56px; padding-top:20px; border-top:1px solid var(--rule);
+    color:var(--ink-dim); font-size:12.5px;
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<header class="hero">
+  <span class="badge">硬件工程师 · 修炼路线图</span>
+  <h1>从点灯到交钥匙 <span class="thin">—— 七关修成硬件工程师</span></h1>
+  <p class="lede">
+    这不是一本教材，是一个<b>老师傅带徒弟</b>的过程。每一关三件套：<b>主课本</b>（把道理讲透）、
+    <b>能跑的 C 程序</b>（把数字算给你看，不是"显然可得"）、<b>可交互的动画</b>（把看不见的电流、
+    波形、回流路径变成能拖能拽的东西）。学完第七关，你手里会有一块自己画、自己焊、自己调通、
+    自己写完固件并交出一份验收报告的板子。
+  </p>
+  <div class="meta">
+    <span>示例语言：<code>C17</code>（gcc 单文件，无需 IDE）</span>
+    <span>动画：<code>离线单文件 HTML</code>，双击即开</span>
+    <span>前置：欧姆定律 + 基础 C</span>
+    <span>产出：一块 MiniBoard + 一份验收报告</span>
+  </div>
+</header>
+
+<h2><span class="num">00</span>开始前的三件事</h2>
+<p class="sub">别急着看第 1 关，先把工具和环境弄利索，否则会卡在"跑不起来"上而不是"看不懂"上。</p>
+
+<div class="panel">
+  <h4>① 装编译器（只要 gcc，不要 IDE）</h4>
+  <ul>
+    <li>Windows 装 <b>MSYS2</b>，然后 <code>pacman -S mingw-w64-ucrt-x86_64-gcc</code>；Linux/macOS 自带或 <code>apt install build-essential</code> / <code>xcode-select --install</code>。</li>
+    <li>验证：<code>gcc --version</code>，C17 需要 gcc ≥ 8；本项目在 GCC 16.2 上验证通过。全套示例只用标准库，不联网、不装包。</li>
+  </ul>
+</div>
+
+<div class="panel warn">
+  <h4>② 运行任何示例前先敲这一句（Windows 专用，忘了就会骂娘）</h4>
+  <pre><span class="c"># 把控制台切到 UTF-8，否则中文全是乱码方块</span>
+<span class="k">chcp 65001</span>
+
+<span class="c"># 然后编译 + 运行，每个文件都是独立的，一行搞定</span>
+gcc -std=c17 -O2 -Wall -Wextra 01_node_solver.c -o demo.exe
+./demo.exe</pre>
+</div>
+
+<div class="panel ok">
+  <h4>③ 动画页面怎么打开</h4>
+  <ul>
+    <li>所有 <code>*.html</code> 都是<b>纯离线单文件</b>：没有 CDN、没有外部字体脚本，断网也能跑。双击就行。</li>
+    <li>滑杆拖一拖再回课本，比盯着公式猜"为什么"快得多。动画不是玩具，是让你把<b>看不见的东西</b>（回流电流、亚稳态窗口、去耦阻抗）看见。</li>
+  </ul>
+</div>
+
+<h2><span class="num">›</span>修炼主线</h2>
+<p class="sub">顺序是有讲究的：算得准 → 看得懂器件 → 数字跑得稳 → 芯片用起来 → 板子画得出 → 出问题查得动 → 全部合成一个真项目。</p>
+<div class="flow">
+  <span class="node">会算（KCL/KVL）</span><span class="arrow">→</span>
+  <span class="node">会看器件（二极管/运放/电源）</span><span class="arrow">→</span>
+  <span class="node">数字系统跑得稳（时序/亚稳态）</span><span class="arrow">→</span>
+  <span class="node">芯片用起来（寄存器/总线/中断）</span><span class="arrow">→</span>
+  <span class="node">板子画得出（阻抗/回流/EMC）</span><span class="arrow">→</span>
+  <span class="node">坏了查得动（仪器/排障）</span><span class="arrow">→</span>
+  <span class="node">交钥匙（MiniBoard）</span>
+</div>
+
+<h2><span class="num">01</span>七关详解</h2>
+<p class="sub">点关卡标题进模块导航页；下面每关都列了"通关标准"——做不到就别往下走，硬件的地基塌了上面全歪。</p>
+
+<!-- 第 1 关 -->
+<div class="stage">
+  <div class="rank"><span class="n">1</span><span class="realm">筑基期</span></div>
+  <div class="body">
+    <h3><a href="circuit_basics/index.html">电路基础 —— 把"猜电压"变成"算电压"</a></h3>
+    <p class="desc">KCL/KVL、节点电压法、戴维南、分压带负载、RC 暂态与时间常数。这一关不教你新器件，只训练一件事：看到一个网络，能写出方程、算出数、并且知道自己在算哪个节点。</p>
+    <div class="tags"><i>节点电压法</i><i>戴维南等效</i><i>负载效应</i><i>τ=RC</i><i>数值积分</i></div>
+    <div class="links">
+      <a class="gate" href="circuit_basics/tutorial.md">tutorial.md 主课本</a>
+      <a href="circuit_basics/01_node_solver.c">01_node_solver.c</a>
+      <a href="circuit_basics/02_rc_transient.c">02_rc_transient.c</a>
+      <a href="circuit_basics/voltage_divider_lab.html">分压带负载实验台</a>
+      <a href="circuit_basics/rc_animator.html">RC 充放电动画</a>
+    </div>
+    <p class="exit"><b>通关标准：</b>给一个三节点电阻网络，能手列 KCL 解出各节点电压，并和程序输出对上；能解释为什么 10k/10k 分压后面接个 10k 负载，电压就从 1.65V 掉到 1.10V（−33%）；能说出 RC 消抖为什么取 10k+100nF（τ=1ms、5τ=5ms），而不是随手用 1k 或 1M。</p>
+  </div>
+</div>
+
+<!-- 第 2 关 -->
+<div class="stage">
+  <div class="rank"><span class="n">2</span><span class="realm">炼气期</span></div>
+  <div class="body">
+    <h3><a href="analog_electronics/index.html">模拟电路 —— 器件不是理想元件</a></h3>
+    <p class="desc">二极管肖克利方程与工作点、整流与纹波、稳压管限流；运放的有限增益 / GBW / 压摆率 / 输出摆幅（把"理想运放"的债一笔笔还上）；有源滤波；LDO 与 Buck 的完整热账与效率账。</p>
+    <div class="tags"><i>牛顿迭代求工作点</i><i>纹波与导通角</i><i>GBW 与压摆率</i><i>Sallen-Key</i><i>LDO 热耗</i><i>Buck 电感选型</i></div>
+    <div class="links">
+      <a class="gate" href="analog_electronics/tutorial.md">tutorial.md 主课本</a>
+      <a href="analog_electronics/01_diode_rectifier.c">01_diode_rectifier.c</a>
+      <a href="analog_electronics/02_opamp_lab.c">02_opamp_lab.c</a>
+      <a href="analog_electronics/03_power_supply.c">03_power_supply.c</a>
+      <a href="analog_electronics/opamp_animator.html">运放翻车动画</a>
+      <a href="analog_electronics/filter_bode.html">滤波波特图</a>
+    </div>
+    <p class="exit"><b>通关标准：</b>能算出 12V→3.3V 出 500mA 时 LDO 要耗 4.35W、结温冲到 500℃ 必热关断，并据此改用 Buck；能给增益 100 的运放在 20kHz 下算出 GBW 与压摆率谁先卡脖子；知道开机浪涌过零合闸约十几倍、峰值合闸可达几十倍，桥堆就是这么烧的。</p>
+  </div>
+</div>
+
+<!-- 第 3 关 -->
+<div class="stage">
+  <div class="rank"><span class="n">3</span><span class="realm">结丹期</span></div>
+  <div class="body">
+    <h3><a href="digital_electronics/index.html">数字电路 —— 0 和 1 之间那点要命的时间</a></h3>
+    <p class="desc">逻辑家族与电平兼容（3.3V 接 5V 到底会不会烧、开漏为什么必须上拉）、卡诺图与 Q-M 化简的真实收益、锁存器 vs 触发器、纹波 vs 同步计数器、表驱动状态机、建立/保持时间与 fmax、亚稳态 MTBF、按键消抖。</p>
+    <div class="tags"><i>噪声容限</i><i>Quine-McCluskey</i><i>毛刺窗口</i><i>表驱动 FSM</i><i>fmax 与 skew</i><i>两级同步器</i><i>格雷码 CDC</i></div>
+    <div class="links">
+      <a class="gate" href="digital_electronics/tutorial.md">tutorial.md 主课本</a>
+      <a href="digital_electronics/01_logic_gates.c">01_logic_gates.c</a>
+      <a href="digital_electronics/02_sequential_lab.c">02_sequential_lab.c</a>
+      <a href="digital_electronics/03_setup_hold.c">03_setup_hold.c</a>
+      <a href="digital_electronics/04_fsm_traffic.c">04_fsm_traffic.c</a>
+      <a href="digital_electronics/karnaugh_lab.html">卡诺图化简台</a>
+      <a href="digital_electronics/setup_hold_animator.html">建立/保持动画</a>
+    </div>
+    <p class="exit"><b>通关标准：</b>能把多数投票器化到 <code>AB+AC+BC</code> 并说清省了几级门；能算出 Tco+Tpd+Tsu 那条链给的 fmax=89.29MHz，并解释"降频救得了建立时间、救不了保持时间"；能背出 100MHz 下不加同步器 MTBF 不到 1 纳秒意味着什么。</p>
+  </div>
+</div>
+
+<!-- 第 4 关 -->
+<div class="stage">
+  <div class="rank"><span class="n">4</span><span class="realm">兵器期</span></div>
+  <div class="body">
+    <h3><a href="mcu_embedded/index.html">MCU 与嵌入式 —— 寄存器才是真相</a></h3>
+    <p class="desc">GPIO 的 MODER/OTYPER/PUPDR/ODR/BSRR 逐位操作与"读-改-写竞态 vs 原子写"，时钟树与功耗分配，UART 的 BRR 计算与帧时序与过采样误差，I2C 开漏总线的上拉电阻 RC 账、时钟拉伸与九脉冲救援，前后台/时间片/抢占调度与优先级反转、看门狗超时计算。</p>
+    <div class="tags"><i>位操作 |= 而非 =</i><i>BSRR 原子写</i><i>BRR 波特率误差</i><i>上拉 RC 上升时间</i><i>环形缓冲</i><i>IWDG</i></div>
+    <div class="links">
+      <a class="gate" href="mcu_embedded/tutorial.md">tutorial.md 主课本</a>
+      <a href="mcu_embedded/01_gpio_registers.c">01_gpio_registers.c</a>
+      <a href="mcu_embedded/02_uart_timing.c">02_uart_timing.c</a>
+      <a href="mcu_embedded/03_i2c_bus.c">03_i2c_bus.c</a>
+      <a href="mcu_embedded/04_scheduler_irq.c">04_scheduler_irq.c</a>
+      <a href="mcu_embedded/register_playground.html">寄存器玩法台</a>
+      <a href="mcu_embedded/uart_frame_animator.html">UART 帧时序</a>
+      <a href="mcu_embedded/clock_tree.html">时钟树</a>
+    </div>
+    <p class="exit"><b>通关标准：</b>72MHz 下能手算 115200 波特率的 BRR 并算出误差；知道 4.7k 上拉配 150pF 总线负载在快速模式为什么过不了、换 1k 之后灌电流又冒出什么新账；能解释中断里为什么不能 <code>while</code> 等标志位，以及优先级反转是怎么把高优先级任务拖死 1401µs 的。</p>
+  </div>
+</div>
+
+<!-- 第 5 关 -->
+<div class="stage">
+  <div class="rank"><span class="n">5</span><span class="realm">阵法期</span></div>
+  <div class="body">
+    <h3><a href="pcb_design/index.html">PCB 与 EMC —— 板子才是那个电路</a></h3>
+    <p class="desc">IPC-2221/2222 载流与温升（含降额）、过孔容量；微带/带状线特征阻抗反解与传播时延、3W 串扰规则；叠层与阻抗控制；回流路径与分割的代价；去耦电容自谐振、多容值并联、安装电感与目标阻抗；EMC 滤波与降额清单。</p>
+    <div class="tags"><i>IPC-2221 载流</i><i>Hammerstad 阻抗</i><i>回流面积</i><i>自谐振频率</i><i>目标阻抗</i><i>安装电感</i></div>
+    <div class="links">
+      <a class="gate" href="pcb_design/tutorial.md">tutorial.md 主课本</a>
+      <a href="pcb_design/01_trace_and_via.c">01_trace_and_via.c</a>
+      <a href="pcb_design/02_impedance_crosstalk.c">02_impedance_crosstalk.c</a>
+      <a href="pcb_design/03_decoupling_emc.c">03_decoupling_emc.c</a>
+      <a href="pcb_design/stackup_lab.html">叠层阻抗台</a>
+      <a href="pcb_design/return_path_animator.html">回流路径动画</a>
+      <a href="pcb_design/decoupling_animator.html">去耦阻抗动画</a>
+    </div>
+    <p class="exit"><b>通关标准：</b>知道 1oz 外层 0.3mm 线在 20℃ 温升下裸值约 1.36A、工程降额后约 0.95A（0.2mm 才降到 0.71A）；能给 1.6mm FR4 反解出 50Ω 微带 ≈3.04mm 线宽；能说清 0603 100nF 自谐振约 19MHz、电容离引脚 10mm 之后高频阻抗恶化 9 倍是怎么发生的。</p>
+  </div>
+</div>
+
+<!-- 第 6 关 -->
+<div class="stage">
+  <div class="rank"><span class="n">6</span><span class="realm">望闻问切</span></div>
+  <div class="body">
+    <h3><a href="instruments_debug/index.html">仪器与排障 —— 别让示波器骗你</a></h3>
+    <p class="desc">示波器整条链路建模（探头负载 → 带宽 → 存储深度 → 采样 → 量化）与混叠、带宽、垂直位数三种典型翻车；万用表负载效应、3½ vs 6½、多次测量合成不确定度、电流档内阻惨案；以及把排障写成算法：按信息增益选测量点 vs 随机乱测。</p>
+    <div class="tags"><i>f_alias 混叠</i><i>探头负载误差</i><i>tr 合成</i><i>不确定度</i><i>信息增益二分</i><i>ENOB</i></div>
+    <div class="links">
+      <a class="gate" href="instruments_debug/tutorial.md">tutorial.md 主课本</a>
+      <a href="instruments_debug/01_scope_model.c">01_scope_model.c</a>
+      <a href="instruments_debug/02_measurement_errors.c">02_measurement_errors.c</a>
+      <a href="instruments_debug/03_debug_bisection.c">03_debug_bisection.c</a>
+      <a href="instruments_debug/aliasing_animator.html">混叠动画</a>
+      <a href="instruments_debug/scope_probe_playground.html">探头实验台</a>
+      <a href="instruments_debug/debug_tree.html">排障决策树</a>
+    </div>
+    <p class="exit"><b>通关标准：</b>知道 1MHz 信号在 1.1MSPS 下会被显示成 100kHz（别再去骂板子）；×1 档量 150Ω 源在 10MHz 误差 48%；能用 10MΩ 表笔负载算出测 1MΩ 分压中点会偏低 4.8%；排障时平均 2.2 步定位故障，而不是像新手那样乱戳 4.6 步还查不出来。</p>
+  </div>
+</div>
+
+<!-- 第 7 关 -->
+<div class="stage">
+  <div class="rank"><span class="n">7</span><span class="realm">手搓期</span></div>
+  <div class="body">
+    <h3><a href="miniboard/index.html">MiniBoard —— 一个能交钥匙的真项目</a></h3>
+    <p class="desc">把前六关捏成一块板：电源树与功耗预算 → BOM 与 DRC 自检 → 固件四层架构（HAL 函数指针表注入，可在 PC 上拿假硬件跑测试）→ I2C 传感器协议与 CRC 与版本兼容 → 上电 Bring-up 流程 → 24 格日历压缩老化（10000 tick = 1000s 固件时间）与验收打分。这一步没有新公式，只有取舍。</p>
+    <div class="tags"><i>功耗预算</i><i>BOM/DRC</i><i>HAL 抽象</i><i>TLV + CRC8</i><i>Bring-up</i><i>老化与验收</i></div>
+    <div class="links">
+      <a class="gate" href="miniboard/tutorial.md">tutorial.md 主课本</a>
+      <a href="miniboard/phase1_power_budget.c">phase1 功耗预算</a>
+      <a href="miniboard/phase2_bom_drc.c">phase2 BOM/DRC</a>
+      <a href="miniboard/phase3_firmware_core.c">phase3 固件骨架</a>
+      <a href="miniboard/phase4_protocol_i2c.c">phase4 协议</a>
+      <a href="miniboard/phase6_bench.c">phase6 台架验收</a>
+      <a href="miniboard/phase5_bringup.md">phase5 上电流程</a>
+      <a href="miniboard/bringup_animator.html">Bring-up 动画</a>
+    </div>
+    <p class="exit"><b>通关标准：</b>独立定出一份能下单的 BOM（每颗料的耐压/降额/封装都过 DRC）；写清三条轨的功耗账和续航；固件在假硬件上跑完 10000 tick（1000s 压缩仿真）不挂、看门狗不误咬、串口整帧通过率 ≥99%（真实 24h 老化另做）；交出一份 6 项全 PASS 的验收报告。<b>做到这一步，你就不是"学过硬件"，是"做过硬件"。</b></p>
+  </div>
+</div>
+
+<h2><span class="num">※</span>老师傅的六条叮嘱</h2>
+<div class="panel bad">
+  <ul>
+    <li><b>先算再焊。</b>算不出来就不要通电。"上电看看"不是方法，是赌博，赌注是你的板子和万用表。</li>
+    <li><b>所有"显然"都要验。</b>软件里可以相信类型系统，硬件里你不能相信"这个电容应该就是 100nF"——它有 20% 容差、有 DC 偏压衰减、有 19MHz 自谐振。</li>
+    <li><b>每个示例都自己跑一遍。</b>课本里写的数字（0.95A、89.29MHz、−4.8%）你必须能亲手复现，复现不了就说明你没懂，或者你的单位换错了——后者占九成。</li>
+    <li><b>改参数是学习的一部分。</b>每个 <code>.c</code> 顶部都留了参数区；把 4.7k 改成 10k、把时钟从 72MHz 改成 8MHz，看数字怎么崩，比读三遍文字有效。</li>
+    <li><b>动画不是装饰。</b>看不懂回流路径时先玩 <code>return_path_animator.html</code>；被亚稳态绕晕时先拖 <code>setup_hold_animator.html</code> 的滑杆。先建立直觉，再回去推公式。</li>
+    <li><b>过不去就回头看。</b>第 5 关画不出阻抗控制，多半是第 1 关的等效电路没扎实；第 4 关调不通 I2C，多半是第 1 关的 RC 上升时间没算过。硬件没有跳级这回事。</li>
+  </ul>
+</div>
+
+<footer>
+  <p>全项目 7 关 / 56 个文件（含本页）：24 个可编译运行的 C17 示例、16 个离线交互动画、7 份模块导航页、7 份主课本与 1 份上电流程。<br>
+  编译统一 <code>gcc -std=c17 -O2 -Wall -Wextra 文件.c -o 文件.exe</code>（Windows 先 <code>chcp 65001</code>）；所有 HTML 双击即开，不联网、不装包。</p>
+</footer>
+
+</div>
+</body>
+</html>
