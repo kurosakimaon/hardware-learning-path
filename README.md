@@ -4,6 +4,12 @@
 
 全套资料离线可用，不依赖第三方库、不联网、不需要开发板。
 
+## 在线浏览
+
+**[https://kurosakimaon.github.io/hardware-learning-path/](https://kurosakimaon.github.io/hardware-learning-path/)**
+
+从在线入口可以直达[硬件学习路线图](https://kurosakimaon.github.io/hardware-learning-path/%E7%A1%AC%E4%BB%B6%E5%AD%A6%E4%B9%A0%E8%B7%AF%E7%BA%BF%E5%9B%BE.html)和各关模块页，寄存器实验台、时钟树这类图解页在线同样能点开。仓库全部离线可用，线上只是省掉 clone。
+
 ## 学习顺序
 
 | 关卡 | 模块 | 主题 | 核心产出 |
