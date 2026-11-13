@@ -1,14 +1,15 @@
 <!DOCTYPE html>
 <html lang="zh-CN">
 <head>
+<script>(function(){var d=document.documentElement,p="auto",t;try{p=localStorage.getItem("lh-theme")||"auto";}catch(e){}if(p!=="light"&&p!=="dark")p="auto";try{t=p==="auto"?(window.matchMedia&&matchMedia("(prefers-color-scheme: light)").matches?"light":"dark"):p;}catch(e){t="dark";}d.setAttribute("data-theme",t);d.setAttribute("data-theme-pref",p);})();</script>
 <meta charset="utf-8">
 <title>分压器实验室 · 第 1 关 · 筑基期</title>
 <style>
 :root{
-  --bg:#0f172a; --surface:#1e293b; --surface-2:#334155;
-  --ink:#f1f5f9; --ink-muted:#94a3b8; --ink-dim:#64748b;
-  --rule:#334155; --accent:#38bdf8; --accent-2:#818cf8;
-  --ok:#4ade80; --warn:#fbbf24; --bad:#f87171;
+  --bg:var(--lh-bg-b2b); --surface:var(--lh-bg-b2c); --surface-2:var(--lh-bg-b3b);
+  --ink:var(--lh-ink-n9b); --ink-muted:var(--lh-ink-b6b); --ink-dim:var(--lh-ink-b5b);
+  --rule:var(--lh-line-b3b); --accent:var(--lh-acc-cb7b); --accent-2:var(--lh-acc-b6b);
+  --ok:var(--lh-acc-g7b); --warn:var(--lh-acc-o7b); --bad:var(--lh-acc-r6b);
 }
 *{box-sizing:border-box;margin:0;padding:0}
 body{
@@ -17,18 +18,18 @@ body{
   font-size:14px; line-height:1.7; padding:24px 20px 60px;
 }
 .wrap{max-width:1180px;margin:0 auto}
-a.back{color:var(--accent);text-decoration:none;font-size:13px}
+a.back{color:var(--lh-ink-cb7b);text-decoration:none;font-size:13px}
 a.back:hover{text-decoration:underline}
 .stage{
-  display:inline-block;padding:3px 12px;border:1px solid var(--accent);border-radius:999px;
-  color:var(--accent);font-size:12px;letter-spacing:1px;margin:14px 0 8px;
+  display:inline-block;padding:3px 12px;border:1px solid var(--lh-line-cb7b);border-radius:999px;
+  color:var(--lh-ink-cb7b);font-size:12px;letter-spacing:1px;margin:14px 0 8px;
 }
 h1{font-size:24px;font-weight:600;letter-spacing:.5px}
 p.lead{color:var(--ink-muted);margin:6px 0 20px;max-width:820px}
 .grid{display:grid;grid-template-columns:minmax(0,1.15fr) minmax(0,1fr);gap:18px}
 @media (max-width:980px){.grid{grid-template-columns:1fr}}
 .panel{background:var(--surface);border:1px solid var(--rule);border-radius:10px;padding:16px 18px}
-.panel h2{font-size:15px;font-weight:600;margin-bottom:10px;color:var(--accent)}
+.panel h2{font-size:15px;font-weight:600;margin-bottom:10px;color:var(--lh-ink-cb7b)}
 .panel h2 .sub{color:var(--ink-dim);font-weight:400;font-size:12px;margin-left:6px}
 label.row{display:block;margin:14px 0}
 label.row .top{display:flex;justify-content:space-between;align-items:baseline;font-size:13px}
@@ -38,34 +39,37 @@ input[type=range]{width:100%;margin-top:6px;accent-color:var(--accent);height:20
 .hint{color:var(--ink-dim);font-size:12px;margin-top:2px}
 table{width:100%;border-collapse:collapse;font-family:Consolas,monospace;font-size:13px}
 th{text-align:left;color:var(--ink-dim);font-weight:400;font-size:12px;border-bottom:1px solid var(--rule);padding:6px 4px}
-td{padding:6px 4px;border-bottom:1px solid rgba(51,65,85,.45)}
+td{padding:6px 4px;border-bottom:1px solid var(--lh-line-b3-a45b)}
 td.k{color:var(--ink-muted);font-family:inherit}
 .big{font-family:Consolas,monospace;font-size:30px;line-height:1.2}
-.ok{color:var(--ok)} .warn{color:var(--warn)} .bad{color:var(--bad)}
+.ok{color:var(--lh-ink-g7b)} .warn{color:var(--lh-ink-o7b)} .bad{color:var(--lh-ink-r6b)}
 .muted{color:var(--ink-muted)} .dim{color:var(--ink-dim)}
 .note{
-  background:rgba(56,189,248,.07);border-left:3px solid var(--accent);
+  background:var(--lh-bg-cb7-a7b);border-left:3px solid var(--lh-line-cb7b);
   padding:10px 12px;border-radius:0 6px 6px 0;margin-top:12px;font-size:13px;color:var(--ink-muted);
 }
-.note.warn{background:rgba(251,191,36,.08);border-left-color:var(--warn)}
-.note.bad{background:rgba(248,113,113,.09);border-left-color:var(--bad)}
+.note.warn{background:var(--lh-bg-o7-a8b);border-left-color:var(--lh-line-o7b)}
+.note.bad{background:var(--lh-bg-r6-a9b);border-left-color:var(--lh-line-r6b)}
 .note b{color:var(--ink)}
 button{
   background:var(--surface-2);color:var(--ink);border:1px solid var(--rule);
   padding:8px 14px;border-radius:6px;font-size:13px;cursor:pointer;font-family:inherit;margin:4px 6px 4px 0;
 }
-button:hover{border-color:var(--accent);color:var(--accent)}
-svg{width:100%;height:auto;display:block;background:#0b1220;border:1px solid var(--rule);border-radius:8px}
-.flow{stroke:var(--warn);stroke-width:2;fill:none;stroke-dasharray:5 9;animation:flow 1s linear infinite}
+button:hover{border-color:var(--lh-line-cb7b);color:var(--lh-ink-cb7b)}
+svg{width:100%;height:auto;display:block;background:var(--lh-bg-n1c);border:1px solid var(--rule);border-radius:8px}
+.flow{stroke:var(--lh-ink-o7b);stroke-width:2;fill:none;stroke-dasharray:5 9;animation:flow 1s linear infinite}
 @keyframes flow{to{stroke-dashoffset:-28}}
 .tag{font-family:Consolas,monospace;font-size:11px;fill:var(--ink-dim)}
 .rlab{font-family:Consolas,monospace;font-size:13px;fill:var(--ink)}
-.vlab{font-family:Consolas,monospace;font-size:13px;fill:var(--accent)}
+.vlab{font-family:Consolas,monospace;font-size:13px;fill:var(--lh-ink-cb7b)}
 .chk{display:flex;align-items:center;gap:8px;margin-top:10px;font-size:13px;color:var(--ink-muted)}
 .chk input{accent-color:var(--accent);width:15px;height:15px}
 .two{display:grid;grid-template-columns:1fr 1fr;gap:0 18px}
 footer{margin-top:26px;color:var(--ink-dim);font-size:12px;text-align:center}
 </style>
+
+<link rel="stylesheet" href="../assets/theme.css">
+<script src="../assets/theme.js" defer></script>
 </head>
 <body>
 <div class="wrap">

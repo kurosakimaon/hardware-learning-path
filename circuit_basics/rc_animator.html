@@ -1,14 +1,15 @@
 <!DOCTYPE html>
 <html lang="zh-CN">
 <head>
+<script>(function(){var d=document.documentElement,p="auto",t;try{p=localStorage.getItem("lh-theme")||"auto";}catch(e){}if(p!=="light"&&p!=="dark")p="auto";try{t=p==="auto"?(window.matchMedia&&matchMedia("(prefers-color-scheme: light)").matches?"light":"dark"):p;}catch(e){t="dark";}d.setAttribute("data-theme",t);d.setAttribute("data-theme-pref",p);})();</script>
 <meta charset="utf-8">
 <title>RC 暂态动画 · 第 1 关 · 筑基期</title>
 <style>
 :root{
-  --bg:#0f172a; --surface:#1e293b; --surface-2:#334155;
-  --ink:#f1f5f9; --ink-muted:#94a3b8; --ink-dim:#64748b;
-  --rule:#334155; --accent:#38bdf8; --accent-2:#818cf8;
-  --ok:#4ade80; --warn:#fbbf24; --bad:#f87171;
+  --bg:var(--lh-bg-b2b); --surface:var(--lh-bg-b2c); --surface-2:var(--lh-bg-b3b);
+  --ink:var(--lh-ink-n9b); --ink-muted:var(--lh-ink-b6b); --ink-dim:var(--lh-ink-b5b);
+  --rule:var(--lh-line-b3b); --accent:var(--lh-acc-cb7b); --accent-2:var(--lh-acc-b6b);
+  --ok:var(--lh-acc-g7b); --warn:var(--lh-acc-o7b); --bad:var(--lh-acc-r6b);
 }
 *{box-sizing:border-box;margin:0;padding:0}
 body{
@@ -17,18 +18,18 @@ body{
   font-size:14px; line-height:1.7; padding:24px 20px 60px;
 }
 .wrap{max-width:1220px;margin:0 auto}
-a.back{color:var(--accent);text-decoration:none;font-size:13px}
+a.back{color:var(--lh-ink-cb7b);text-decoration:none;font-size:13px}
 a.back:hover{text-decoration:underline}
 .stage{
-  display:inline-block;padding:3px 12px;border:1px solid var(--accent);border-radius:999px;
-  color:var(--accent);font-size:12px;letter-spacing:1px;margin:14px 0 8px;
+  display:inline-block;padding:3px 12px;border:1px solid var(--lh-line-cb7b);border-radius:999px;
+  color:var(--lh-ink-cb7b);font-size:12px;letter-spacing:1px;margin:14px 0 8px;
 }
 h1{font-size:24px;font-weight:600;letter-spacing:.5px}
 p.lead{color:var(--ink-muted);margin:6px 0 18px;max-width:880px}
 .grid{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,320px);gap:18px}
 @media (max-width:1020px){.grid{grid-template-columns:1fr}}
 .panel{background:var(--surface);border:1px solid var(--rule);border-radius:10px;padding:16px 18px}
-.panel h2{font-size:15px;font-weight:600;margin-bottom:10px;color:var(--accent)}
+.panel h2{font-size:15px;font-weight:600;margin-bottom:10px;color:var(--lh-ink-cb7b)}
 .panel h2 .sub{color:var(--ink-dim);font-weight:400;font-size:12px;margin-left:6px}
 label.row{display:block;margin:13px 0}
 label.row .top{display:flex;justify-content:space-between;align-items:baseline;font-size:13px}
@@ -40,39 +41,42 @@ button{
   background:var(--surface-2);color:var(--ink);border:1px solid var(--rule);
   padding:8px 14px;border-radius:6px;font-size:13px;cursor:pointer;font-family:inherit;margin:4px 6px 4px 0;
 }
-button:hover{border-color:var(--accent);color:var(--accent)}
-button.primary{border-color:var(--accent);color:var(--accent)}
-button.on{border-color:var(--ok);color:var(--ok)}
+button:hover{border-color:var(--lh-line-cb7b);color:var(--lh-ink-cb7b)}
+button.primary{border-color:var(--lh-line-cb7b);color:var(--lh-ink-cb7b)}
+button.on{border-color:var(--lh-line-g7b);color:var(--lh-ink-g7b)}
 .presets{display:flex;flex-wrap:wrap;gap:6px;margin:4px 0 2px}
-svg{width:100%;height:auto;display:block;background:#0b1220;border:1px solid var(--rule);border-radius:8px}
+svg{width:100%;height:auto;display:block;background:var(--lh-bg-n1c);border:1px solid var(--rule);border-radius:8px}
 .axis{stroke:var(--rule);stroke-width:1}
-.grid-l{stroke:#1e293b;stroke-width:1}
-.tau-l{stroke:var(--accent-2);stroke-width:1.4;stroke-dasharray:4 4}
-.vth{stroke:var(--warn);stroke-width:1;stroke-dasharray:3 5}
-.vcurve{stroke:var(--accent);stroke-width:2.4;fill:none}
-.icurve{stroke:var(--warn);stroke-width:2;fill:none;stroke-dasharray:7 4}
-.lead-l{stroke:var(--ok);stroke-width:1.6}
-.tau-t{font-family:Consolas,monospace;font-size:11px;fill:var(--accent-2)}
+.grid-l{stroke:var(--lh-line-b2b);stroke-width:1}
+.tau-l{stroke:var(--lh-ink-b6c);stroke-width:1.4;stroke-dasharray:4 4}
+.vth{stroke:var(--lh-ink-o7b);stroke-width:1;stroke-dasharray:3 5}
+.vcurve{stroke:var(--lh-ink-cb7b);stroke-width:2.4;fill:none}
+.icurve{stroke:var(--lh-ink-o7b);stroke-width:2;fill:none;stroke-dasharray:7 4}
+.lead-l{stroke:var(--lh-ink-g7b);stroke-width:1.6}
+.tau-t{font-family:Consolas,monospace;font-size:11px;fill:var(--lh-ink-b6c)}
 .ax-t{font-family:Consolas,monospace;font-size:11px;fill:var(--ink-dim)}
 .rd-t{font-family:Consolas,monospace;font-size:13px;fill:var(--ink)}
 .readout{display:grid;grid-template-columns:repeat(2,1fr);gap:10px 14px;margin-top:12px}
 .cell{background:var(--surface-2);border-radius:6px;padding:8px 10px}
 .cell .k{color:var(--ink-dim);font-size:11px;letter-spacing:.4px}
 .cell .v{font-family:Consolas,monospace;font-size:19px}
-.ok{color:var(--ok)} .warn{color:var(--warn)} .bad{color:var(--bad)} .muted{color:var(--ink-muted)}
+.ok{color:var(--lh-ink-g7b)} .warn{color:var(--lh-ink-o7b)} .bad{color:var(--lh-ink-r6b)} .muted{color:var(--ink-muted)}
 .dim{color:var(--ink-dim)}
 .note{
-  background:rgba(56,189,248,.07);border-left:3px solid var(--accent);
+  background:var(--lh-bg-cb7-a7b);border-left:3px solid var(--lh-line-cb7b);
   padding:10px 12px;border-radius:0 6px 6px 0;margin-top:12px;font-size:13px;color:var(--ink-muted);
 }
-.note.warn{background:rgba(251,191,36,.08);border-left-color:var(--warn)}
-.note.bad{background:rgba(248,113,113,.09);border-left-color:var(--bad)}
+.note.warn{background:var(--lh-bg-o7-a8b);border-left-color:var(--lh-line-o7b)}
+.note.bad{background:var(--lh-bg-r6-a9b);border-left-color:var(--lh-line-r6b)}
 .note b{color:var(--ink)}
 .tabs{display:flex;gap:0;margin-bottom:12px;border-bottom:1px solid var(--rule)}
 .tabs div{padding:6px 14px;font-size:13px;cursor:pointer;color:var(--ink-dim);border-bottom:2px solid transparent}
-.tabs div.sel{color:var(--accent);border-bottom-color:var(--accent)}
+.tabs div.sel{color:var(--lh-ink-cb7b);border-bottom-color:var(--lh-line-cb7b)}
 footer{margin-top:26px;color:var(--ink-dim);font-size:12px;text-align:center}
 </style>
+
+<link rel="stylesheet" href="../assets/theme.css">
+<script src="../assets/theme.js" defer></script>
 </head>
 <body>
 <div class="wrap">
@@ -371,11 +375,11 @@ function drawScale(){
     const pct = mode === "charge" ? (1 - Math.exp(-r.n)) * 100 : Math.exp(-r.n) * 100;
     const iLeft = Math.exp(-r.n) * 100;
     return `<tr>
-      <td style="padding:5px 4px;border-bottom:1px solid rgba(51,65,85,.45)">${r.tag}</td>
-      <td style="padding:5px 4px;border-bottom:1px solid rgba(51,65,85,.45)">${fmtT(r.n * tau)}</td>
-      <td style="padding:5px 4px;border-bottom:1px solid rgba(51,65,85,.45)" class="${pct>99?'ok':pct>90?'warn':'muted'}">${pct.toFixed(1)} %</td>
-      <td style="padding:5px 4px;border-bottom:1px solid rgba(51,65,85,.45)">${iLeft.toFixed(1)} %</td>
-      <td style="padding:5px 4px;border-bottom:1px solid rgba(51,65,85,.45);font-family:inherit;color:var(--ink-muted)">${r.use}</td>
+      <td style="padding:5px 4px;border-bottom:1px solid var(--lh-line-b3-a45b)">${r.tag}</td>
+      <td style="padding:5px 4px;border-bottom:1px solid var(--lh-line-b3-a45b)">${fmtT(r.n * tau)}</td>
+      <td style="padding:5px 4px;border-bottom:1px solid var(--lh-line-b3-a45b)" class="${pct>99?'ok':pct>90?'warn':'muted'}">${pct.toFixed(1)} %</td>
+      <td style="padding:5px 4px;border-bottom:1px solid var(--lh-line-b3-a45b)">${iLeft.toFixed(1)} %</td>
+      <td style="padding:5px 4px;border-bottom:1px solid var(--lh-line-b3-a45b);font-family:inherit;color:var(--ink-muted)">${r.use}</td>
     </tr>`;
   }).join("");
 }

@@ -3,13 +3,14 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
+<script>(function(){var d=document.documentElement,p="auto",t;try{p=localStorage.getItem("lh-theme")||"auto";}catch(e){}if(p!=="light"&&p!=="dark")p="auto";try{t=p==="auto"?(window.matchMedia&&matchMedia("(prefers-color-scheme: light)").matches?"light":"dark"):p;}catch(e){t="dark";}d.setAttribute("data-theme",t);d.setAttribute("data-theme-pref",p);})();</script>
 <title>STM32F103 时钟树交互图 · 第 4 关 · 兵器期</title>
 <style>
 :root{
-  --bg:#0f172a; --surface:#1e293b; --surface-2:#334155;
-  --ink:#f1f5f9; --ink-muted:#94a3b8; --ink-dim:#64748b;
-  --rule:#334155; --accent:#38bdf8; --accent-2:#818cf8;
-  --ok:#4ade80; --warn:#fbbf24; --bad:#f87171;
+  --bg:var(--lh-bg-b2b); --surface:var(--lh-bg-b2c); --surface-2:var(--lh-bg-b3b);
+  --ink:var(--lh-ink-n9b); --ink-muted:var(--lh-ink-b6b); --ink-dim:var(--lh-ink-b5b);
+  --rule:var(--lh-line-b3b); --accent:var(--lh-acc-cb7b); --accent-2:var(--lh-acc-b6b);
+  --ok:var(--lh-acc-g7b); --warn:var(--lh-acc-o7b); --bad:var(--lh-acc-r6b);
 }
 *{box-sizing:border-box;margin:0;padding:0}
 body{
@@ -18,12 +19,12 @@ body{
   font-size:14px;line-height:1.7;padding:24px 20px 60px;
 }
 .wrap{max-width:1280px;margin:0 auto}
-a.back{color:var(--accent);text-decoration:none;font-size:13px}
+a.back{color:var(--lh-ink-cb7b);text-decoration:none;font-size:13px}
 a.back:hover{text-decoration:underline}
 .head{display:flex;align-items:center;gap:14px;flex-wrap:wrap;margin-bottom:6px}
 .stage{
-  background:linear-gradient(90deg,var(--accent-2),var(--accent));
-  color:#0f172a;font-weight:700;font-size:12px;letter-spacing:1px;
+  background:linear-gradient(90deg,var(--lh-bg-b6b),var(--lh-bg-cb7b));
+  color:var(--lh-ink-b2b);font-weight:700;font-size:12px;letter-spacing:1px;
   padding:3px 12px;border-radius:999px;
 }
 h1{font-size:22px;font-weight:700}
@@ -31,7 +32,7 @@ h1{font-size:22px;font-weight:700}
 .grid{display:grid;grid-template-columns:290px 1fr;gap:16px}
 @media (max-width:1020px){.grid{grid-template-columns:1fr}}
 .panel{background:var(--surface);border:1px solid var(--rule);border-radius:10px;padding:16px}
-.panel h2{font-size:15px;margin-bottom:8px;color:var(--accent)}
+.panel h2{font-size:15px;margin-bottom:8px;color:var(--lh-ink-cb7b)}
 label{display:block;color:var(--ink-muted);font-size:12px;margin:10px 0 4px}
 select{
   width:100%;background:var(--surface-2);border:1px solid var(--rule);border-radius:6px;
@@ -43,32 +44,37 @@ button{
   background:var(--surface-2);border:1px solid var(--rule);color:var(--ink);
   border-radius:6px;padding:7px 10px;font-size:13px;cursor:pointer;font-family:inherit;width:100%;
 }
-button:hover{border-color:var(--accent);color:var(--accent)}
+button:hover{border-color:var(--lh-line-cb7b);color:var(--lh-ink-cb7b)}
 button.preset{border-style:dashed;text-align:left;margin-top:8px}
 .ck{display:flex;align-items:center;gap:8px;margin-top:12px;color:var(--ink-muted);font-size:13px}
 .ck input{accent-color:var(--bad);width:16px;height:16px}
 svg{width:100%;height:auto;display:block;background:var(--bg);border:1px solid var(--rule);border-radius:8px}
 .swg rect{fill:var(--surface);stroke:var(--rule);stroke-width:1}
+/* 开关圆点没写 fill，SVG 默认纯黑：接上色板，浅档才跟着翻成浅底，不至于深字压黑底 */
+.swg circle{fill:var(--lh-bg-n1e)}
 .swg text{fill:var(--ink-muted);font-size:11px;font-family:Consolas,monospace}
 .swg .cap{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI","PingFang SC","Microsoft YaHei",sans-serif;font-size:11px;fill:var(--ink-dim)}
 path.wire{fill:none;stroke:var(--rule);stroke-width:1.5}
-path.wire.on{stroke:var(--accent);stroke-width:3}
-path.wire.bad{stroke:var(--bad);stroke-width:3}
-.boxbad{stroke:var(--bad) !important}
+path.wire.on{stroke:var(--lh-ink-cb7b);stroke-width:3}
+path.wire.bad{stroke:var(--lh-ink-r6b);stroke-width:3}
+.boxbad{stroke:var(--lh-ink-r6b) !important}
 .f{font-weight:700}
-.fok{fill:var(--ok)} .fwarn{fill:var(--warn)} .fbad{fill:var(--bad)}
+.fok{fill:var(--lh-ink-g7b)} .fwarn{fill:var(--lh-ink-o7b)} .fbad{fill:var(--lh-ink-r6b)}
 .wlist{margin-top:12px;display:flex;flex-direction:column;gap:6px}
 .witem{border-radius:6px;padding:7px 12px;font-size:13px;border:1px solid var(--rule);background:var(--surface-2)}
-.witem.ok{border-color:var(--ok);color:var(--ok)}
-.witem.warn{border-color:var(--warn);color:var(--warn)}
-.witem.bad{border-color:var(--bad);color:var(--bad);font-weight:700}
+.witem.ok{border-color:var(--lh-line-g7b);color:var(--lh-ink-g7b)}
+.witem.warn{border-color:var(--lh-line-o7b);color:var(--lh-ink-o7b)}
+.witem.bad{border-color:var(--lh-line-r6b);color:var(--lh-ink-r6b);font-weight:700}
 .note{
-  margin-top:16px;background:var(--surface);border-left:3px solid var(--accent);
+  margin-top:16px;background:var(--surface);border-left:3px solid var(--lh-line-cb7b);
   border-radius:0 8px 8px 0;padding:12px 14px;color:var(--ink-muted);font-size:13px;
 }
 .note b{color:var(--ink)}
 .mono{font-family:Consolas,monospace}
 </style>
+
+<link rel="stylesheet" href="../assets/theme.css">
+<script src="../assets/theme.js" defer></script>
 </head>
 <body>
 <div class="wrap">

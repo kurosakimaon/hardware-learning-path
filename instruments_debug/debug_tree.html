@@ -3,13 +3,14 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
+<script>(function(){var d=document.documentElement,p="auto",t;try{p=localStorage.getItem("lh-theme")||"auto";}catch(e){}if(p!=="light"&&p!=="dark")p="auto";try{t=p==="auto"?(window.matchMedia&&matchMedia("(prefers-color-scheme: light)").matches?"light":"dark"):p;}catch(e){t="dark";}d.setAttribute("data-theme",t);d.setAttribute("data-theme-pref",p);})();</script>
 <title>排障决策树 · 第 6 关 · 望闻问切</title>
 <style>
 :root {
-  --bg: #0f172a; --surface: #1e293b; --surface-2: #334155;
-  --ink: #f1f5f9; --ink-muted: #94a3b8; --ink-dim: #64748b;
-  --rule: #334155; --accent: #38bdf8; --accent-2: #818cf8;
-  --ok: #4ade80; --warn: #fbbf24; --bad: #f87171;
+  --bg: var(--lh-bg-b2b); --surface: var(--lh-bg-b2c); --surface-2: var(--lh-bg-b3b);
+  --ink: var(--lh-ink-n9b); --ink-muted: var(--lh-ink-b6b); --ink-dim: var(--lh-ink-b5b);
+  --rule: var(--lh-line-b3b); --accent: var(--lh-acc-cb7b); --accent-2: var(--lh-acc-b6b);
+  --ok: var(--lh-acc-g7b); --warn: var(--lh-acc-o7b); --bad: var(--lh-acc-r6b);
 }
 * { box-sizing: border-box; margin: 0; padding: 0; }
 body {
@@ -20,8 +21,8 @@ body {
 .mono { font-family: Consolas, "Courier New", monospace; }
 .header { max-width: 1180px; margin: 0 auto 18px; }
 .stage {
-  display: inline-block; background: var(--surface-2); color: var(--accent);
-  border: 1px solid var(--accent); border-radius: 999px;
+  display: inline-block; background: var(--surface-2); color: var(--lh-ink-cb7b);
+  border: 1px solid var(--lh-line-cb7b); border-radius: 999px;
   padding: 2px 14px; font-size: 12px; margin-bottom: 10px;
 }
 h1 { font-size: 22px; margin-bottom: 6px; }
@@ -31,48 +32,51 @@ h1 { font-size: 22px; margin-bottom: 6px; }
   background: var(--surface); border: 1px solid var(--rule);
   border-radius: 10px; padding: 18px; margin-bottom: 16px;
 }
-.panel h2 { font-size: 15px; color: var(--accent); margin-bottom: 10px; }
+.panel h2 { font-size: 15px; color: var(--lh-ink-cb7b); margin-bottom: 10px; }
 .chains { display: flex; gap: 10px; flex-wrap: wrap; margin-bottom: 14px; }
 .chains button {
   background: var(--surface-2); color: var(--ink); border: 1px solid var(--rule);
   border-radius: 8px; padding: 8px 14px; cursor: pointer; font-size: 13px; font-family: inherit;
 }
-.chains button.on { border-color: var(--accent); color: var(--accent); }
+.chains button.on { border-color: var(--lh-line-cb7b); color: var(--lh-ink-cb7b); }
 .tree { display: grid; gap: 8px; }
 .node {
   background: var(--bg); border: 1px solid var(--rule); border-radius: 8px;
   padding: 10px 14px; cursor: pointer; transition: border-color .15s;
   display: grid; grid-template-columns: auto 1fr auto; gap: 10px; align-items: center;
 }
-.node:hover { border-color: var(--accent); }
+.node:hover { border-color: var(--lh-line-cb7b); }
 .node .step { color: var(--ink-dim); font-family: Consolas, monospace; font-size: 12px; }
 .node .q b { display: block; }
 .node .q span { color: var(--ink-muted); font-size: 12.5px; }
 .node .cost { font-family: Consolas, monospace; font-size: 12px; color: var(--ink-dim); white-space: nowrap; }
 .branch { margin-left: 26px; border-left: 2px dashed var(--rule); padding-left: 14px; display: grid; gap: 8px; }
-.node.doom { border-color: var(--bad); }
-.node.safe { border-color: var(--ok); }
+.node.doom { border-color: var(--lh-line-r6b); }
+.node.safe { border-color: var(--lh-line-g7b); }
 .tag { display: inline-block; border-radius: 6px; padding: 1px 8px; font-size: 12px; font-family: Consolas, monospace; }
-.tag.yes { background: rgba(74,222,128,.12); color: var(--ok); border: 1px solid var(--ok); }
-.tag.no { background: rgba(248,113,113,.12); color: var(--bad); border: 1px solid var(--bad); }
+.tag.yes { background: var(--lh-bg-g7-a12b); color: var(--lh-ink-g7b); border: 1px solid var(--lh-line-g7b); }
+.tag.no { background: var(--lh-bg-r6-a12b); color: var(--lh-ink-r6b); border: 1px solid var(--lh-line-r6b); }
 .side .panel { position: sticky; top: 16px; }
-.hypo { border-left: 3px solid var(--accent-2); background: var(--surface-2); border-radius: 0 8px 8px 0; padding: 10px 12px; margin-bottom: 10px; }
-.hypo h3 { font-size: 13px; color: var(--accent); margin-bottom: 4px; }
+.hypo { border-left: 3px solid var(--lh-line-b6b); background: var(--surface-2); border-radius: 0 8px 8px 0; padding: 10px 12px; margin-bottom: 10px; }
+.hypo h3 { font-size: 13px; color: var(--lh-ink-cb7b); margin-bottom: 4px; }
 .hypo p { color: var(--ink-muted); font-size: 13px; }
-.safety { border-left: 3px solid var(--warn); background: var(--surface-2); border-radius: 0 8px 8px 0; padding: 10px 12px; }
-.safety h3 { font-size: 13px; color: var(--warn); margin-bottom: 4px; }
+.safety { border-left: 3px solid var(--lh-line-o7b); background: var(--surface-2); border-radius: 0 8px 8px 0; padding: 10px 12px; }
+.safety h3 { font-size: 13px; color: var(--lh-ink-o7b); margin-bottom: 4px; }
 .safety ul { margin-left: 18px; color: var(--ink-muted); font-size: 13px; }
 .reset {
   width: 100%; margin-top: 12px; background: var(--surface-2); color: var(--ink);
   border: 1px solid var(--rule); border-radius: 8px; padding: 9px; cursor: pointer; font-family: inherit; font-size: 13px;
 }
-.reset:hover { border-color: var(--accent); color: var(--accent); }
+.reset:hover { border-color: var(--lh-line-cb7b); color: var(--lh-ink-cb7b); }
 .wisdom { color: var(--ink-muted); font-size: 13px; }
 .wisdom li { margin-bottom: 8px; margin-left: 18px; }
 .wisdom b { color: var(--ink); }
-a { color: var(--accent); }
+a { color: var(--lh-ink-cb7b); }
 @media (max-width: 900px) { .layout { grid-template-columns: 1fr; } }
 </style>
+
+<link rel="stylesheet" href="../assets/theme.css">
+<script src="../assets/theme.js" defer></script>
 </head>
 <body>
 <div class="header">
@@ -244,7 +248,7 @@ function nodeEl(n, isRoot, step) {
 
 function narrate(n, lastAns) {
   var h = document.getElementById("hypoBox");
-  var extra = path.length >= 5 ? '<p style="color:var(--warn)">已经走了 5 步还没到叶子——回头检查最初的假设是不是错的，这本身就是信息。</p>' : "";
+  var extra = path.length >= 5 ? '<p style="color:var(--lh-ink-o7b)">已经走了 5 步还没到叶子——回头检查最初的假设是不是错的，这本身就是信息。</p>' : "";
   h.innerHTML = '<div class="hypo"><h3>' + (n.leaf ? "★ 收敛了" : "当前假设收窄") + "</h3><p><b>上一步答案：</b>" +
     (lastAns === "yes" ? "是" : "否") + "<br><b>动作：</b>" + (n.q || "收工") +
     "<br><b>为什么：</b>" + (n.why || n.leaf) + "</p>" + extra + "</div>";

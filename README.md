@@ -78,6 +78,7 @@ build_all.bat
 - `*.c` —— 可在 PC 上直接运行的计算/仿真程序；
 - `*_animator.html` / `*_lab.html` / `*_playground.html` —— 离线交互实验台；
 - `index.html` —— 本关导航页。
+- 主题：每页右下角可选**跟随系统 / 浅色 / 深色**，选择存在浏览器本地，刷新和换页都记得；首次打开跟随系统。
 
 全项目共 **24 个 C 程序、24 个 HTML 页面、8 份课程 Markdown**（另有根目录的 `README.md` 与 `ERRATA.md`）。
 

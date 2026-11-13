@@ -3,21 +3,22 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
+<script>(function(){var d=document.documentElement,p="auto",t;try{p=localStorage.getItem("lh-theme")||"auto";}catch(e){}if(p!=="light"&&p!=="dark")p="auto";try{t=p==="auto"?(window.matchMedia&&matchMedia("(prefers-color-scheme: light)").matches?"light":"dark"):p;}catch(e){t="dark";}d.setAttribute("data-theme",t);d.setAttribute("data-theme-pref",p);})();</script>
 <title>滤波器波特图实验室 · 第 2 关 · 模拟电路</title>
 <style>
 :root {
-  --bg: #0f172a;
-  --surface: #1e293b;
-  --surface-2: #334155;
-  --ink: #f1f5f9;
-  --ink-muted: #94a3b8;
-  --ink-dim: #64748b;
-  --rule: #334155;
-  --accent: #38bdf8;
-  --accent-2: #818cf8;
-  --ok: #4ade80;
-  --warn: #fbbf24;
-  --bad: #f87171;
+  --bg: var(--lh-bg-b2b);
+  --surface: var(--lh-bg-b2c);
+  --surface-2: var(--lh-bg-b3b);
+  --ink: var(--lh-ink-n9b);
+  --ink-muted: var(--lh-ink-b6b);
+  --ink-dim: var(--lh-ink-b5b);
+  --rule: var(--lh-line-b3b);
+  --accent: var(--lh-acc-cb7b);
+  --accent-2: var(--lh-acc-b6b);
+  --ok: var(--lh-acc-g7b);
+  --warn: var(--lh-acc-o7b);
+  --bad: var(--lh-acc-r6b);
 }
 * { box-sizing: border-box; margin: 0; padding: 0; }
 body {
@@ -28,12 +29,12 @@ body {
   line-height: 1.7;
   padding: 20px 26px 60px;
 }
-a { color: var(--accent); text-decoration: none; }
+a { color: var(--lh-ink-cb7b); text-decoration: none; }
 a:hover { text-decoration: underline; }
 .topbar { display: flex; align-items: center; gap: 14px; margin-bottom: 6px; }
 .badge {
   display: inline-block; padding: 3px 12px; border-radius: 999px;
-  background: var(--surface-2); color: var(--accent);
+  background: var(--surface-2); color: var(--lh-ink-cb7b);
   font-size: 12px; letter-spacing: 1px;
 }
 h1 { font-size: 22px; margin: 10px 0 4px; }
@@ -43,7 +44,7 @@ h1 { font-size: 22px; margin: 10px 0 4px; }
   background: var(--surface); border: 1px solid var(--rule);
   border-radius: 10px; padding: 16px;
 }
-.panel h2 { font-size: 14px; color: var(--accent); margin-bottom: 10px; letter-spacing: 1px; }
+.panel h2 { font-size: 14px; color: var(--lh-ink-cb7b); margin-bottom: 10px; letter-spacing: 1px; }
 .ctl { margin-bottom: 12px; }
 .ctl label { display: flex; justify-content: space-between; color: var(--ink-muted); font-size: 12.5px; }
 .ctl label b { color: var(--ink); font-weight: 600; font-family: Consolas, monospace; }
@@ -58,33 +59,36 @@ select {
   background: var(--surface-2); color: var(--ink); border: 1px solid var(--rule);
   border-radius: 6px; padding: 6px 10px; cursor: pointer; font-family: inherit; font-size: 12.5px;
 }
-.presets button:hover { border-color: var(--accent); color: var(--accent); }
-svg { width: 100%; height: auto; display: block; background: #0b1120; border-radius: 8px; }
+.presets button:hover { border-color: var(--lh-line-cb7b); color: var(--lh-ink-cb7b); }
+svg { width: 100%; height: auto; display: block; background: var(--lh-bg-n1b); border-radius: 8px; }
 .legend { display: flex; gap: 18px; margin: 8px 0 0; color: var(--ink-muted); font-size: 12.5px; flex-wrap: wrap; }
 .legend i { display: inline-block; width: 18px; height: 3px; vertical-align: middle; margin-right: 6px; }
 .cards { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; margin-top: 14px; }
 .cell { background: var(--surface-2); border-radius: 8px; padding: 8px 10px; }
 .cell .k { color: var(--ink-dim); font-size: 11.5px; }
 .cell .v { font-family: Consolas, monospace; font-size: 15px; }
-.cell .v.ok { color: var(--ok); }
-.cell .v.warn { color: var(--warn); }
-.cell .v.bad { color: var(--bad); }
+.cell .v.ok { color: var(--lh-ink-g7b); }
+.cell .v.warn { color: var(--lh-ink-o7b); }
+.cell .v.bad { color: var(--lh-ink-r6b); }
 .diag {
   border-radius: 8px; padding: 10px 12px; margin-top: 14px;
-  background: var(--surface-2); border-left: 4px solid var(--accent);
+  background: var(--surface-2); border-left: 4px solid var(--lh-line-cb7b);
   font-size: 13px;
 }
-.diag.warn { border-left-color: var(--warn); }
-.diag.bad { border-left-color: var(--bad); }
+.diag.warn { border-left-color: var(--lh-line-o7b); }
+.diag.bad { border-left-color: var(--lh-line-r6b); }
 .note { color: var(--ink-dim); font-size: 12.5px; margin-top: 12px; }
 table { border-collapse: collapse; width: 100%; margin-top: 12px; font-size: 12.5px; }
 th, td { border-bottom: 1px solid var(--rule); padding: 5px 8px; text-align: right; font-family: Consolas, monospace; }
 th { color: var(--ink-dim); font-weight: 600; }
 td:first-child, th:first-child { text-align: left; }
-.anti td.good { color: var(--ok); }
-.anti td.over { color: var(--bad); }
+.anti td.good { color: var(--lh-ink-g7b); }
+.anti td.over { color: var(--lh-ink-r6b); }
 @media (max-width: 1000px) { .layout { grid-template-columns: 1fr; } .cards { grid-template-columns: 1fr 1fr; } }
 </style>
+
+<link rel="stylesheet" href="../assets/theme.css">
+<script src="../assets/theme.js" defer></script>
 </head>
 <body>
 <div class="topbar">
@@ -134,7 +138,7 @@ td:first-child, th:first-child { text-align: left; }
       一阶：|H| = 1/√(1+(f/fc)²)，相位 = −arctan(f/fc)。
     </div>
     <div class="note" style="border-top:1px solid var(--rule); padding-top:10px">
-      <b style="color:var(--accent-2)">ADC 抗混叠怎么定 fc：</b><br>
+      <b style="color:var(--lh-ink-b6c)">ADC 抗混叠怎么定 fc：</b><br>
       信号带 1kHz、采样率 10kSPS → Nyquist 5kHz。抗混叠的目标是让
       "镜像污染带"（fs − f_signal 附近及以上）被压到所需动态以下。
       二阶 Q=0.707 每倍频 −12dB：fc 取 2~3kHz 时，5kHz 处约 −8~−12dB，
@@ -150,10 +154,10 @@ td:first-child, th:first-child { text-align: left; }
       <h2 style="margin-top:14px">相 频（°）</h2>
       <svg id="phsSvg" viewBox="0 0 680 200" xmlns="http://www.w3.org/2000/svg"></svg>
       <div class="legend">
-        <span><i style="background:#38bdf8"></i>当前 Q</span>
-        <span><i style="background:#818cf8"></i>参考 Q=0.707</span>
-        <span><i style="background:#fbbf24"></i>参考 Q=2（峰化）</span>
-        <span><i style="background:#4ade80"></i>−3dB 点 / fc</span>
+        <span><i style="background:var(--lh-bg-cb7b)"></i>当前 Q</span>
+        <span><i style="background:var(--lh-bg-b6b)"></i>参考 Q=0.707</span>
+        <span><i style="background:var(--lh-bg-o7b)"></i>参考 Q=2（峰化）</span>
+        <span><i style="background:var(--lh-bg-g7b)"></i>−3dB 点 / fc</span>
       </div>
       <div class="cards">
         <div class="cell"><div class="k">截止 / 特征频率 fc</div><div class="v" id="oFc"></div></div>

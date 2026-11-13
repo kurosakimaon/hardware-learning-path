@@ -3,13 +3,14 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
+<script>(function(){var d=document.documentElement,p="auto",t;try{p=localStorage.getItem("lh-theme")||"auto";}catch(e){}if(p!=="light"&&p!=="dark")p="auto";try{t=p==="auto"?(window.matchMedia&&matchMedia("(prefers-color-scheme: light)").matches?"light":"dark"):p;}catch(e){t="dark";}d.setAttribute("data-theme",t);d.setAttribute("data-theme-pref",p);})();</script>
 <title>第 4 关 · 兵器期 — MCU 与嵌入式</title>
 <style>
 :root {
-  --bg: #0f172a; --surface: #1e293b; --surface-2: #334155;
-  --ink: #f1f5f9; --ink-muted: #94a3b8; --ink-dim: #64748b;
-  --rule: #334155; --accent: #38bdf8; --accent-2: #818cf8;
-  --ok: #4ade80; --warn: #fbbf24; --bad: #f87171;
+  --bg: var(--lh-bg-b2b); --surface: var(--lh-bg-b2c); --surface-2: var(--lh-bg-b3b);
+  --ink: var(--lh-ink-n9b); --ink-muted: var(--lh-ink-b6b); --ink-dim: var(--lh-ink-b5b);
+  --rule: var(--lh-line-b3b); --accent: var(--lh-acc-cb7b); --accent-2: var(--lh-acc-b6b);
+  --ok: var(--lh-acc-g7b); --warn: var(--lh-acc-o7b); --bad: var(--lh-acc-r6b);
   --mono: Consolas, "Cascadia Mono", "Courier New", monospace;
 }
 * { margin: 0; padding: 0; box-sizing: border-box; }
@@ -19,17 +20,17 @@ body {
   line-height: 1.7; font-size: 14px; padding: 30px 20px 70px;
 }
 .container { max-width: 1120px; margin: 0 auto; }
-.back { display: inline-block; margin-bottom: 18px; color: var(--accent); text-decoration: none; font-size: 13px; }
+.back { display: inline-block; margin-bottom: 18px; color: var(--lh-ink-cb7b); text-decoration: none; font-size: 13px; }
 .back:hover { text-decoration: underline; }
 .header { text-align: center; margin-bottom: 30px; }
 .header .stage {
   display: inline-block; font-size: 12px; letter-spacing: .12em;
-  color: var(--accent); border: 1px solid var(--accent);
+  color: var(--lh-ink-cb7b); border: 1px solid var(--lh-line-cb7b);
   border-radius: 999px; padding: 3px 14px; margin-bottom: 14px;
 }
 .header h1 {
   font-size: 2rem; margin-bottom: 10px;
-  background: linear-gradient(135deg, var(--accent), var(--accent-2));
+  background: linear-gradient(135deg, var(--lh-bg-cb7b), var(--lh-bg-b6b));
   -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent;
 }
 .header p { color: var(--ink-muted); font-size: 14px; max-width: 760px; margin: 0 auto; }
@@ -37,7 +38,7 @@ body {
   background: var(--surface); border: 1px solid var(--rule);
   border-radius: 14px; padding: 22px 26px; margin-bottom: 22px;
 }
-.panel h2 { font-size: 16px; color: var(--accent); margin-bottom: 12px; }
+.panel h2 { font-size: 16px; color: var(--lh-ink-cb7b); margin-bottom: 12px; }
 .panel > p { color: var(--ink-muted); font-size: 13.5px; }
 .cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 16px; margin: 14px 0 4px; }
 .card {
@@ -48,19 +49,19 @@ body {
 }
 .card::before {
   content: ''; position: absolute; top: 0; left: 0; right: 0; height: 3px;
-  background: linear-gradient(90deg, var(--accent), var(--accent-2));
+  background: linear-gradient(90deg, var(--lh-bg-cb7b), var(--lh-bg-b6b));
 }
-.card:hover { transform: translateY(-4px); border-color: var(--accent); box-shadow: 0 12px 32px rgba(2,6,23,.6); }
+.card:hover { transform: translateY(-4px); border-color: var(--lh-line-cb7b); box-shadow: 0 12px 32px var(--lh-shd-n1-a60b); }
 .card .no { font-family: var(--mono); font-size: 11px; color: var(--ink-dim); margin-bottom: 6px; }
 .card .title { font-size: 15.5px; font-weight: 700; margin-bottom: 6px; }
-.card .title code { font-family: var(--mono); color: var(--accent); font-size: 14.5px; }
+.card .title code { font-family: var(--mono); color: var(--lh-ink-cb7b); font-size: 14.5px; }
 .card .desc { font-size: 12.5px; color: var(--ink-muted); line-height: 1.65; }
 .card .desc b { color: var(--ink); }
 .card .tags { margin-top: 10px; display: flex; gap: 7px; flex-wrap: wrap; }
 .tag { font-size: 10.5px; padding: 2px 9px; border-radius: 999px; background: var(--surface-2); color: var(--ink-muted); }
-.tag.star { background: rgba(56,189,248,.16); color: var(--accent); }
-.tag.tool { background: rgba(129,140,248,.16); color: var(--accent-2); }
-.tag.live { background: rgba(74,222,128,.14); color: var(--ok); }
+.tag.star { background: var(--lh-bg-cb7-a16b); color: var(--lh-ink-cb7b); }
+.tag.tool { background: var(--lh-bg-b6-a16b); color: var(--lh-ink-b6c); }
+.tag.live { background: var(--lh-bg-g7-a14b); color: var(--lh-ink-g7b); }
 .order { counter-reset: st; margin-top: 10px; }
 .order li {
   list-style: none; counter-increment: st;
@@ -71,33 +72,36 @@ body {
 .order li::before {
   content: counter(st); position: absolute; left: 6px; top: 10px;
   width: 26px; height: 26px; border-radius: 50%;
-  background: linear-gradient(135deg, var(--accent), var(--accent-2));
-  color: #0b1220; font-weight: 700; font-size: 13px;
+  background: linear-gradient(135deg, var(--lh-bg-cb7b), var(--lh-bg-b6b));
+  color: var(--lh-ink-n1b); font-weight: 700; font-size: 13px;
   display: flex; align-items: center; justify-content: center;
 }
-.order code { font-family: var(--mono); color: var(--accent); }
+.order code { font-family: var(--mono); color: var(--lh-ink-cb7b); }
 .order b { color: var(--ink); }
 .pits { margin-top: 10px; display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 10px; }
 .pits > div {
-  background: rgba(248,113,113,.06); border: 1px solid var(--rule);
-  border-left: 3px solid var(--bad); border-radius: 9px;
+  background: var(--lh-bg-r6-a6b); border: 1px solid var(--rule);
+  border-left: 3px solid var(--lh-line-r6b); border-radius: 9px;
   padding: 10px 13px; font-size: 12.5px; color: var(--ink-muted);
 }
-.pits b { color: var(--bad); display: block; margin-bottom: 3px; }
+.pits b { color: var(--lh-ink-r6b); display: block; margin-bottom: 3px; }
 pre.cmd {
-  background: #0b1220; border: 1px solid var(--rule); border-radius: 9px;
+  background: var(--lh-bg-n1c); border: 1px solid var(--rule); border-radius: 9px;
   padding: 13px 16px; font-family: var(--mono); font-size: 12.5px;
   line-height: 1.85; overflow-x: auto; margin-top: 10px;
 }
 pre.cmd .c { color: var(--ink-dim); }
-pre.cmd .k { color: var(--accent); }
+pre.cmd .k { color: var(--lh-ink-cb7b); }
 .note {
-  margin-top: 12px; padding: 10px 14px; border-left: 3px solid var(--warn);
-  background: rgba(251,191,36,.07); border-radius: 0 8px 8px 0;
+  margin-top: 12px; padding: 10px 14px; border-left: 3px solid var(--lh-line-o7b);
+  background: var(--lh-bg-o7-a7b); border-radius: 0 8px 8px 0;
   font-size: 12.5px; color: var(--ink-muted);
 }
-.note b { color: var(--warn); }
+.note b { color: var(--lh-ink-o7b); }
 </style>
+
+<link rel="stylesheet" href="../assets/theme.css">
+<script src="../assets/theme.js" defer></script>
 </head>
 <body>
 <div class="container">
@@ -224,12 +228,12 @@ pre.cmd .k { color: var(--accent); }
   <div class="panel">
     <h2>🎯 通关暗号（师傅抽查就抽这几个数）</h2>
     <p>
-      <code style="font-family:var(--mono);color:var(--accent)">72MHz→115200：BRR=0x271 误差 0.00%</code> ·
-      <code style="font-family:var(--mono);color:var(--accent)">8N1 采样极限 ±5.26%，工程预算 ±2%</code> ·
-      <code style="font-family:var(--mono);color:var(--accent)">3.3V/150pF 上拉 1.1k~7.9kΩ</code> ·
-      <code style="font-family:var(--mono);color:var(--accent)">IWDG 超时=预分频×(重装值+1)÷40kHz，LSI 30~60kHz</code> ·
-      <code style="font-family:var(--mono);color:var(--accent)">最坏中断延迟=临界区剩余+上级尾巴+入栈</code> ·
-      <code style="font-family:var(--mono);color:var(--accent)">APB1≤36 / APB2≤72 / ADC≤14 / USB=48</code>。
+      <code style="font-family:var(--mono);color:var(--lh-ink-cb7b)">72MHz→115200：BRR=0x271 误差 0.00%</code> ·
+      <code style="font-family:var(--mono);color:var(--lh-ink-cb7b)">8N1 采样极限 ±5.26%，工程预算 ±2%</code> ·
+      <code style="font-family:var(--mono);color:var(--lh-ink-cb7b)">3.3V/150pF 上拉 1.1k~7.9kΩ</code> ·
+      <code style="font-family:var(--mono);color:var(--lh-ink-cb7b)">IWDG 超时=预分频×(重装值+1)÷40kHz，LSI 30~60kHz</code> ·
+      <code style="font-family:var(--mono);color:var(--lh-ink-cb7b)">最坏中断延迟=临界区剩余+上级尾巴+入栈</code> ·
+      <code style="font-family:var(--mono);color:var(--lh-ink-cb7b)">APB1≤36 / APB2≤72 / ADC≤14 / USB=48</code>。
       三句口诀：<b style="color:var(--ink)">改输出只用 BSRR；误差是链路所有环节的总和；ISR 里睡一觉，系统里死一片。</b>
     </p>
   </div>

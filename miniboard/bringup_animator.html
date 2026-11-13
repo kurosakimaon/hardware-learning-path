@@ -3,13 +3,14 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
+<script>(function(){var d=document.documentElement,p="auto",t;try{p=localStorage.getItem("lh-theme")||"auto";}catch(e){}if(p!=="light"&&p!=="dark")p="auto";try{t=p==="auto"?(window.matchMedia&&matchMedia("(prefers-color-scheme: light)").matches?"light":"dark"):p;}catch(e){t="dark";}d.setAttribute("data-theme",t);d.setAttribute("data-theme-pref",p);})();</script>
 <title>MiniBoard 上电时序动画 · 故障注入沙盒</title>
 <style>
 :root {
-  --bg: #0f172a; --surface: #1e293b; --surface-2: #334155;
-  --ink: #f1f5f9; --ink-muted: #94a3b8; --ink-dim: #64748b;
-  --rule: #334155; --accent: #38bdf8; --accent-2: #818cf8;
-  --ok: #4ade80; --warn: #fbbf24; --bad: #f87171;
+  --bg: var(--lh-bg-b2b); --surface: var(--lh-bg-b2c); --surface-2: var(--lh-bg-b3b);
+  --ink: var(--lh-ink-n9b); --ink-muted: var(--lh-ink-b6b); --ink-dim: var(--lh-ink-b5b);
+  --rule: var(--lh-line-b3b); --accent: var(--lh-acc-cb7b); --accent-2: var(--lh-acc-b6b);
+  --ok: var(--lh-acc-g7b); --warn: var(--lh-acc-o7b); --bad: var(--lh-acc-r6b);
   --mono: Consolas, "Cascadia Mono", "Courier New", monospace;
 }
 * { margin: 0; padding: 0; box-sizing: border-box; }
@@ -19,38 +20,38 @@ body {
   line-height: 1.7; font-size: 14px; padding: 26px 18px 60px;
 }
 .container { max-width: 1180px; margin: 0 auto; }
-.back { display: inline-block; margin-bottom: 14px; color: var(--accent); text-decoration: none; font-size: 13px; }
+.back { display: inline-block; margin-bottom: 14px; color: var(--lh-ink-cb7b); text-decoration: none; font-size: 13px; }
 .back:hover { text-decoration: underline; }
 h1 { font-size: 1.5rem; margin-bottom: 6px; }
 .sub { color: var(--ink-muted); font-size: 13px; margin-bottom: 20px; }
 .layout { display: grid; grid-template-columns: minmax(560px, 1.5fr) minmax(320px, 1fr); gap: 18px; }
 @media (max-width: 980px) { .layout { grid-template-columns: 1fr; } }
 .panel { background: var(--surface); border: 1px solid var(--rule); border-radius: 14px; padding: 18px 20px; margin-bottom: 18px; }
-.panel h2 { font-size: 15px; color: var(--accent); margin-bottom: 10px; }
+.panel h2 { font-size: 15px; color: var(--lh-ink-cb7b); margin-bottom: 10px; }
 .controls { display: flex; gap: 10px; flex-wrap: wrap; align-items: center; margin-bottom: 12px; }
 button {
   font-family: inherit; font-size: 13px; font-weight: 600;
-  background: linear-gradient(135deg, var(--accent), var(--accent-2));
-  color: #0b1220; border: none; border-radius: 9px; padding: 9px 18px; cursor: pointer;
+  background: linear-gradient(135deg, var(--lh-bg-cb7b), var(--lh-bg-b6b));
+  color: var(--lh-ink-n1b); border: none; border-radius: 9px; padding: 9px 18px; cursor: pointer;
   transition: transform .15s, box-shadow .15s;
 }
-button:hover { transform: translateY(-2px); box-shadow: 0 6px 18px rgba(56,189,248,.25); }
+button:hover { transform: translateY(-2px); box-shadow: 0 6px 18px var(--lh-shd-cb7-a25b); }
 button.ghost { background: var(--surface-2); color: var(--ink-muted); }
 select {
   font-family: inherit; font-size: 13px; background: var(--bg); color: var(--ink);
   border: 1px solid var(--rule); border-radius: 9px; padding: 8px 12px; cursor: pointer;
 }
 label.fault { font-size: 12.5px; color: var(--ink-muted); }
-svg { width: 100%; height: auto; display: block; background: #0b1220; border: 1px solid var(--rule); border-radius: 10px; }
+svg { width: 100%; height: auto; display: block; background: var(--lh-bg-n1c); border: 1px solid var(--rule); border-radius: 10px; }
 .legend { display: flex; gap: 16px; flex-wrap: wrap; margin-top: 8px; font-size: 11.5px; color: var(--ink-dim); }
 .legend i { display: inline-block; width: 22px; height: 4px; border-radius: 2px; margin-right: 5px; vertical-align: middle; }
 .log {
-  font-family: var(--mono); font-size: 12px; line-height: 1.8; background: #0b1220;
+  font-family: var(--mono); font-size: 12px; line-height: 1.8; background: var(--lh-bg-n1c);
   border: 1px solid var(--rule); border-radius: 9px; padding: 10px 13px;
   min-height: 150px; max-height: 220px; overflow-y: auto;
 }
-.log .ok { color: var(--ok); } .log .warn { color: var(--warn); } .log .bad { color: var(--bad); }
-.log .info { color: var(--accent); } .log .dim { color: var(--ink-dim); }
+.log .ok { color: var(--lh-ink-g7b); } .log .warn { color: var(--lh-ink-o7b); } .log .bad { color: var(--lh-ink-r6b); }
+.log .info { color: var(--lh-ink-cb7b); } .log .dim { color: var(--ink-dim); }
 .bulbs { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 10px; margin-top: 10px; }
 .bulb {
   background: var(--bg); border: 1px solid var(--rule); border-radius: 10px;
@@ -58,13 +59,16 @@ svg { width: 100%; height: auto; display: block; background: #0b1220; border: 1p
 }
 .bulb b { display: block; font-size: 12.5px; margin-bottom: 4px; }
 .bulb svg { background: transparent; border: none; }
-.step { font-size: 13px; color: var(--ink); background: rgba(56,189,248,.08); border: 1px solid var(--rule);
-  border-left: 3px solid var(--accent); border-radius: 0 9px 9px 0; padding: 10px 13px; margin-bottom: 10px; min-height: 60px; }
-.step b { color: var(--accent); }
-.note { margin-top: 10px; padding: 9px 13px; border-left: 3px solid var(--warn);
-  background: rgba(251,191,36,.07); border-radius: 0 8px 8px 0; font-size: 12px; color: var(--ink-muted); }
-.note b { color: var(--warn); }
+.step { font-size: 13px; color: var(--ink); background: var(--lh-bg-cb7-a8b); border: 1px solid var(--rule);
+  border-left: 3px solid var(--lh-line-cb7b); border-radius: 0 9px 9px 0; padding: 10px 13px; margin-bottom: 10px; min-height: 60px; }
+.step b { color: var(--lh-ink-cb7b); }
+.note { margin-top: 10px; padding: 9px 13px; border-left: 3px solid var(--lh-line-o7b);
+  background: var(--lh-bg-o7-a7b); border-radius: 0 8px 8px 0; font-size: 12px; color: var(--ink-muted); }
+.note b { color: var(--lh-ink-o7b); }
 </style>
+
+<link rel="stylesheet" href="../assets/theme.css">
+<script src="../assets/theme.js" defer></script>
 </head>
 <body>
 <div class="container">
@@ -160,10 +164,10 @@ svg { width: 100%; height: auto; display: block; background: #0b1220; border: 1p
           </g>
         </svg>
         <div class="legend">
-          <span><i style="background:#38bdf8"></i>5V 轨</span>
-          <span><i style="background:#4ade80"></i>3.3V 轨</span>
-          <span><i style="background:#fbbf24"></i>异常/跌落</span>
-          <span><i style="background:#f87171"></i>故障实锤</span>
+          <span><i style="background:var(--lh-bg-cb7b)"></i>5V 轨</span>
+          <span><i style="background:var(--lh-bg-g7b)"></i>3.3V 轨</span>
+          <span><i style="background:var(--lh-bg-o7b)"></i>异常/跌落</span>
+          <span><i style="background:var(--lh-bg-r6b)"></i>故障实锤</span>
         </div>
       </div>
 
@@ -172,15 +176,15 @@ svg { width: 100%; height: auto; display: block; background: #0b1220; border: 1p
         <div class="bulbs" id="bulbCards">
           <div class="bulb" data-b="hard">
             <svg viewBox="0 0 60 46"><circle cx="30" cy="23" r="17" fill="#fbbf24" stroke="#f59e0b"/><path d="M23,17 Q30,8 37,17" fill="none" stroke="#b45309" stroke-width="2"/></svg>
-            <b style="color:var(--bad)">猛烈常亮</b>硬短路：5V/3.3V 对地低阻，立刻断电查桥连
+            <b style="color:var(--lh-ink-r6b)">猛烈常亮</b>硬短路：5V/3.3V 对地低阻，立刻断电查桥连
           </div>
           <div class="bulb" data-b="normal">
             <svg viewBox="0 0 60 46"><circle cx="30" cy="23" r="17" fill="#334155" stroke="#64748b"/><path d="M23,17 Q30,8 37,17" fill="none" stroke="#94a3b8" stroke-width="1.4"/></svg>
-            <b style="color:var(--ok)">基本不亮（最多瞬间一跳）</b>正常：10µF 充电只有 50µC，灯丝来不及亮，板上只剩 mA 级电流
+            <b style="color:var(--lh-ink-g7b)">基本不亮（最多瞬间一跳）</b>正常：10µF 充电只有 50µC，灯丝来不及亮，板上只剩 mA 级电流
           </div>
           <div class="bulb" data-b="leak">
             <svg viewBox="0 0 60 46"><circle cx="30" cy="23" r="17" fill="#7c2d12" stroke="#9a3412"/><path d="M23,17 Q30,8 37,17" fill="none" stroke="#c2410c" stroke-width="1.6"/></svg>
-            <b style="color:var(--warn)">持续暗红微亮</b>漏电/半短：LDO 装反、MLCC 微裂，逐路断电二分法
+            <b style="color:var(--lh-ink-o7b)">持续暗红微亮</b>漏电/半短：LDO 装反、MLCC 微裂，逐路断电二分法
           </div>
         </div>
       </div>

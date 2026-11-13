@@ -3,21 +3,22 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
+<script>(function(){var d=document.documentElement,p="auto",t;try{p=localStorage.getItem("lh-theme")||"auto";}catch(e){}if(p!=="light"&&p!=="dark")p="auto";try{t=p==="auto"?(window.matchMedia&&matchMedia("(prefers-color-scheme: light)").matches?"light":"dark"):p;}catch(e){t="dark";}d.setAttribute("data-theme",t);d.setAttribute("data-theme-pref",p);})();</script>
 <title>运放输出波形实验室 · 第 2 关 · 模拟电路</title>
 <style>
 :root {
-  --bg: #0f172a;
-  --surface: #1e293b;
-  --surface-2: #334155;
-  --ink: #f1f5f9;
-  --ink-muted: #94a3b8;
-  --ink-dim: #64748b;
-  --rule: #334155;
-  --accent: #38bdf8;
-  --accent-2: #818cf8;
-  --ok: #4ade80;
-  --warn: #fbbf24;
-  --bad: #f87171;
+  --bg: var(--lh-bg-b2b);
+  --surface: var(--lh-bg-b2c);
+  --surface-2: var(--lh-bg-b3b);
+  --ink: var(--lh-ink-n9b);
+  --ink-muted: var(--lh-ink-b6b);
+  --ink-dim: var(--lh-ink-b5b);
+  --rule: var(--lh-line-b3b);
+  --accent: var(--lh-acc-cb7b);
+  --accent-2: var(--lh-acc-b6b);
+  --ok: var(--lh-acc-g7b);
+  --warn: var(--lh-acc-o7b);
+  --bad: var(--lh-acc-r6b);
 }
 * { box-sizing: border-box; margin: 0; padding: 0; }
 body {
@@ -28,12 +29,12 @@ body {
   line-height: 1.7;
   padding: 20px 26px 60px;
 }
-a { color: var(--accent); text-decoration: none; }
+a { color: var(--lh-ink-cb7b); text-decoration: none; }
 a:hover { text-decoration: underline; }
 .topbar { display: flex; align-items: center; gap: 14px; margin-bottom: 6px; }
 .badge {
   display: inline-block; padding: 3px 12px; border-radius: 999px;
-  background: var(--surface-2); color: var(--accent);
+  background: var(--surface-2); color: var(--lh-ink-cb7b);
   font-size: 12px; letter-spacing: 1px;
 }
 h1 { font-size: 22px; margin: 10px 0 4px; }
@@ -43,7 +44,7 @@ h1 { font-size: 22px; margin: 10px 0 4px; }
   background: var(--surface); border: 1px solid var(--rule);
   border-radius: 10px; padding: 16px;
 }
-.panel h2 { font-size: 14px; color: var(--accent); margin-bottom: 10px; letter-spacing: 1px; }
+.panel h2 { font-size: 14px; color: var(--lh-ink-cb7b); margin-bottom: 10px; letter-spacing: 1px; }
 .ctl { margin-bottom: 12px; }
 .ctl label { display: flex; justify-content: space-between; color: var(--ink-muted); font-size: 12.5px; }
 .ctl label b { color: var(--ink); font-weight: 600; font-family: Consolas, monospace; }
@@ -58,27 +59,30 @@ select {
   background: var(--surface-2); color: var(--ink); border: 1px solid var(--rule);
   border-radius: 6px; padding: 6px 10px; cursor: pointer; font-family: inherit; font-size: 12.5px;
 }
-.presets button:hover { border-color: var(--accent); color: var(--accent); }
+.presets button:hover { border-color: var(--lh-line-cb7b); color: var(--lh-ink-cb7b); }
 .diagnosis {
   border-radius: 8px; padding: 10px 12px; margin-bottom: 12px;
-  background: var(--surface-2); border-left: 4px solid var(--ok);
+  background: var(--surface-2); border-left: 4px solid var(--lh-line-g7b);
   font-size: 13px; min-height: 44px;
 }
-.diagnosis.warn { border-left-color: var(--warn); }
-.diagnosis.bad { border-left-color: var(--bad); }
+.diagnosis.warn { border-left-color: var(--lh-line-o7b); }
+.diagnosis.bad { border-left-color: var(--lh-line-r6b); }
 .readout { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
 .cell { background: var(--surface-2); border-radius: 8px; padding: 8px 10px; }
 .cell .k { color: var(--ink-dim); font-size: 11.5px; }
 .cell .v { font-family: Consolas, monospace; font-size: 15px; color: var(--ink); }
-.cell .v.good { color: var(--ok); }
-.cell .v.warn { color: var(--warn); }
-.cell .v.bad { color: var(--bad); }
-svg { width: 100%; height: auto; display: block; background: #0b1120; border-radius: 8px; }
+.cell .v.good { color: var(--lh-ink-g7b); }
+.cell .v.warn { color: var(--lh-ink-o7b); }
+.cell .v.bad { color: var(--lh-ink-r6b); }
+svg { width: 100%; height: auto; display: block; background: var(--lh-bg-n1b); border-radius: 8px; }
 .legend { display: flex; gap: 18px; margin-top: 8px; color: var(--ink-muted); font-size: 12.5px; }
 .legend i { display: inline-block; width: 18px; height: 3px; vertical-align: middle; margin-right: 6px; }
 .note { color: var(--ink-dim); font-size: 12.5px; margin-top: 12px; }
 @media (max-width: 1100px) { .layout { grid-template-columns: 1fr; } }
 </style>
+
+<link rel="stylesheet" href="../assets/theme.css">
+<script src="../assets/theme.js" defer></script>
 </head>
 <body>
 <div class="topbar">
@@ -148,10 +152,10 @@ svg { width: 100%; height: auto; display: block; background: #0b1120; border-rad
     <h2>波 形（一个周期 × 2）</h2>
     <svg id="scope" viewBox="0 0 640 360" xmlns="http://www.w3.org/2000/svg"></svg>
     <div class="legend">
-      <span><i style="background:#64748b"></i>输入 vin</span>
-      <span><i style="background:#38bdf8"></i>输出 vout（理想）</span>
-      <span><i style="background:#4ade80"></i>输出 vout（实际）</span>
-      <span><i style="background:#f87171"></i>限幅/失真标记</span>
+      <span><i style="background:var(--lh-bg-b5b)"></i>输入 vin</span>
+      <span><i style="background:var(--lh-bg-cb7b)"></i>输出 vout（理想）</span>
+      <span><i style="background:var(--lh-bg-g7b)"></i>输出 vout（实际）</span>
+      <span><i style="background:var(--lh-bg-r6b)"></i>限幅/失真标记</span>
     </div>
     <div class="note" id="shapeNote"></div>
   </div>
